@@ -59,7 +59,7 @@ export function TeamTabs({
       </TabsContent>
 
       <TabsContent value="guideline" className="mt-4">
-        <GuidelineViewer team={team} />
+        <GuidelineViewer team={team} teamId={team.id} />
       </TabsContent>
 
       <TabsContent value="checklist" className="mt-4">

@@ -146,8 +146,16 @@ describe('parseTeamChecklists', () => {
     const items = parseTeamChecklists(TEAM_SAMPLE, 'content')
     // 피드백 2 + 진행 2 = 4
     expect(items.length).toBe(4)
-    const feedback = items.filter((i) => i.section === 'feedback')
-    expect(feedback.length).toBe(2)
+    // 마크다운 파서는 milestone UUID를 알 수 없으므로 모든 항목은
+    // 상시(milestone_id=null)로 파싱된다. section 필드는 제거됨.
+    for (const item of items) {
+      expect(item.milestone_id).toBeNull()
+    }
+    // 피드백 섹션 항목(심판 규칙, 페이스페인팅)이 여전히 파싱되는지 확인
+    const hasJudging = items.some((i) => i.content.includes('심판'))
+    const hasFacePaint = items.some((i) => i.content.includes('페이스페인팅'))
+    expect(hasJudging).toBe(true)
+    expect(hasFacePaint).toBe(true)
     const highItem = items.find((i) => i.priority === 'high')
     expect(highItem?.content).toContain('심판')
     const completed = items.find((i) => i.completed)

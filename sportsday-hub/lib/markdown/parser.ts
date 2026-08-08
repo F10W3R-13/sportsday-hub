@@ -268,16 +268,6 @@ function mapPriority(text: string): ChecklistItem['priority'] {
   return null
 }
 
-function detectSection(sectionTitle: string): ChecklistItem['section'] {
-  if (sectionTitle.includes('피드백')) return 'feedback'
-  if (
-    sectionTitle.includes('진행 체크리스트') ||
-    sectionTitle.includes('체크리스트')
-  )
-    return 'progress'
-  return 'prep'
-}
-
 export function parseTeamChecklists(
   md: string,
   teamId: TeamId
@@ -286,12 +276,15 @@ export function parseTeamChecklists(
   const items: ChecklistItem[] = []
   let sortOrder = 0
 
+  // NOTE: 마크다운 파서는 milestone UUID를 알 수 없으므로 모든 파싱 항목을
+  // 상시(unassigned, milestone_id=null)로 분류한다. 이 스크립트들은 더 이상
+  // 사용되지 않으며(supabase migration 0008이 명시적 milestone_id 매핑으로
+  // 시드를 대체함) 컴파일만 통과하면 된다.
   for (const section of sections) {
     if (
       section.title.toLowerCase().includes('체크리스트') ||
       section.title.includes('피드백')
     ) {
-      const sectionType = detectSection(section.title)
       const checks = parseChecklist(section.body)
       for (const c of checks) {
         const priority = mapPriority(c.text)
@@ -329,7 +322,7 @@ export function parseTeamChecklists(
           items.push({
             id: randomUUID(),
             team_id: teamId,
-            section: sectionType,
+            milestone_id: null,
             content,
             priority,
             completed: c.checked,

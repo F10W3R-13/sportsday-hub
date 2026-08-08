@@ -7,7 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { Checkbox } from '@/components/ui/checkbox'
+import { EditableChecklistCheckbox } from '@/components/editor/editable-checkbox'
 import { PriorityBadge } from '@/components/shared/priority-badge'
 import { EmptyState } from '@/components/shared/empty-state'
 import type { ChecklistItem, Team, TeamId } from '@/lib/types/models'
@@ -109,7 +109,7 @@ export function UnifiedChecklist({
                           key={item.id}
                           className="flex items-start gap-3 rounded-md border p-2"
                         >
-                          <Checkbox checked={item.completed} disabled />
+                          <EditableChecklistCheckbox item={item} />
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <PriorityBadge priority={item.priority} />

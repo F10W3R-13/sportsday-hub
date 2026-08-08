@@ -1,14 +1,20 @@
+'use client'
+
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { StatusBadge } from '@/components/shared/status-badge'
 import { EmptyState } from '@/components/shared/empty-state'
+import { DecisionStatusSelect } from '@/components/editor/decision-status-select'
+import { InlineTextEdit } from '@/components/editor/inline-text-edit'
+import { useUpdateDecision } from '@/lib/mutations/decisions'
 import type { Decision } from '@/lib/types/models'
 
 export function DecisionTracker({ decisions }: { decisions: Decision[] }) {
+  const updateDecision = useUpdateDecision()
+
   return (
     <Card>
       <CardHeader>
@@ -29,13 +35,18 @@ export function DecisionTracker({ decisions }: { decisions: Decision[] }) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{d.title}</div>
-                  {d.current_value && (
-                    <div className="truncate text-xs text-muted-foreground">
-                      {d.current_value}
-                    </div>
-                  )}
+                  <InlineTextEdit
+                    value={d.current_value}
+                    placeholder="미정"
+                    onSave={(value) =>
+                      updateDecision.mutate({
+                        id: d.id,
+                        currentValue: value,
+                      })
+                    }
+                  />
                 </div>
-                <StatusBadge status={d.status} />
+                <DecisionStatusSelect decision={d} />
               </div>
             ))}
           </div>

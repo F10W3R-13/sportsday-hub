@@ -1,38 +1,95 @@
-import { Badge } from '@/components/ui/badge'
-import { EmptyState } from '@/components/shared/empty-state'
-import type { Issue } from '@/lib/types/models'
+'use client'
 
-const STATUS_LABEL: Record<string, string> = {
+import { Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
+import { EmptyState } from '@/components/shared/empty-state'
+import { AddItemButton } from '@/components/editor/add-item-button'
+import {
+  useAddIssue,
+  useUpdateIssue,
+  useDeleteIssue,
+} from '@/lib/mutations/issues'
+import type { Issue, IssueStatus, TeamId } from '@/lib/types/models'
+
+const STATUS_LABEL: Record<IssueStatus, string> = {
   open: '열림',
   in_progress: '진행중',
   resolved: '해결됨',
 }
 
-const STATUS_STYLE: Record<string, string> = {
-  open: 'bg-red-100 text-red-800',
-  in_progress: 'bg-yellow-100 text-yellow-800',
-  resolved: 'bg-green-100 text-green-800',
-}
+const STATUSES: IssueStatus[] = ['open', 'in_progress', 'resolved']
 
-export function IssuePanel({ issues }: { issues: Issue[] }) {
-  if (issues.length === 0) {
-    return <EmptyState title="이슈가 없습니다" description="모두 순조롭게 진행 중" />
-  }
+export function IssuePanel({
+  issues,
+  teamId,
+}: {
+  issues: Issue[]
+  teamId: TeamId | null
+}) {
+  const addIssue = useAddIssue()
+  const updateIssue = useUpdateIssue()
+  const deleteIssue = useDeleteIssue()
+
   return (
     <div className="space-y-2">
-      {issues.map((issue) => (
-        <div key={issue.id} className="flex items-center gap-3 rounded-md border p-3">
-          <Badge variant="secondary" className={STATUS_STYLE[issue.status]}>
-            {STATUS_LABEL[issue.status]}
-          </Badge>
-          <span className="min-w-0 flex-1 text-sm">{issue.title}</span>
-          {issue.date && (
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {issue.date}
-            </span>
-          )}
-        </div>
-      ))}
+      <AddItemButton
+        onAdd={(title) => addIssue.mutate({ teamId, title })}
+        label="이슈 추가"
+        placeholder="새 이슈..."
+      />
+      {issues.length === 0 ? (
+        <EmptyState title="이슈가 없습니다" description="모두 순조롭게 진행 중" />
+      ) : (
+        issues.map((issue) => (
+          <div
+            key={issue.id}
+            className="flex items-center gap-3 rounded-md border p-3"
+          >
+            <Select
+              value={issue.status}
+              onValueChange={(value) =>
+                updateIssue.mutate({
+                  id: issue.id,
+                  status: value as IssueStatus,
+                })
+              }
+            >
+              <SelectTrigger size="sm" className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {STATUS_LABEL[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="min-w-0 flex-1 text-sm">{issue.title}</span>
+            {issue.date && (
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {issue.date}
+              </span>
+            )}
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              className="text-muted-foreground hover:text-destructive"
+              disabled={deleteIssue.isPending}
+              onClick={() => deleteIssue.mutate(issue.id)}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        ))
+      )}
     </div>
   )
 }

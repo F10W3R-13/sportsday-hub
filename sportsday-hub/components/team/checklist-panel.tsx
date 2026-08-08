@@ -1,7 +1,16 @@
-import { Checkbox } from '@/components/ui/checkbox'
+'use client'
+
+import { Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { PriorityBadge } from '@/components/shared/priority-badge'
 import { EmptyState } from '@/components/shared/empty-state'
-import type { ChecklistItem } from '@/lib/types/models'
+import { EditableChecklistCheckbox } from '@/components/editor/editable-checkbox'
+import { AddItemButton } from '@/components/editor/add-item-button'
+import {
+  useAddChecklistItem,
+  useDeleteChecklistItem,
+} from '@/lib/mutations/checklist'
+import type { ChecklistItem, TeamId } from '@/lib/types/models'
 
 const SECTION_LABEL: Record<string, string> = {
   progress: '진행 체크리스트',
@@ -9,7 +18,16 @@ const SECTION_LABEL: Record<string, string> = {
   prep: '준비',
 }
 
-export function ChecklistPanel({ items }: { items: ChecklistItem[] }) {
+export function ChecklistPanel({
+  items,
+  teamId,
+}: {
+  items: ChecklistItem[]
+  teamId: TeamId | null
+}) {
+  const addItem = useAddChecklistItem()
+  const deleteItem = useDeleteChecklistItem()
+
   if (items.length === 0) {
     return <EmptyState title="체크리스트 항목이 없습니다" />
   }
@@ -27,7 +45,8 @@ export function ChecklistPanel({ items }: { items: ChecklistItem[] }) {
       {Object.entries(bySection).map(([section, sectionItems]) => (
         <div key={section}>
           <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-            {SECTION_LABEL[section] ?? section} ({sectionItems.filter((i) => i.completed).length}/
+            {SECTION_LABEL[section] ?? section} (
+            {sectionItems.filter((i) => i.completed).length}/
             {sectionItems.length})
           </h3>
           <div className="space-y-1">
@@ -38,13 +57,15 @@ export function ChecklistPanel({ items }: { items: ChecklistItem[] }) {
                   key={item.id}
                   className="flex items-start gap-3 rounded-md border p-2"
                 >
-                  <Checkbox checked={item.completed} disabled />
+                  <EditableChecklistCheckbox item={item} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <PriorityBadge priority={item.priority} />
                       <span
                         className={`text-sm ${
-                          item.completed ? 'text-muted-foreground line-through' : ''
+                          item.completed
+                            ? 'text-muted-foreground line-through'
+                            : ''
                         }`}
                       >
                         {item.content}
@@ -56,9 +77,31 @@ export function ChecklistPanel({ items }: { items: ChecklistItem[] }) {
                       </span>
                     )}
                   </div>
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-destructive"
+                    disabled={deleteItem.isPending}
+                    onClick={() => deleteItem.mutate(item.id)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
                 </div>
               ))}
           </div>
+          {teamId && (
+            <AddItemButton
+              onAdd={(content) =>
+                addItem.mutate({
+                  teamId,
+                  section: section as ChecklistItem['section'],
+                  content,
+                })
+              }
+              label="항목 추가"
+              placeholder="새 체크리스트 항목..."
+            />
+          )}
         </div>
       ))}
     </div>

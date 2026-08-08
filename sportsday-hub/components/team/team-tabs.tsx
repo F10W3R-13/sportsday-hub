@@ -63,7 +63,7 @@ export function TeamTabs({
       </TabsContent>
 
       <TabsContent value="checklist" className="mt-4">
-        <ChecklistPanel items={checklist} />
+        <ChecklistPanel items={checklist} teamId={team.id} />
       </TabsContent>
 
       <TabsContent value="milestones" className="mt-4">
@@ -71,7 +71,7 @@ export function TeamTabs({
       </TabsContent>
 
       <TabsContent value="issues" className="mt-4">
-        <IssuePanel issues={issues} />
+        <IssuePanel issues={issues} teamId={team.id} />
       </TabsContent>
     </Tabs>
   )

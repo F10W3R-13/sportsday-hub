@@ -1,7 +1,6 @@
 -- 26-2 스포츠데이 허브 초기 스키마
 
--- extensions
-create extension if not exists "uuid-ossp";
+-- pgcrypto (gen_random_uuid)는 Supabase에 기본 활성화되어 있음
 
 -- ===== teams =====
 create table public.teams (
@@ -33,7 +32,7 @@ create table public.decisions (
 
 -- ===== milestones =====
 create table public.milestones (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   date        date not null,
   title       text not null,
   team_id     text references public.teams(id) on delete set null,
@@ -47,7 +46,7 @@ create table public.milestones (
 
 -- ===== checklist_items =====
 create table public.checklist_items (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   team_id     text references public.teams(id) on delete cascade,
   section     text not null default 'progress'
                 check (section in ('progress','feedback','prep')),
@@ -61,7 +60,7 @@ create table public.checklist_items (
 
 -- ===== issues =====
 create table public.issues (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   team_id     text references public.teams(id) on delete cascade,
   date        date,
   title       text not null,

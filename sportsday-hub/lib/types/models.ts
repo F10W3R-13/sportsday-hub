@@ -30,6 +30,7 @@ export const teamSchema = z.object({
   }),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
+  deleted_at: z.string().nullable().optional(),
 })
 export type Team = z.infer<typeof teamSchema>
 
@@ -52,6 +53,7 @@ export const decisionSchema = z.object({
   sort_order: z.number(),
   notes: z.string().nullable(),
   updated_at: z.string().optional(),
+  deleted_at: z.string().nullable().optional(),
 })
 export type Decision = z.infer<typeof decisionSchema>
 
@@ -73,6 +75,7 @@ export const milestoneSchema = z.object({
   depends_on: z.array(z.string().uuid()).nullable(),
   sort_order: z.number(),
   updated_at: z.string().optional(),
+  deleted_at: z.string().nullable().optional(),
 })
 export type Milestone = z.infer<typeof milestoneSchema>
 
@@ -93,6 +96,7 @@ export const checklistItemSchema = z.object({
   source: z.string().nullable(),
   sort_order: z.number(),
   updated_at: z.string().optional(),
+  deleted_at: z.string().nullable().optional(),
 })
 export type ChecklistItem = z.infer<typeof checklistItemSchema>
 
@@ -108,6 +112,7 @@ export const issueSchema = z.object({
   status: z.enum(ISSUE_STATUS),
   notes: z.string().nullable(),
   updated_at: z.string().optional(),
+  deleted_at: z.string().nullable().optional(),
 })
 export type Issue = z.infer<typeof issueSchema>
 
@@ -123,4 +128,26 @@ export const PRIORITY_LABEL: Record<Priority, string> = {
   high: '높음',
   medium: '보통',
   low: '낮음',
+}
+
+// ===== 감사 로그 (Plan B) =====
+export const AUDIT_ACTIONS = ['insert', 'update', 'delete'] as const
+export type AuditAction = (typeof AUDIT_ACTIONS)[number]
+
+export const auditLogSchema = z.object({
+  id: z.string().uuid(),
+  table_name: z.string(),
+  record_id: z.string(),
+  action: z.enum(AUDIT_ACTIONS),
+  changed_by: z.string().default('익명'),
+  old_value: z.any().nullable(),
+  new_value: z.any().nullable(),
+  created_at: z.string().optional(),
+})
+export type AuditLog = z.infer<typeof auditLogSchema>
+
+export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
+  insert: '생성',
+  update: '수정',
+  delete: '삭제',
 }

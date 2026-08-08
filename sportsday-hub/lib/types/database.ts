@@ -4,6 +4,7 @@ import type {
   Milestone,
   ChecklistItem,
   Issue,
+  AuditLog,
 } from './models'
 
 // Supabase 자동 생성 타입과 호환되는 수동 정의
@@ -34,6 +35,11 @@ export interface Database {
         Row: Issue
         Insert: Partial<Issue>
         Update: Partial<Issue>
+      }
+      audit_log: {
+        Row: AuditLog
+        Insert: Omit<AuditLog, 'id' | 'created_at'>
+        Update: Partial<AuditLog>
       }
     }
   }

@@ -80,7 +80,7 @@ export function UnifiedChecklist({
       {byTeam.size === 0 ? (
         <EmptyState title="해당 항목이 없습니다" />
       ) : (
-        <Accordion className="w-full">
+        <Accordion multiple className="w-full">
           {Array.from(byTeam.entries()).map(([teamId, teamItems]) => {
             const team = teamId ? teamMap.get(teamId) : null
             const teamCompleted = teamItems.filter((i) => i.completed).length

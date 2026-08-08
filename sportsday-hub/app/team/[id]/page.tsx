@@ -6,8 +6,6 @@ import { getMilestonesByTeam } from '@/lib/queries/milestones'
 import { getIssuesByTeam } from '@/lib/queries/issues'
 import { TEAM_IDS } from '@/lib/types/models'
 
-export const revalidate = 60
-
 export async function generateStaticParams() {
   return TEAM_IDS.map((id) => ({ id }))
 }

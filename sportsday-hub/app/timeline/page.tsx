@@ -2,8 +2,6 @@ import { TimelineList } from '@/components/timeline/timeline-list'
 import { getMilestones } from '@/lib/queries/milestones'
 import { getTeams } from '@/lib/queries/teams'
 
-export const revalidate = 60
-
 export default async function TimelinePage() {
   const [milestones, teams] = await Promise.all([getMilestones(), getTeams()])
   return (

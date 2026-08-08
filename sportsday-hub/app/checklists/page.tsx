@@ -2,8 +2,6 @@ import { UnifiedChecklist } from '@/components/checklist/unified-checklist'
 import { getChecklistItems } from '@/lib/queries/checklist'
 import { getTeams } from '@/lib/queries/teams'
 
-export const revalidate = 60
-
 export default async function ChecklistsPage() {
   const [items, teams] = await Promise.all([getChecklistItems(), getTeams()])
   return (

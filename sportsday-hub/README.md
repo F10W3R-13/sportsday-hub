@@ -56,7 +56,7 @@ npm test          # 마크다운 파서 단위/통합 테스트
 
 ## 기술 스택
 
-- Next.js 15 (App Router) + React 19
+- Next.js 16 (App Router) + React 19
 - shadcn/ui + Tailwind CSS v4
 - Supabase (Postgres)
 - TanStack Query v5

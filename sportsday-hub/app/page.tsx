@@ -8,8 +8,6 @@ import { getMilestones } from '@/lib/queries/milestones'
 import { getChecklistItems } from '@/lib/queries/checklist'
 import { getIssues } from '@/lib/queries/issues'
 
-export const revalidate = 60 // 60초 ISR
-
 export default async function DashboardPage() {
   const [decisions, teams, milestones, checklist, issues] = await Promise.all([
     getDecisions(),

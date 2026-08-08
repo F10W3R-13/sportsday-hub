@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { RotateCcw, RefreshCw } from 'lucide-react'
@@ -43,6 +44,7 @@ export function TrashView() {
   const [loaded, setLoaded] = useState(false)
   const [restoringId, setRestoringId] = useState<string | null>(null)
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   const loadTrash = async () => {
     const client = createClient()
@@ -88,6 +90,7 @@ export function TrashView() {
       toast.success('복원되었습니다.')
       queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
       queryClient.invalidateQueries({ queryKey: queryKeys.issues })
+      void router.refresh()
       setItems((prev) => prev.filter((i) => i.id !== entry.id))
     } catch {
       toast.error('복원 실패')

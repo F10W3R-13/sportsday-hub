@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { queryKeys } from '@/lib/queries/keys'
-import type { Decision, DecisionStatus } from '@/lib/types/models'
+import type { DecisionStatus } from '@/lib/types/models'
 
 type DecisionUpdate = {
   status?: DecisionStatus
@@ -39,31 +39,8 @@ export function useUpdateDecision() {
       if (error) throw error
       return data
     },
-    onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.decisions })
-      const prev = queryClient.getQueryData<Decision[]>(queryKeys.decisions)
-      if (prev) {
-        queryClient.setQueryData<Decision[]>(
-          queryKeys.decisions,
-          prev.map((d) =>
-            d.id === input.id
-              ? {
-                  ...d,
-                  status: input.status ?? d.status,
-                  current_value: input.currentValue ?? d.current_value,
-                  notes: input.notes ?? d.notes,
-                }
-              : d
-          )
-        )
-      }
-      return { prev }
-    },
-    onError: (_err, _input, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(queryKeys.decisions, ctx.prev)
-      toast.error('저장 실패. 다시 시도해주세요.')
-    },
-    onSettled: () => {
+    onError: () => toast.error('저장 실패. 다시 시도해주세요.'),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.decisions })
       void router.refresh()
     },

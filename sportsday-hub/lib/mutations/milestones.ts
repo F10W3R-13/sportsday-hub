@@ -21,24 +21,8 @@ export function useToggleMilestone() {
         .eq('id', milestone.id)
       if (error) throw error
     },
-    onMutate: async (milestone) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.milestones })
-      const prev = queryClient.getQueryData<Milestone[]>(queryKeys.milestones)
-      if (prev) {
-        queryClient.setQueryData<Milestone[]>(
-          queryKeys.milestones,
-          prev.map((m) =>
-            m.id === milestone.id ? { ...m, completed: !m.completed } : m
-          )
-        )
-      }
-      return { prev }
-    },
-    onError: (_err, _m, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(queryKeys.milestones, ctx.prev)
-      toast.error('저장 실패. 다시 시도해주세요.')
-    },
-    onSettled: () => {
+    onError: () => toast.error('저장 실패. 다시 시도해주세요.'),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
       void router.refresh()
     },

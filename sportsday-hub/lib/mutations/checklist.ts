@@ -7,7 +7,7 @@ import { createClient, ensureContext } from '@/lib/supabase/client'
 import { queryKeys } from '@/lib/queries/keys'
 import type { ChecklistItem, TeamId } from '@/lib/types/models'
 
-// ===== 체크 토글 (낙관적 업데이트) =====
+// ===== 체크 토글 =====
 export function useToggleCheck() {
   const queryClient = useQueryClient()
   const router = useRouter()
@@ -22,27 +22,8 @@ export function useToggleCheck() {
         .eq('id', item.id)
       if (error) throw error
     },
-    onMutate: async (item) => {
-      // 통합 체크리스트와 팀 체크리스트 모두 무효화
-      await queryClient.cancelQueries({ queryKey: queryKeys.checklist })
-      const prevAll = queryClient.getQueryData<ChecklistItem[]>(queryKeys.checklist)
-      if (prevAll) {
-        queryClient.setQueryData<ChecklistItem[]>(
-          queryKeys.checklist,
-          prevAll.map((i) =>
-            i.id === item.id ? { ...i, completed: !i.completed } : i
-          )
-        )
-      }
-      return { prevAll }
-    },
-    onError: (_err, _item, ctx) => {
-      if (ctx?.prevAll) {
-        queryClient.setQueryData(queryKeys.checklist, ctx.prevAll)
-      }
-      toast.error('저장 실패. 다시 시도해주세요.')
-    },
-    onSettled: () => {
+    onError: () => toast.error('저장 실패. 다시 시도해주세요.'),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
       void router.refresh()
     },

@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { queryKeys } from '@/lib/queries/keys'
@@ -8,6 +9,7 @@ import type { Milestone } from '@/lib/types/models'
 
 export function useToggleMilestone() {
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   return useMutation({
     mutationFn: async (milestone: Milestone) => {
@@ -38,6 +40,7 @@ export function useToggleMilestone() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
+      void router.refresh()
     },
   })
 }

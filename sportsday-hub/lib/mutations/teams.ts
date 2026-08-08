@@ -1,13 +1,14 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { queryKeys } from '@/lib/queries/keys'
-import type { Team } from '@/lib/types/models'
 
 export function useUpdateGuidelineSection() {
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   return useMutation({
     mutationFn: async (input: {
@@ -17,30 +18,18 @@ export function useUpdateGuidelineSection() {
     }) => {
       const client = createClient()
       await ensureContext(client)
-      // 현재 팀 데이터 조회 → 섹션 업데이트 → 저장
-      const { data: team, error: fetchErr } = await client
-        .from('teams')
-        .select('*')
-        .eq('id', input.teamId as Team['id'])
-        .single()
-      if (fetchErr) throw fetchErr
-      if (!team) throw new Error('팀을 찾을 수 없습니다')
-
-      const sections = (team.guideline_doc?.sections ?? []).map((s) =>
-        s.id === input.sectionId
-          ? { ...s, content_md: input.contentMd }
-          : s
-      )
-      const { error } = await client
-        .from('teams')
-        .update({
-          guideline_doc: { sections },
-        })
-        .eq('id', input.teamId as Team['id'])
+      // C3: 클라이언트에서 read-modify-write(전체 guideline_doc 덮어쓰기)하면
+      // 동시 편집 시 섹션 유실이 발생하므로 서버 RPC로 원자적 갱신.
+      const { error } = await client.rpc('update_guideline_section', {
+        p_team_id: input.teamId,
+        p_section_id: input.sectionId,
+        p_content_md: input.contentMd,
+      })
       if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.teams })
+      void router.refresh()
       toast.success('지침이 저장되었습니다.')
     },
     onError: () => toast.error('저장 실패. 다시 시도해주세요.'),

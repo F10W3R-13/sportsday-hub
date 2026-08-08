@@ -50,10 +50,20 @@ export interface Database {
       }
     }
     Views: {}
-    // RPC 함수 — set_user_context(p_nickname text) returns void
+    // RPC 함수
+    // - set_user_context(p_nickname text) returns void
+    // - update_guideline_section(p_team_id text, p_section_id text, p_content_md text) returns void
     Functions: {
       set_user_context: {
         Args: { p_nickname: string }
+        Returns: undefined
+      }
+      update_guideline_section: {
+        Args: {
+          p_team_id: string
+          p_section_id: string
+          p_content_md: string
+        }
         Returns: undefined
       }
     }

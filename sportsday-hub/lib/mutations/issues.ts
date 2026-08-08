@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { queryKeys } from '@/lib/queries/keys'
@@ -13,6 +14,7 @@ type IssueUpdate = {
 
 export function useAddIssue() {
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   return useMutation({
     mutationFn: async (input: {
@@ -35,6 +37,7 @@ export function useAddIssue() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.issues })
+      void router.refresh()
       toast.success('이슈가 추가되었습니다.')
     },
     onError: () => toast.error('추가 실패.'),
@@ -43,6 +46,7 @@ export function useAddIssue() {
 
 export function useUpdateIssue() {
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   return useMutation({
     mutationFn: async (input: {
@@ -63,6 +67,7 @@ export function useUpdateIssue() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.issues })
+      void router.refresh()
     },
     onError: () => toast.error('저장 실패.'),
   })
@@ -70,6 +75,7 @@ export function useUpdateIssue() {
 
 export function useDeleteIssue() {
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -83,6 +89,7 @@ export function useDeleteIssue() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.issues })
+      void router.refresh()
       toast.success('이슈가 삭제되었습니다.')
     },
     onError: () => toast.error('삭제 실패.'),

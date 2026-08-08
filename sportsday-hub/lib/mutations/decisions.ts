@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { queryKeys } from '@/lib/queries/keys'
@@ -14,6 +15,7 @@ type DecisionUpdate = {
 
 export function useUpdateDecision() {
   const queryClient = useQueryClient()
+  const router = useRouter()
 
   return useMutation({
     mutationFn: async (input: {
@@ -63,6 +65,7 @@ export function useUpdateDecision() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.decisions })
+      void router.refresh()
     },
   })
 }

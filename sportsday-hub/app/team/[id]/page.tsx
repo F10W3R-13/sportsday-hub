@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { TeamTabs } from '@/components/team/team-tabs'
-import { getTeam, getTeams } from '@/lib/queries/teams'
+import { getTeam } from '@/lib/queries/teams'
 import { getChecklistByTeam } from '@/lib/queries/checklist'
 import { getMilestonesByTeam } from '@/lib/queries/milestones'
 import { getIssuesByTeam } from '@/lib/queries/issues'

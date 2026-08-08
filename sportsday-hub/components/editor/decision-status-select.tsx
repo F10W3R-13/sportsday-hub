@@ -35,7 +35,9 @@ export function DecisionStatusSelect({ decision }: { decision: Decision }) {
       }
     >
       <SelectTrigger className="w-28">
-        <SelectValue />
+        <SelectValue>
+          {(value: DecisionStatus) => DECISION_STATUS_LABEL[value]}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {STATUSES.map((s) => (

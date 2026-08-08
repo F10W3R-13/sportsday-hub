@@ -5,7 +5,6 @@ import { GuidelineViewer } from './guideline-viewer'
 import { ChecklistPanel } from './checklist-panel'
 import { MilestonePanel } from './milestone-panel'
 import { IssuePanel } from './issue-panel'
-import { MarkdownRenderer } from '@/lib/markdown/renderer'
 import type { Team, ChecklistItem, Milestone, Issue } from '@/lib/types/models'
 
 export function TeamTabs({

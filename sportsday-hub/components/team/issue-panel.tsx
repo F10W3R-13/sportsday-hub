@@ -62,7 +62,9 @@ export function IssuePanel({
               }
             >
               <SelectTrigger size="sm" className="w-24">
-                <SelectValue />
+                <SelectValue>
+                  {(value: IssueStatus) => STATUS_LABEL[value]}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {STATUSES.map((s) => (

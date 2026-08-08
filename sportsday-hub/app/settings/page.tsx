@@ -49,9 +49,9 @@ export default async function SettingsPage() {
         )}
       </div>
 
-      {/* 폴더 매핑 */}
+      {/* 폴더 매핑 — 기획관리팀은 제외 (드라이브 폴더 없음) */}
       {status.connected && (
-        <FolderMapping teams={teams} />
+        <FolderMapping teams={teams.filter((t) => t.id !== 'management')} />
       )}
     </div>
   )

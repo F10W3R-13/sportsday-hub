@@ -21,15 +21,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/settings?error=no_refresh_token', baseUrl))
     }
 
-    // 이메일 조회
+    // 이메일 조회 — userinfo API로 직접 호출
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
       process.env.GOOGLE_OAUTH_REDIRECT_URL
     )
     oauth2Client.setCredentials(tokens)
-    const userInfo = await oauth2Client.getTokenInfo(tokens.access_token)
-    const email = userInfo.email ?? 'unknown'
+    let email = 'unknown'
+    try {
+      const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      })
+      if (res.ok) {
+        const userInfo = await res.json()
+        email = userInfo.email ?? 'unknown'
+      }
+    } catch {
+      // 이메일 조회 실패는 연결 자체를 실패시키지 않음
+    }
 
     // 토큰 저장
     await saveDriveTokens({

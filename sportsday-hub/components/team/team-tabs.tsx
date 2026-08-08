@@ -12,12 +12,17 @@ export function TeamTabs({
   team,
   checklist,
   milestones,
+  allMilestones,
   issues,
   driveFiles,
 }: {
   team: Team
   checklist: ChecklistItem[]
   milestones: Milestone[]
+  // ChecklistPanel은 다른 팀 소유 마일스톤 아래 배정된 항목까지 올바른 라벨을
+  // 표시해야 하므로 전체 마일스톤을 받는다. MilestonePanel은 여전히 milestones
+  // (팀 범위)를 사용한다.
+  allMilestones: Milestone[]
   issues: Issue[]
   activityFeed?: never
   driveFiles: DriveFile[]
@@ -70,7 +75,7 @@ export function TeamTabs({
       <TabsContent value="checklist" className="mt-4">
         <ChecklistPanel
           items={checklist}
-          milestones={milestones}
+          milestones={allMilestones}
           teamId={team.id}
         />
       </TabsContent>

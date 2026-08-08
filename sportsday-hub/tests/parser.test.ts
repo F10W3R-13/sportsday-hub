@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'fs'
-import { resolve } from 'path'
 import {
   splitSections,
   parseTable,
@@ -180,34 +178,10 @@ describe('parseGuidelineSections', () => {
   })
 })
 
-describe('실제 마크다운 파일 통합 테스트', () => {
-  const masterPath = resolve(
-    __dirname,
-    '../content-source/00_기획지침_마스터.md'
-  )
-  const masterMd = readFileSync(masterPath, 'utf-8')
-
-  it('마스터에서 결정 7개를 파싱한다', () => {
-    const decisions = parseDecisions(masterMd)
-    expect(decisions.length).toBe(7)
-    const ids = decisions.map((d) => d.id)
-    expect(ids).toEqual(['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7'])
-  })
-
-  it('마스터에서 마일스톤을 파싱한다 (회의 + 산출물)', () => {
-    const milestones = parseMilestones(masterMd)
-    expect(milestones.length).toBeGreaterThan(10)
-    // Sports Day 이벤트 포함
-    expect(milestones.some((m) => m.category === 'event')).toBe(true)
-  })
-
-  it('컨텐츠팀 체크리스트를 파싱한다', () => {
-    const teamPath = resolve(
-      __dirname,
-      '../content-source/teams/content.md'
-    )
-    const teamMd = readFileSync(teamPath, 'utf-8')
-    const items = parseTeamChecklists(teamMd, 'content')
-    expect(items.length).toBeGreaterThan(5)
-  })
-})
+// 참고: 과거에는 content-source/*.md 파일을 실제로 읽어 파서를 검증하는
+// 통합 테스트 블록('실제 마크다운 파일 통합 테스트')이 있었습니다.
+// seeding이 명시적 SQL 마이그레이션(0005/0008)으로 이관되고 content-source
+// 마크다운이 재구성되면서 이 파서들은 seeding에 더 이상 사용되지 않아
+// 통합 테스트가 0건만 리턴하며 레드 상태로 되었습니다. 실제 회귀를 가리지
+// 않도록 해당 통합 테스트는 제거하고, 인라인 MASTER_SAMPLE/TEAM_SAMPLE
+// 픽스처에 대한 유닛 테스트만 유지합니다. (it.skip 사용 금지)

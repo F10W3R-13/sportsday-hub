@@ -59,6 +59,10 @@ export async function GET(request: NextRequest) {
 
         // 매핑 결과를 teams 테이블에 저장
         const supabase = createServiceClient()
+
+        // management는 상위 폴더 자체에 매핑 (하위 팀 폴더가 아닌 직접 파일용)
+        mapping.management = rootFolderId
+
         for (const [teamId, folderId] of Object.entries(mapping)) {
           if (folderId) {
             await supabase

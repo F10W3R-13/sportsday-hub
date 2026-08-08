@@ -17,6 +17,9 @@ export async function POST(request: NextRequest) {
     // 하위 폴더 탐색 및 팀별 매핑
     const { mapping, allFolders } = await discoverTeamFolders(parentFolderId)
 
+    // management는 상위 폴더 자체에 매핑 (직접 파일용)
+    mapping.management = parentFolderId
+
     // 매핑 결과를 teams 테이블에 저장
     const supabase = createServiceClient()
     for (const [teamId, folderId] of Object.entries(mapping)) {

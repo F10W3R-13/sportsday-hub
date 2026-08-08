@@ -5,23 +5,21 @@ import { GuidelineViewer } from './guideline-viewer'
 import { ChecklistPanel } from './checklist-panel'
 import { MilestonePanel } from './milestone-panel'
 import { IssuePanel } from './issue-panel'
-import { ActivityFeed } from '@/components/drive/activity-feed'
 import { FileList } from '@/components/drive/file-list'
-import type { Team, ChecklistItem, Milestone, Issue, ActivityFeedItem, DriveFile } from '@/lib/types/models'
+import type { Team, ChecklistItem, Milestone, Issue, DriveFile } from '@/lib/types/models'
 
 export function TeamTabs({
   team,
   checklist,
   milestones,
   issues,
-  activityFeed,
   driveFiles,
 }: {
   team: Team
   checklist: ChecklistItem[]
   milestones: Milestone[]
   issues: Issue[]
-  activityFeed: ActivityFeedItem[]
+  activityFeed?: never
   driveFiles: DriveFile[]
 }) {
   const completed = checklist.filter((c) => c.completed).length
@@ -62,23 +60,7 @@ export function TeamTabs({
           </div>
         </div>
 
-        <ActivityFeed items={activityFeed} teamId={team.id} />
-
-        {driveFiles.length > 0 && (
-          <div className="rounded-lg border p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold">
-                📁 드라이브 파일 ({driveFiles.length})
-              </h3>
-            </div>
-            <FileList files={driveFiles.slice(0, 5)} />
-            {driveFiles.length > 5 && (
-              <p className="mt-2 text-center text-xs text-muted-foreground">
-                최근 5개 파일 표시 중
-              </p>
-            )}
-          </div>
-        )}
+        <FileList files={driveFiles} teamId={team.id} />
       </TabsContent>
 
       <TabsContent value="guideline" className="mt-4">

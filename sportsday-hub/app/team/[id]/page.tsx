@@ -4,7 +4,6 @@ import { getTeam } from '@/lib/queries/teams'
 import { getChecklistByTeam } from '@/lib/queries/checklist'
 import { getMilestonesByTeam } from '@/lib/queries/milestones'
 import { getIssuesByTeam } from '@/lib/queries/issues'
-import { getActivityFeed } from '@/lib/queries/activity-feed'
 import { getDriveFilesByTeam } from '@/lib/queries/drive-files'
 import { TEAM_IDS } from '@/lib/types/models'
 
@@ -25,11 +24,10 @@ export default async function TeamPage({
   const team = await getTeam(id)
   if (!team) notFound()
 
-  const [checklist, milestones, issues, activityFeed, driveFiles] = await Promise.all([
+  const [checklist, milestones, issues, driveFiles] = await Promise.all([
     getChecklistByTeam(id as (typeof TEAM_IDS)[number]),
     getMilestonesByTeam(id as (typeof TEAM_IDS)[number]),
     getIssuesByTeam(id as (typeof TEAM_IDS)[number]),
-    getActivityFeed(id as (typeof TEAM_IDS)[number], 8),
     getDriveFilesByTeam(id as (typeof TEAM_IDS)[number]),
   ])
 
@@ -47,7 +45,6 @@ export default async function TeamPage({
         checklist={checklist}
         milestones={milestones}
         issues={issues}
-        activityFeed={activityFeed}
         driveFiles={driveFiles}
       />
     </div>

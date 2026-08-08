@@ -81,7 +81,7 @@ export function IssuePanel({
               </span>
             )}
             <Button
-              size="icon-xs"
+              size="icon-sm"
               variant="ghost"
               className="text-muted-foreground hover:text-destructive"
               disabled={deleteIssue.isPending}

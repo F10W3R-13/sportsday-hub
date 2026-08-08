@@ -54,7 +54,7 @@ export function AddItemButton({
           }
         }}
         autoFocus
-        className="h-8"
+        className="h-9"
       />
       <Button size="sm" onClick={handleAdd}>
         추가

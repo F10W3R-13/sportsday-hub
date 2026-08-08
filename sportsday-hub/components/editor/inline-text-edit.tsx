@@ -39,7 +39,7 @@ export function InlineTextEdit({
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="text-left text-sm hover:bg-muted rounded px-1 -mx-1"
+        className="text-left text-sm hover:bg-muted rounded px-1 -mx-1 min-h-9 w-full"
       >
         {value || (
           <span className="text-muted-foreground italic">{placeholder}</span>
@@ -60,10 +60,10 @@ export function InlineTextEdit({
         }}
         className="h-8"
       />
-      <Button size="icon-xs" variant="ghost" onClick={handleSave}>
+      <Button size="icon-sm" variant="ghost" onClick={handleSave}>
         <Check className="h-3 w-3" />
       </Button>
-      <Button size="icon-xs" variant="ghost" onClick={handleCancel}>
+      <Button size="icon-sm" variant="ghost" onClick={handleCancel}>
         <X className="h-3 w-3" />
       </Button>
     </div>

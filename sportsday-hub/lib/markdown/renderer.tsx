@@ -21,7 +21,18 @@ export function MarkdownRenderer({
         className
       )}
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          table: ({ node, ...props }) => (
+            <div className="overflow-x-auto my-4">
+              <table {...props} />
+            </div>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   )
 }

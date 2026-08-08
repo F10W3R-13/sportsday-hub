@@ -62,7 +62,7 @@ export function TimelineList({
                   >
                     {CATEGORY_LABEL[m.category] ?? m.category}
                   </span>
-                  <span className="min-w-0 flex-1 text-sm">{m.title}</span>
+                  <span className="min-w-0 truncate flex-1 text-sm">{m.title}</span>
                   {team && (
                     <span
                       className="shrink-0 rounded px-1.5 py-0.5 text-xs"

@@ -78,7 +78,7 @@ export function ChecklistPanel({
                     )}
                   </div>
                   <Button
-                    size="icon-xs"
+                    size="icon-sm"
                     variant="ghost"
                     className="text-muted-foreground hover:text-destructive"
                     disabled={deleteItem.isPending}

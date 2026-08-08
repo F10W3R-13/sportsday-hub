@@ -12,10 +12,10 @@ export async function SidebarLayout({
     <SidebarProvider>
       <AppSidebar teams={teams} />
       <SidebarInset>
-        <header className="flex h-14 items-center gap-3 border-b px-4">
+        <header className="sticky top-0 z-40 bg-background flex h-14 items-center gap-3 border-b px-4">
           <SidebarTrigger />
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   )

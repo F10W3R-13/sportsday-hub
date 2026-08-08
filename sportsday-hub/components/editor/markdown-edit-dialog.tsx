@@ -34,11 +34,11 @@ export function MarkdownEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title} 편집</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-4 min-h-[400px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[400px]">
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted-foreground">
               마크다운
@@ -46,14 +46,14 @@ export function MarkdownEditDialog({
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="h-[400px] font-mono text-sm"
+              className="h-[240px] md:h-[400px] font-mono text-sm"
             />
           </div>
           <div className="space-y-2 overflow-y-auto">
             <label className="text-sm font-medium text-muted-foreground">
               미리보기
             </label>
-            <div className="border rounded-md p-4 h-[400px] overflow-y-auto">
+            <div className="border rounded-md p-4 h-[240px] md:h-[400px] overflow-y-auto">
               <MarkdownRenderer content={content} />
             </div>
           </div>

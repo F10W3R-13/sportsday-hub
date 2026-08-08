@@ -26,14 +26,14 @@ export function TeamTabs({
 
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <TabsList>
-        <TabsTrigger value="overview">개요</TabsTrigger>
-        <TabsTrigger value="guideline">지침</TabsTrigger>
-        <TabsTrigger value="checklist">
+      <TabsList className="w-full overflow-x-auto">
+        <TabsTrigger className="shrink-0" value="overview">개요</TabsTrigger>
+        <TabsTrigger className="shrink-0" value="guideline">지침</TabsTrigger>
+        <TabsTrigger className="shrink-0" value="checklist">
           체크리스트 ({completed}/{checklist.length})
         </TabsTrigger>
-        <TabsTrigger value="milestones">마일스톤</TabsTrigger>
-        <TabsTrigger value="issues">이슈 ({issues.length})</TabsTrigger>
+        <TabsTrigger className="shrink-0" value="milestones">마일스톤</TabsTrigger>
+        <TabsTrigger className="shrink-0" value="issues">이슈 ({issues.length})</TabsTrigger>
       </TabsList>
 
       <TabsContent value="overview" className="mt-4 space-y-4">

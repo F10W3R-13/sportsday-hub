@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   CalendarClock,
-  CheckSquare,
   LayoutDashboard,
   Trash2,
   Circle,
@@ -30,7 +29,6 @@ type IconComponent = ComponentType<{ style?: CSSProperties; className?: string }
 const NAV_ITEMS = [
   { href: '/', label: '대시보드', icon: LayoutDashboard },
   { href: '/timeline', label: '타임라인', icon: CalendarClock },
-  { href: '/checklists', label: '체크리스트', icon: CheckSquare },
   { href: '/trash', label: '휴지통', icon: Trash2 },
   { href: '/settings', label: '설정', icon: Settings },
 ]

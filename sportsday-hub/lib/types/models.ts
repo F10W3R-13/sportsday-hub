@@ -1,0 +1,126 @@
+import { z } from 'zod'
+
+// ===== 팀 =====
+export const TEAM_IDS = [
+  'management',
+  'content',
+  'budget',
+  'exchange',
+  'timeline',
+] as const
+export type TeamId = (typeof TEAM_IDS)[number]
+
+export const teamSchema = z.object({
+  id: z.enum(TEAM_IDS),
+  name: z.string(),
+  name_en: z.string(),
+  color: z.string(),           // hex
+  icon: z.string(),            // lucide 아이콘명
+  sort_order: z.number(),
+  mission: z.string(),
+  guideline_doc: z.object({
+    sections: z.array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        order: z.number(),
+        content_md: z.string(),
+      })
+    ),
+  }),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+})
+export type Team = z.infer<typeof teamSchema>
+
+// ===== 결정 =====
+export const DECISION_STATUS = [
+  'confirmed',
+  'discussing',
+  'pending',
+  'deferred',
+] as const
+export type DecisionStatus = (typeof DECISION_STATUS)[number]
+
+export const decisionSchema = z.object({
+  id: z.string(),              // 'D1'~'D7'
+  title: z.string(),
+  options: z.array(z.string()),
+  status: z.enum(DECISION_STATUS),
+  current_value: z.string().nullable(),
+  decision_date: z.string().nullable(),
+  sort_order: z.number(),
+  notes: z.string().nullable(),
+  updated_at: z.string().optional(),
+})
+export type Decision = z.infer<typeof decisionSchema>
+
+// ===== 마일스톤 =====
+export const MILESTONE_CATEGORIES = [
+  'meeting',
+  'deliverable',
+  'event',
+] as const
+export type MilestoneCategory = (typeof MILESTONE_CATEGORIES)[number]
+
+export const milestoneSchema = z.object({
+  id: z.string().uuid(),
+  date: z.string(),            // ISO date
+  title: z.string(),
+  team_id: z.enum(TEAM_IDS).nullable(),
+  category: z.enum(MILESTONE_CATEGORIES),
+  completed: z.boolean(),
+  depends_on: z.array(z.string().uuid()).nullable(),
+  sort_order: z.number(),
+  updated_at: z.string().optional(),
+})
+export type Milestone = z.infer<typeof milestoneSchema>
+
+// ===== 체크리스트 =====
+export const PRIORITY = ['high', 'medium', 'low'] as const
+export type Priority = (typeof PRIORITY)[number]
+
+export const CHECKLIST_SECTIONS = ['progress', 'feedback', 'prep'] as const
+export type ChecklistSection = (typeof CHECKLIST_SECTIONS)[number]
+
+export const checklistItemSchema = z.object({
+  id: z.string().uuid(),
+  team_id: z.enum(TEAM_IDS).nullable(),
+  section: z.enum(CHECKLIST_SECTIONS),
+  content: z.string(),
+  priority: z.enum(PRIORITY).nullable(),
+  completed: z.boolean(),
+  source: z.string().nullable(),
+  sort_order: z.number(),
+  updated_at: z.string().optional(),
+})
+export type ChecklistItem = z.infer<typeof checklistItemSchema>
+
+// ===== 이슈 =====
+export const ISSUE_STATUS = ['open', 'in_progress', 'resolved'] as const
+export type IssueStatus = (typeof ISSUE_STATUS)[number]
+
+export const issueSchema = z.object({
+  id: z.string().uuid(),
+  team_id: z.enum(TEAM_IDS).nullable(),
+  date: z.string().nullable(),
+  title: z.string(),
+  status: z.enum(ISSUE_STATUS),
+  notes: z.string().nullable(),
+  updated_at: z.string().optional(),
+})
+export type Issue = z.infer<typeof issueSchema>
+
+// ===== 상태 배지 매핑 =====
+export const DECISION_STATUS_LABEL: Record<DecisionStatus, string> = {
+  confirmed: '확정',
+  discussing: '논의중',
+  pending: '미정',
+  deferred: '보류',
+}
+
+export const PRIORITY_LABEL: Record<Priority, string> = {
+  high: '높음',
+  medium: '보통',
+  low: '낮음',
+}

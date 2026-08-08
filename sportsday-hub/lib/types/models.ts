@@ -144,6 +144,7 @@ export const auditLogSchema = z.object({
   old_value: z.any().nullable(),
   new_value: z.any().nullable(),
   created_at: z.string().optional(),
+  team_id: z.enum(TEAM_IDS).nullable().optional(),
 })
 export type AuditLog = z.infer<typeof auditLogSchema>
 

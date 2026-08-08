@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type { Team } from '@/lib/types/models'
+import type { Team, TeamId } from '@/lib/types/models'
 
 export async function getTeams(): Promise<Team[]> {
   const supabase = await createClient()
@@ -17,7 +17,7 @@ export async function getTeam(id: string): Promise<Team | null> {
   const { data, error } = await supabase
     .from('teams')
     .select('*')
-    .eq('id', id)
+    .eq('id', id as TeamId)
     .is('deleted_at', null)
     .maybeSingle()
   if (error) throw error

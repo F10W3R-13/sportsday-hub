@@ -29,10 +29,5 @@ export async function ensureContext(
   client: ReturnType<typeof createClient>
 ): Promise<void> {
   const nickname = getNickname() ?? '익명'
-  // Database 타입에 Functions를 정의했으나 postgrest-js의 rpc()는
-  // 수동 Database 타입에서 Args 타입 추론이 동작하지 않아 캐스트 필요.
-  await client.rpc(
-    'set_user_context',
-    { p_nickname: nickname } as never
-  )
+  await client.rpc('set_user_context', { p_nickname: nickname })
 }

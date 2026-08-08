@@ -8,6 +8,7 @@ import type {
 } from './models'
 
 // Supabase 자동 생성 타입과 호환되는 수동 정의
+// (postgrest-js의 GenericSchema/GenericTable 호환을 위해 Relationships 포함)
 export interface Database {
   public: {
     Tables: {
@@ -15,33 +16,40 @@ export interface Database {
         Row: Team
         Insert: Partial<Team>
         Update: Partial<Team>
+        Relationships: []
       }
       decisions: {
         Row: Decision
         Insert: Partial<Decision>
         Update: Partial<Decision>
+        Relationships: []
       }
       milestones: {
         Row: Milestone
         Insert: Partial<Milestone>
         Update: Partial<Milestone>
+        Relationships: []
       }
       checklist_items: {
         Row: ChecklistItem
         Insert: Partial<ChecklistItem>
         Update: Partial<ChecklistItem>
+        Relationships: []
       }
       issues: {
         Row: Issue
         Insert: Partial<Issue>
         Update: Partial<Issue>
+        Relationships: []
       }
       audit_log: {
         Row: AuditLog
         Insert: Omit<AuditLog, 'id' | 'created_at'>
         Update: Partial<AuditLog>
+        Relationships: []
       }
     }
+    Views: {}
     // RPC 함수 — set_user_context(p_nickname text) returns void
     Functions: {
       set_user_context: {

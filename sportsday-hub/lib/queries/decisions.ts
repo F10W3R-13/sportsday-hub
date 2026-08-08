@@ -6,6 +6,7 @@ export async function getDecisions(): Promise<Decision[]> {
   const { data, error } = await supabase
     .from('decisions')
     .select('*')
+    .is('deleted_at', null)
     .order('sort_order')
   if (error) throw error
   return data ?? []

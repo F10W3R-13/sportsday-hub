@@ -6,6 +6,7 @@ export async function getChecklistItems(): Promise<ChecklistItem[]> {
   const { data, error } = await supabase
     .from('checklist_items')
     .select('*')
+    .is('deleted_at', null)
     .order('team_id')
     .order('sort_order')
   if (error) throw error
@@ -20,6 +21,7 @@ export async function getChecklistByTeam(
     .from('checklist_items')
     .select('*')
     .eq('team_id', teamId)
+    .is('deleted_at', null)
     .order('section')
     .order('sort_order')
   if (error) throw error

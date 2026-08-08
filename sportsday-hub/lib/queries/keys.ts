@@ -8,4 +8,7 @@ export const queryKeys = {
   checklistByTeam: (teamId: string) => ['checklist', 'team', teamId] as const,
   issues: ['issues'] as const,
   issuesByTeam: (teamId: string) => ['issues', 'team', teamId] as const,
+  auditLog: ['audit-log'] as const,
+  auditForRecord: (table: string, recordId: string) =>
+    ['audit-log', table, recordId] as const,
 }

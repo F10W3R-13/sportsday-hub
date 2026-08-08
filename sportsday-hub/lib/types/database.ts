@@ -42,5 +42,12 @@ export interface Database {
         Update: Partial<AuditLog>
       }
     }
+    // RPC 함수 — set_user_context(p_nickname text) returns void
+    Functions: {
+      set_user_context: {
+        Args: { p_nickname: string }
+        Returns: undefined
+      }
+    }
   }
 }

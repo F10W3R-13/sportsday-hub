@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { exchangeCodeForTokens, saveDriveTokens } from '@/lib/drive/client'
+import { discoverTeamFolders, syncDriveFiles, createServiceClient } from '@/lib/drive/sync'
 import { google } from 'googleapis'
+import type { TeamId } from '@/lib/types/models'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -29,12 +31,41 @@ export async function GET(request: NextRequest) {
     const userInfo = await oauth2Client.getTokenInfo(tokens.access_token)
     const email = userInfo.email ?? 'unknown'
 
+    // 토큰 저장
     await saveDriveTokens({
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
       expiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : new Date(Date.now() + 3600 * 1000),
       email,
     })
+
+    // === 자동 매핑 + 동기화 ===
+    // 환경 변수 DRIVE_ROOT_FOLDER_ID에 상위 폴더 ID가 있으면
+    // 토큰 저장 직후 자동으로 하위 폴더 매핑 + 파일 동기화 실행
+    const rootFolderId = process.env.DRIVE_ROOT_FOLDER_ID
+    if (rootFolderId) {
+      try {
+        const { mapping } = await discoverTeamFolders(rootFolderId)
+
+        // 매핑 결과를 teams 테이블에 저장
+        const supabase = createServiceClient()
+        for (const [teamId, folderId] of Object.entries(mapping)) {
+          if (folderId) {
+            await supabase
+              .from('teams')
+              .update({ drive_folder_id: folderId })
+              .eq('id', teamId as TeamId)
+          }
+        }
+
+        // 즉시 동기화
+        await syncDriveFiles(undefined, true)
+      } catch (syncErr) {
+        // 동기화 실패는 OAuth 연결 자체를 실패시키지 않음
+        // 사용자는 연결 후 수동으로 재시도 가능
+        console.error('Auto-sync after connect failed:', syncErr)
+      }
+    }
 
     return NextResponse.redirect(new URL('/settings?connected=true', baseUrl))
   } catch (err) {

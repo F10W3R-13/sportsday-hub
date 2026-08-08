@@ -68,7 +68,11 @@ export function TeamTabs({
       </TabsContent>
 
       <TabsContent value="checklist" className="mt-4">
-        <ChecklistPanel items={checklist} teamId={team.id} />
+        <ChecklistPanel
+          items={checklist}
+          milestones={milestones}
+          teamId={team.id}
+        />
       </TabsContent>
 
       <TabsContent value="milestones" className="mt-4">

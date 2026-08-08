@@ -31,7 +31,7 @@ export function useAddChecklistItem() {
   return useMutation({
     mutationFn: async (input: {
       teamId: TeamId
-      section: ChecklistItem['section']
+      milestoneId: string | null
       content: string
     }) => {
       const client = createClient()
@@ -40,7 +40,7 @@ export function useAddChecklistItem() {
         .from('checklist_items')
         .insert({
           team_id: input.teamId,
-          section: input.section,
+          milestone_id: input.milestoneId,
           content: input.content,
           completed: false,
           // 기존 항목(0~100 범위) 뒤에 정렬되도록 충분히 큰 값 사용.

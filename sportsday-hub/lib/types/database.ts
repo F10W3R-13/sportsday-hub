@@ -5,6 +5,8 @@ import type {
   ChecklistItem,
   Issue,
   AuditLog,
+  DriveToken,
+  DriveFile,
 } from './models'
 
 // Supabase 자동 생성 타입과 호환되는 수동 정의
@@ -46,6 +48,18 @@ export interface Database {
         Row: AuditLog
         Insert: Omit<AuditLog, 'id' | 'created_at'>
         Update: Partial<AuditLog>
+        Relationships: []
+      }
+      drive_tokens: {
+        Row: DriveToken
+        Insert: Partial<DriveToken>
+        Update: Partial<DriveToken>
+        Relationships: []
+      }
+      drive_files: {
+        Row: DriveFile
+        Insert: Omit<DriveFile, 'id' | 'last_synced'>
+        Update: Partial<DriveFile>
         Relationships: []
       }
     }

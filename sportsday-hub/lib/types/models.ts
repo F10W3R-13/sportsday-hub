@@ -31,6 +31,7 @@ export const teamSchema = z.object({
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
   deleted_at: z.string().nullable().optional(),
+  drive_folder_id: z.string().nullable().optional(),
 })
 export type Team = z.infer<typeof teamSchema>
 
@@ -150,4 +151,42 @@ export const AUDIT_ACTION_LABEL: Record<AuditAction, string> = {
   insert: '생성',
   update: '수정',
   delete: '삭제',
+}
+
+// ===== 구글 드라이브 연동 =====
+export const driveTokenSchema = z.object({
+  id: z.number(),
+  email: z.string().nullable(),
+  access_token: z.string().nullable(),
+  refresh_token: z.string().nullable(),
+  expires_at: z.string().nullable(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+})
+export type DriveToken = z.infer<typeof driveTokenSchema>
+
+export const driveFileSchema = z.object({
+  id: z.string().uuid(),
+  team_id: z.enum(TEAM_IDS),
+  file_id: z.string(),
+  name: z.string(),
+  mime_type: z.string().nullable(),
+  icon_link: z.string().nullable(),
+  modified_time: z.string().nullable(),
+  modified_by: z.string().nullable(),
+  web_view_link: z.string().nullable(),
+  last_synced: z.string().optional(),
+})
+export type DriveFile = z.infer<typeof driveFileSchema>
+
+// ===== 통합 활동 피드 =====
+export type ActivityFeedItem = {
+  id: string
+  type: 'file' | 'checklist' | 'decision' | 'issue'
+  title: string
+  timestamp: string
+  actor: string
+  link?: string
+  icon?: string
+  mimeType?: string
 }

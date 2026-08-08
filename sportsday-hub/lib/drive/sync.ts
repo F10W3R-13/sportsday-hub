@@ -153,7 +153,7 @@ export const TEAM_FOLDER_KEYWORDS: Record<TeamId, string[]> = {
   content: ['컨텐츠', '콘텐츠', '게임'],
   budget: ['예산'],
   exchange: ['교환'],
-  timeline: ['타임라인', '인원', '버스', '일정'],
+  timeline: ['타임라인', '인원', '버스', '일정', '탐라', '인관'],
 }
 
 export interface DiscoverResult {

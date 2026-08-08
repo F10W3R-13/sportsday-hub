@@ -79,16 +79,17 @@ sportsday-hub/
 │   │   ├── database.ts            # Supabase 타입
 │   │   └── models.ts              # Zod 스키마 + 도메인 타입
 │   └── utils.ts
-├── migrations/
-│   ├── 0001_init_schema.sql
-│   ├── 0002_rls_policies.sql
-│   └── 0005_seed_data.sql         # 이주 스크립트가 생성
 ├── scripts/
 │   └── migrate-from-md.ts
 ├── tests/
 │   └── parser.test.ts             # 마크다운 파서 단위 테스트
 ├── content-source/                # 이주 원본 복사본
-├── supabase/config.toml
+├── supabase/
+│   ├── config.toml                # Supabase 로컬 설정
+│   └── migrations/                # Supabase SQL 마이그레이션
+│       ├── 0001_init_schema.sql
+│       ├── 0002_rls_policies.sql
+│       └── 0005_seed_data.sql     # 이주 스크립트가 생성
 ├── .env.local.example
 ├── package.json
 ├── components.json
@@ -435,8 +436,8 @@ git commit -m "feat: 데이터 모델 Zod 스키마 + Supabase 타입 정의"
 
 **Files:**
 - Create: `sportsday-hub/supabase/config.toml`
-- Create: `sportsday-hub/migrations/0001_init_schema.sql`
-- Create: `sportsday-hub/migrations/0002_rls_policies.sql`
+- Create: `sportsday-hub/supabase/migrations/0001_init_schema.sql`
+- Create: `sportsday-hub/supabase/migrations/0002_rls_policies.sql`
 
 **Interfaces:**
 - Consumes: Task 2의 타입 정의
@@ -453,7 +454,7 @@ pnpm supabase init
 
 - [ ] **Step 2: 초기 스키마 마이그레이션 작성**
 
-`migrations/0001_init_schema.sql` 생성:
+`supabase/migrations/0001_init_schema.sql` 생성:
 
 ```sql
 -- 26-2 스포츠데이 허브 초기 스키마
@@ -552,7 +553,7 @@ create trigger trg_issues_updated   before update on public.issues
 
 - [ ] **Step 3: RLS 정책 마이그레이션 작성**
 
-`migrations/0002_rls_policies.sql` 생성:
+`supabase/migrations/0002_rls_policies.sql` 생성:
 
 ```sql
 -- RLS 활성화 (열린 편집: anon 전권)
@@ -623,7 +624,7 @@ pnpm supabase link --project-ref <프로젝트-ref>
 pnpm supabase db push
 ```
 
-이 명령은 `migrations/*.sql`을 원격 DB에 순서대로 적용한다. (Plan A 범위에서는 아직 0001, 0002만 있음 — 0005 시드는 Task 5에서 추가.)
+이 명령은 `supabase/migrations/*.sql`을 원격 DB에 순서대로 적용한다. (Plan A 범위에서는 아직 0001, 0002만 있음 — 0005 시드는 Task 5에서 추가.)
 
 - [ ] **Step 6: 스키마 적용 확인**
 
@@ -1322,11 +1323,11 @@ git commit -m "feat: 마크다운 이주 파서 + 단위/통합 테스트"
 
 **Files:**
 - Create: `sportsday-hub/scripts/migrate-from-md.ts`
-- Create: `sportsday-hub/migrations/0005_seed_data.sql` (스크립트가 생성)
+- Create: `sportsday-hub/supabase/migrations/0005_seed_data.sql` (스크립트가 생성)
 
 **Interfaces:**
 - Consumes: Task 4의 파서 함수들. 원본: `content-source/*.md`
-- Produces: `migrations/0005_seed_data.sql` — 모든 초기 데이터(5 teams + 7 decisions + milestones + checklist + issues)를 INSERT. Task 3의 스키마에 적용.
+- Produces: `supabase/migrations/0005_seed_data.sql` — 모든 초기 데이터(5 teams + 7 decisions + milestones + checklist + issues)를 INSERT. Task 3의 스키마에 적용.
 
 - [ ] **Step 1: 팀 메타데이터 정의**
 
@@ -1534,7 +1535,7 @@ function main() {
   console.log('마크다운 → SQL 시드 변환 시작...\n')
 
   const sql = generateSeed()
-  const outPath = resolve(__dirname, '../migrations/0005_seed_data.sql')
+  const outPath = resolve(__dirname, '../supabase/migrations/0005_seed_data.sql')
   writeFileSync(outPath, sql, 'utf-8')
 
   // 결과 리포트
@@ -1601,10 +1602,10 @@ Expected: 결과 리포트 출력. 대략:
 - checklist_items: 50~70
 - issues: 0~5 (현재 빈 이슈 로그)
 
-`migrations/0005_seed_data.sql`이 생성되었는지 확인:
+`supabase/migrations/0005_seed_data.sql`이 생성되었는지 확인:
 
 ```bash
-head -20 migrations/0005_seed_data.sql
+head -20 supabase/migrations/0005_seed_data.sql
 ```
 
 - [ ] **Step 7: 시드 데이터 클라우드 DB에 적용**
@@ -3356,7 +3357,7 @@ pnpm test          # 마크다운 파서 단위/통합 테스트
 
 ## 데이터 구조
 
-- `migrations/` — Supabase SQL 마이그레이션
+- `supabase/migrations/` — Supabase SQL 마이그레이션
 - `scripts/migrate-from-md.ts` — 마크다운 → SQL 시드 변환
 - `content-source/` — 이주 원본 마크다운
 - `lib/` — 쿼리, 타입, 유틸

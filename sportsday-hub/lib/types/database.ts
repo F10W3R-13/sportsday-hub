@@ -58,7 +58,7 @@ export interface Database {
       }
       drive_files: {
         Row: DriveFile
-        Insert: Omit<DriveFile, 'id' | 'last_synced'>
+        Insert: Partial<DriveFile>
         Update: Partial<DriveFile>
         Relationships: []
       }

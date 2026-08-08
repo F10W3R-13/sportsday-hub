@@ -9,9 +9,6 @@ import type { ChecklistItem, TeamId } from '@/lib/types/models'
 
 // ===== 체크 토글 =====
 export function useToggleCheck() {
-  const queryClient = useQueryClient()
-  const router = useRouter()
-
   return useMutation({
     mutationFn: async (item: ChecklistItem) => {
       const client = createClient()
@@ -23,10 +20,6 @@ export function useToggleCheck() {
       if (error) throw error
     },
     onError: () => toast.error('저장 실패. 다시 시도해주세요.'),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
-      void router.refresh()
-    },
   })
 }
 

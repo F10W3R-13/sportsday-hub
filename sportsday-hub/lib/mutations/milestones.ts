@@ -1,16 +1,11 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
+import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
-import { queryKeys } from '@/lib/queries/keys'
 import type { Milestone } from '@/lib/types/models'
 
 export function useToggleMilestone() {
-  const queryClient = useQueryClient()
-  const router = useRouter()
-
   return useMutation({
     mutationFn: async (milestone: Milestone) => {
       const client = createClient()
@@ -22,9 +17,5 @@ export function useToggleMilestone() {
       if (error) throw error
     },
     onError: () => toast.error('저장 실패. 다시 시도해주세요.'),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
-      void router.refresh()
-    },
   })
 }

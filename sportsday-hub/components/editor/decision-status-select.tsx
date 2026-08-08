@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   Select,
   SelectTrigger,
@@ -23,17 +24,16 @@ const STATUSES: DecisionStatus[] = [
 
 export function DecisionStatusSelect({ decision }: { decision: Decision }) {
   const update = useUpdateDecision()
+  const [localStatus, setLocalStatus] = useState<DecisionStatus>(decision.status)
+
+  const handleChange = (value: DecisionStatus | null) => {
+    if (!value) return
+    setLocalStatus(value) // 즉시 UI 반영
+    update.mutate({ id: decision.id, status: value }) // 백그라운드 저장
+  }
 
   return (
-    <Select
-      value={decision.status}
-      onValueChange={(value) =>
-        update.mutate({
-          id: decision.id,
-          status: value as DecisionStatus,
-        })
-      }
-    >
+    <Select value={localStatus} onValueChange={handleChange}>
       <SelectTrigger className="w-28">
         <SelectValue>
           {(value: DecisionStatus) => DECISION_STATUS_LABEL[value]}

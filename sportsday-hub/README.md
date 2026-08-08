@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HI-Side Out Hub
 
-## Getting Started
+26-2 스포츠데이 기획팀 협업 허브.
 
-First, run the development server:
+## 개발 환경 설정
+
+### 사전 요구사항
+- Node.js v20+
+- npm
+- 클라우드 Supabase 프로젝트 (supabase.com 무료 티어)
+
+### 설치
+
+```bash
+npm install
+```
+
+### 환경 변수
+
+`.env.local` 생성:
+
+```bash
+cp .env.local.example .env.local
+# 클라우드 Supabase URL/anon key 입력 (Project Settings → API)
+```
+
+### Supabase 연결 + 마이그레이션
+
+```bash
+npx supabase link --project-ref <프로젝트-ref>
+npx supabase db push    # 마이그레이션 적용
+```
+
+### 마크다운에서 데이터 이주
+
+원본 마크다운(`content-source/`)에서 시드 SQL 재생성:
+
+```bash
+npm run migrate:md
+npx supabase db push    # 시드 마이그레이션 적용
+```
+
+### 개발 서버
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`http://localhost:3000` 접속.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 테스트
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test          # 마크다운 파서 단위/통합 테스트
+```
 
-## Learn More
+## 기술 스택
 
-To learn more about Next.js, take a look at the following resources:
+- Next.js 15 (App Router) + React 19
+- shadcn/ui + Tailwind CSS v4
+- Supabase (Postgres)
+- TanStack Query v5
+- react-markdown + remark-gfm
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 데이터 구조
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `supabase/migrations/` — Supabase SQL 마이그레이션
+- `scripts/migrate-from-md.ts` — 마크다운 → SQL 시드 변환
+- `content-source/` — 이주 원본 마크다운
+- `lib/` — 쿼리, 타입, 유틸

@@ -21,6 +21,29 @@ export function FolderMapping({ teams }: { teams: Team[] }) {
     )
   )
   const [saving, setSaving] = useState(false)
+  const [parentUrl, setParentUrl] = useState('')
+  const [autoMapping, setAutoMapping] = useState(false)
+  const [autoMapResult, setAutoMapResult] = useState<Record<string, string | null> | null>(null)
+
+  const handleAutoMap = async () => {
+    setAutoMapping(true)
+    try {
+      const res = await fetch('/api/drive/auto-map', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parentFolderUrl: parentUrl }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setAutoMapResult(data.mapping)
+      toast.success(`자동 매핑 완료! ${data.sync?.totalFiles ?? 0}개 파일 동기화됨.`)
+      router.refresh()
+    } catch {
+      toast.error('자동 매핑 실패. URL을 확인해주세요.')
+    } finally {
+      setAutoMapping(false)
+    }
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -55,6 +78,34 @@ export function FolderMapping({ teams }: { teams: Team[] }) {
       <p className="mb-4 text-sm text-muted-foreground">
         각 팀의 구글 드라이브 폴더 URL을 입력하세요.
       </p>
+
+      <div className="mb-6 rounded-md bg-muted/50 p-3">
+        <h3 className="mb-2 text-sm font-medium">🚀 빠른 설정 (권장)</h3>
+        <p className="mb-2 text-xs text-muted-foreground">
+          상위 폴더 URL 하나만 입력하면 하위 폴더를 자동으로 찾아 팀별로 매핑합니다.
+        </p>
+        <div className="flex gap-2">
+          <Input
+            placeholder="https://drive.google.com/drive/folders/..."
+            value={parentUrl}
+            onChange={(e) => setParentUrl(e.target.value)}
+            className="h-9"
+          />
+          <Button onClick={handleAutoMap} disabled={autoMapping || !parentUrl.trim()}>
+            {autoMapping ? '매핑 중...' : '자동 매핑'}
+          </Button>
+        </div>
+        {autoMapResult && (
+          <div className="mt-2 space-y-1 text-xs">
+            {Object.entries(autoMapResult).map(([teamId, folderId]) => (
+              <div key={teamId}>
+                {folderId ? '✅' : '⚠️'} {teamId}: {folderId ? '매핑됨' : '폴더를 찾지 못함'}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="space-y-3">
         {teams.map((team) => (
           <div key={team.id} className="flex items-center gap-3">

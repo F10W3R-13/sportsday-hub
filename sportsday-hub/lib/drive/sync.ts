@@ -2,7 +2,7 @@ import { createDriveClient } from './client'
 import { createClient } from '@supabase/supabase-js'
 import { google } from 'googleapis'
 import type { Database } from '@/lib/types/database'
-import type { TeamId } from '@/lib/types/models'
+import { TEAM_IDS, type TeamId } from '@/lib/types/models'
 
 // drive 클라이언트 타입
 type DriveClient = ReturnType<typeof google.drive>
@@ -145,4 +145,39 @@ export async function getDriveConnectionStatus(): Promise<{
   const client = await createDriveClient()
   if (!client) return { connected: false, email: null }
   return { connected: true, email: client.email }
+}
+
+// 팀별 폴더명 키워드 (자동 매핑용)
+export const TEAM_FOLDER_KEYWORDS: Record<TeamId, string[]> = {
+  management: ['기획', '관리', '총괄'],
+  content: ['컨텐츠', '콘텐츠', '게임'],
+  budget: ['예산'],
+  exchange: ['교환'],
+  timeline: ['타임라인', '인원', '버스'],
+}
+
+// 상위 폴더 내 하위 폴더를 탐색하여 팀별로 자동 매핑
+export async function discoverTeamFolders(
+  parentFolderId: string
+): Promise<Record<string, string | null>> {
+  const client = await createDriveClient()
+  if (!client) throw new Error('Drive not connected')
+
+  // 상위 폴더의 모든 하위 폴더 조회
+  const res = await client.drive.files.list({
+    q: `'${parentFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    fields: 'files(id,name)',
+  })
+  const subfolders = (res.data.files ?? []) as { id: string; name: string }[]
+
+  // 각 팀을 하위 폴더에 매칭 (키워드 포함 여부로 판별)
+  const mapping: Record<string, string | null> = {}
+  for (const teamId of TEAM_IDS) {
+    const keywords = TEAM_FOLDER_KEYWORDS[teamId]
+    const match = subfolders.find((f) =>
+      keywords.some((kw) => f.name.toLowerCase().includes(kw.toLowerCase()))
+    )
+    mapping[teamId] = match?.id ?? null
+  }
+  return mapping
 }

@@ -84,13 +84,10 @@ export type Milestone = z.infer<typeof milestoneSchema>
 export const PRIORITY = ['high', 'medium', 'low'] as const
 export type Priority = (typeof PRIORITY)[number]
 
-export const CHECKLIST_SECTIONS = ['progress', 'feedback', 'prep'] as const
-export type ChecklistSection = (typeof CHECKLIST_SECTIONS)[number]
-
 export const checklistItemSchema = z.object({
   id: z.string().uuid(),
   team_id: z.enum(TEAM_IDS).nullable(),
-  section: z.enum(CHECKLIST_SECTIONS),
+  milestone_id: z.string().uuid().nullable(),
   content: z.string(),
   priority: z.enum(PRIORITY).nullable(),
   completed: z.boolean(),

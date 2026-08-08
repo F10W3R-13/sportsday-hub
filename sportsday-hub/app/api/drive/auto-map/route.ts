@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const parentFolderId = match[1]
 
     // 하위 폴더 탐색 및 팀별 매핑
-    const mapping = await discoverTeamFolders(parentFolderId)
+    const { mapping, allFolders } = await discoverTeamFolders(parentFolderId)
 
     // 매핑 결과를 teams 테이블에 저장
     const supabase = createServiceClient()
@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       mapping,
+      allFolders,
       sync: syncResult,
     })
   } catch (err) {

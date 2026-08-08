@@ -149,17 +149,22 @@ export async function getDriveConnectionStatus(): Promise<{
 
 // 팀별 폴더명 키워드 (자동 매핑용)
 export const TEAM_FOLDER_KEYWORDS: Record<TeamId, string[]> = {
-  management: ['기획', '관리', '총괄'],
+  management: ['기획', '관리', '총괄', '마스터', '전체'],
   content: ['컨텐츠', '콘텐츠', '게임'],
   budget: ['예산'],
   exchange: ['교환'],
-  timeline: ['타임라인', '인원', '버스'],
+  timeline: ['타임라인', '인원', '버스', '일정'],
+}
+
+export interface DiscoverResult {
+  mapping: Record<string, string | null>
+  allFolders: { id: string; name: string }[]
 }
 
 // 상위 폴더 내 하위 폴더를 탐색하여 팀별로 자동 매핑
 export async function discoverTeamFolders(
   parentFolderId: string
-): Promise<Record<string, string | null>> {
+): Promise<DiscoverResult> {
   const client = await createDriveClient()
   if (!client) throw new Error('Drive not connected')
 
@@ -179,5 +184,5 @@ export async function discoverTeamFolders(
     )
     mapping[teamId] = match?.id ?? null
   }
-  return mapping
+  return { mapping, allFolders: subfolders }
 }

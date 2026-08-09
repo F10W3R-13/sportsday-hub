@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { queryKeys } from '@/lib/queries/keys'
+import { notifyTabs } from '@/lib/sync'
 import type { ChecklistItem, TeamId } from '@/lib/types/models'
 
 // ===== 체크 토글 =====
@@ -26,6 +27,7 @@ export function useToggleCheck() {
       // 체크박스 자체는 낙관적 UI로 즉시 뒤집히지만, 마일스톤별 진행률(1/4)과
       // 상단 진행 바를 서버 데이터와 동기화하려면 캐시 무효화 + 라우트 새로고침이 필요.
       queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
+      notifyTabs({ type: 'checklist-updated' })
       void router.refresh()
     },
     onError: () => toast.error('저장 실패. 다시 시도해주세요.'),
@@ -63,6 +65,7 @@ export function useAddChecklistItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
+      notifyTabs({ type: 'checklist-updated' })
       void router.refresh()
       toast.success('항목이 추가되었습니다.')
     },
@@ -87,6 +90,7 @@ export function useDeleteChecklistItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
+      notifyTabs({ type: 'checklist-updated' })
       void router.refresh()
       toast.success('항목이 삭제되었습니다.')
     },

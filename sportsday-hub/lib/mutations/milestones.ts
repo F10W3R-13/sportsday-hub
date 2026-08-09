@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { queryKeys } from '@/lib/queries/keys'
+import { notifyTabs } from '@/lib/sync'
 import type { Milestone } from '@/lib/types/models'
 
 export function useToggleMilestone() {
@@ -23,6 +24,7 @@ export function useToggleMilestone() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
+      notifyTabs({ type: 'milestone-updated' })
       void router.refresh()
     },
     onError: () => toast.error('저장 실패. 다시 시도해주세요.'),

@@ -31,6 +31,11 @@ export function GuidelineViewer({
     (a, b) => a.order - b.order
   )
 
+  // content_md 는 "## {title}\n{body}" 형태로 저장되어 있어,
+  // title 을 h2 로 이미 렌더링하므로 본문 쪽의 첫 헤더 라인을 제거한다 (제목 이중 출력 방지).
+  const stripLeadingHeader = (contentMd: string) =>
+    contentMd.replace(/^##\s+.+\n?/, '')
+
   if (sections.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">지침 내용이 없습니다.</p>
@@ -51,7 +56,7 @@ export function GuidelineViewer({
               <Pencil className="h-3 w-3" />
             </Button>
           </div>
-          <MarkdownRenderer content={section.content_md} />
+          <MarkdownRenderer content={stripLeadingHeader(section.content_md)} />
         </section>
       ))}
 
@@ -60,12 +65,14 @@ export function GuidelineViewer({
           open={!!editingSection}
           onClose={() => setEditingSection(null)}
           title={editingSection.title}
-          initialContent={editingSection.content_md}
+          initialContent={stripLeadingHeader(editingSection.content_md)}
           onSave={(content) =>
             updateSection.mutate({
               teamId,
               sectionId: editingSection.id,
-              contentMd: content,
+              // content_md 는 "## {title}\n{body}" 형태로 저장된다.
+              // 다이얼로그에서는 본문만 편집하므로 저장 시 헤더를 다시 붙인다.
+              contentMd: `## ${editingSection.title}\n${content}`,
             })
           }
         />

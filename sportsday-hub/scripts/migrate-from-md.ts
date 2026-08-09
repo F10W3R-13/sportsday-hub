@@ -161,7 +161,7 @@ function generateSeed(): string {
     const items = parseTeamChecklists(teamMd, teamId)
     for (const item of items) {
       lines.push(
-        `INSERT INTO public.checklist_items (id, team_id, section, content, priority, completed, source, sort_order) VALUES (${sqlStr(item.id)}, ${sqlStr(item.team_id)}, ${sqlStr(item.section)}, ${sqlStr(item.content)}, ${sqlStr(item.priority)}, ${sqlBool(item.completed)}, ${sqlStr(item.source)}, ${item.sort_order});`
+        `INSERT INTO public.checklist_items (id, team_id, milestone_id, content, priority, completed, source, sort_order) VALUES (${sqlStr(item.id)}, ${sqlStr(item.team_id)}, NULL, ${sqlStr(item.content)}, ${sqlStr(item.priority)}, ${sqlBool(item.completed)}, ${sqlStr(item.source)}, ${item.sort_order});`
       )
     }
   }

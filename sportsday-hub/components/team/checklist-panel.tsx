@@ -10,19 +10,17 @@ import {
   useAddChecklistItem,
   useDeleteChecklistItem,
 } from '@/lib/mutations/checklist'
-import type { ChecklistItem, TeamId } from '@/lib/types/models'
-
-const SECTION_LABEL: Record<string, string> = {
-  progress: '진행 체크리스트',
-  feedback: '피드백 반영',
-  prep: '준비',
-}
+import type { ChecklistItem, Milestone, TeamId } from '@/lib/types/models'
+import { format, parseISO } from 'date-fns'
+import { ko } from 'date-fns/locale'
 
 export function ChecklistPanel({
   items,
+  milestones,
   teamId,
 }: {
   items: ChecklistItem[]
+  milestones: Milestone[]
   teamId: TeamId | null
 }) {
   const addItem = useAddChecklistItem()
@@ -32,27 +30,46 @@ export function ChecklistPanel({
     return <EmptyState title="체크리스트 항목이 없습니다" />
   }
 
-  const bySection = items.reduce(
-    (acc, item) => {
-      ;(acc[item.section] ??= []).push(item)
-      return acc
-    },
-    {} as Record<string, ChecklistItem[]>
-  )
+  const milestoneMap = new Map(milestones.map((m) => [m.id, m]))
+
+  // milestone_id로 그룹핑 (null = 상시)
+  const groups = new Map<string | null, ChecklistItem[]>()
+  for (const item of items) {
+    const key = item.milestone_id
+    const arr = groups.get(key) ?? []
+    arr.push(item)
+    groups.set(key, arr)
+  }
+
+  // 마일스톤은 날짜순, 상시(null)는 맨 앞
+  const sortedKeys = Array.from(groups.keys()).sort((a, b) => {
+    if (a === null) return -1
+    if (b === null) return 1
+    const ma = milestoneMap.get(a)
+    const mb = milestoneMap.get(b)
+    if (!ma || !mb) return 0
+    return ma.date.localeCompare(mb.date)
+  })
 
   return (
     <div className="space-y-6">
-      {Object.entries(bySection).map(([section, sectionItems]) => (
-        <div key={section}>
-          <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-            {SECTION_LABEL[section] ?? section} (
-            {sectionItems.filter((i) => i.completed).length}/
-            {sectionItems.length})
-          </h3>
-          <div className="space-y-1">
-            {sectionItems
-              .sort((a, b) => a.sort_order - b.sort_order)
-              .map((item) => (
+      {sortedKeys.map((key) => {
+        const groupItems = (groups.get(key) ?? []).sort(
+          (a, b) => a.sort_order - b.sort_order
+        )
+        const completed = groupItems.filter((i) => i.completed).length
+        const milestone = key ? milestoneMap.get(key) : null
+        const label = milestone
+          ? `${format(parseISO(milestone.date), 'M/d (E)', { locale: ko })} · ${milestone.title}`
+          : '⚙ 상시 / 특정 시점 없음'
+
+        return (
+          <div key={key ?? 'unassigned'}>
+            <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
+              {label} ({completed}/{groupItems.length})
+            </h3>
+            <div className="space-y-1">
+              {groupItems.map((item) => (
                 <div
                   key={item.id}
                   className="flex items-start gap-3 rounded-md border p-2"
@@ -88,22 +105,23 @@ export function ChecklistPanel({
                   </Button>
                 </div>
               ))}
+            </div>
+            {teamId && (
+              <AddItemButton
+                onAdd={(content) =>
+                  addItem.mutate({
+                    teamId,
+                    milestoneId: key,
+                    content,
+                  })
+                }
+                label="항목 추가"
+                placeholder="새 체크리스트 항목..."
+              />
+            )}
           </div>
-          {teamId && (
-            <AddItemButton
-              onAdd={(content) =>
-                addItem.mutate({
-                  teamId,
-                  section: section as ChecklistItem['section'],
-                  content,
-                })
-              }
-              label="항목 추가"
-              placeholder="새 체크리스트 항목..."
-            />
-          )}
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

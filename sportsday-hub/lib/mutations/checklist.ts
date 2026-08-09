@@ -9,6 +9,9 @@ import type { ChecklistItem, TeamId } from '@/lib/types/models'
 
 // ===== 체크 토글 =====
 export function useToggleCheck() {
+  const queryClient = useQueryClient()
+  const router = useRouter()
+
   return useMutation({
     mutationFn: async (item: ChecklistItem) => {
       const client = createClient()
@@ -18,6 +21,12 @@ export function useToggleCheck() {
         .update({ completed: !item.completed })
         .eq('id', item.id)
       if (error) throw error
+    },
+    onSuccess: () => {
+      // 체크박스 자체는 낙관적 UI로 즉시 뒤집히지만, 마일스톤별 진행률(1/4)과
+      // 상단 진행 바를 서버 데이터와 동기화하려면 캐시 무효화 + 라우트 새로고침이 필요.
+      queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
+      void router.refresh()
     },
     onError: () => toast.error('저장 실패. 다시 시도해주세요.'),
   })
@@ -31,7 +40,7 @@ export function useAddChecklistItem() {
   return useMutation({
     mutationFn: async (input: {
       teamId: TeamId
-      section: ChecklistItem['section']
+      milestoneId: string | null
       content: string
     }) => {
       const client = createClient()
@@ -40,7 +49,7 @@ export function useAddChecklistItem() {
         .from('checklist_items')
         .insert({
           team_id: input.teamId,
-          section: input.section,
+          milestone_id: input.milestoneId,
           content: input.content,
           completed: false,
           // 기존 항목(0~100 범위) 뒤에 정렬되도록 충분히 큰 값 사용.

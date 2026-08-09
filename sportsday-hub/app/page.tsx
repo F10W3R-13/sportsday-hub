@@ -2,6 +2,7 @@ import { StatsCards } from '@/components/dashboard/stats-cards'
 import { DecisionTracker } from '@/components/dashboard/decision-tracker'
 import { TeamStatusCard } from '@/components/dashboard/team-status-card'
 import { UpcomingMilestones } from '@/components/dashboard/upcoming-milestones'
+import { UrgentChecklist } from '@/components/dashboard/urgent-checklist'
 import { getDecisions } from '@/lib/queries/decisions'
 import { getTeams } from '@/lib/queries/teams'
 import { getMilestones } from '@/lib/queries/milestones'
@@ -31,6 +32,14 @@ export default async function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <DecisionTracker decisions={decisions} />
         <UpcomingMilestones milestones={milestones} teams={teams} />
+      </div>
+
+      <div>
+        <UrgentChecklist
+          checklist={checklist}
+          milestones={milestones}
+          teams={teams}
+        />
       </div>
 
       <div>

@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
@@ -16,7 +19,13 @@ export function UpcomingMilestones({
   milestones: Milestone[]
   teams: Team[]
 }) {
-  const now = new Date()
+  // 필터링 기준 시각. 자정 경과 등으로 '오늘 이후' 목록이 바뀌어야 하므로 주기적 갱신.
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60 * 1000)
+    return () => clearInterval(id)
+  }, [])
+
   const upcoming = milestones
     .filter((m) => !m.completed && parseISO(m.date) >= now)
     .sort((a, b) => a.date.localeCompare(b.date))

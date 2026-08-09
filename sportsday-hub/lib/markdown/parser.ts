@@ -398,10 +398,20 @@ export function parseGuidelineSections(md: string): GuidelineSection[] {
   const result: GuidelineSection[] = []
   let order = 0
   for (const section of sections) {
-    const isExcluded = EXCLUDED_SECTION_PATTERNS.some((p) =>
-      section.title.toLowerCase().includes(p.toLowerCase())
-    )
+    // EXCLUDED 매칭: 제목이 패턴으로 시작하거나, "N. 패턴" 형태일 때만 제외.
+    // (단순 includes 는 새 원칙 카드 제목 안의 단어를 오잡함 — 예: "체크리스트로 추적")
+    const normalizedTitle = section.title
+      .toLowerCase()
+      .replace(/^\d+\.\s*/, '') // "1. 행사 개요" → "행사 개요"
+    const isExcluded = EXCLUDED_SECTION_PATTERNS.some((p) => {
+      const lp = p.toLowerCase()
+      return normalizedTitle === lp || normalizedTitle.startsWith(lp)
+    })
     if (isExcluded) continue
+    // 본문이 텅 빈 부모 섹션(예: "## 🎯 원칙" 아래 바로 "### 🎯" 카드들이 이어지는 경우,
+    // splitSections 가 자식 헤더를 별도 섹션으로 분리하므로 부모 body는 빈 문자열이 됨)은 스킵.
+    // 실제 원칙 카드는 본문(원칙/왜/참고)이 있으므로 이 필터에 걸리지 않는다.
+    if (section.body.trim() === '') continue
     // slug id 생성
     const id = section.title
       .replace(/[^\w\s가-힣]/g, '')

@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { queryKeys } from '@/lib/queries/keys'
 import { notifyTabs } from '@/lib/sync'
+import { syncMilestoneCompletion } from '@/lib/milestone-sync'
 import type { ChecklistItem, TeamId } from '@/lib/types/models'
 
 // ===== 체크 토글 =====
@@ -24,11 +25,12 @@ export function useToggleCheck() {
       if (error) throw error
     },
     onSuccess: () => {
-      // 체크박스 자체는 낙관적 UI로 즉시 뒤집히지만, 마일스톤별 진행률(1/4)과
+      // 체크박스 자체는 낙관적 UI로 즉히 뒤집히지만, 마일스톤별 진행률(1/4)과
       // 상단 진행 바를 서버 데이터와 동기화하려면 캐시 무효화 + 라우트 새로고침이 필요.
+      // 마일스톤 자동 완료/롤백을 먼저 동기화한 뒤 새로고침해야 갱신된 마일스톤이 반영됨.
       queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
       notifyTabs({ type: 'checklist-updated' })
-      void router.refresh()
+      void syncMilestoneCompletion().then(() => router.refresh())
     },
     onError: () => toast.error('저장 실패. 다시 시도해주세요.'),
   })
@@ -66,7 +68,7 @@ export function useAddChecklistItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
       notifyTabs({ type: 'checklist-updated' })
-      void router.refresh()
+      void syncMilestoneCompletion().then(() => router.refresh())
       toast.success('항목이 추가되었습니다.')
     },
     onError: () => toast.error('추가 실패. 다시 시도해주세요.'),
@@ -91,7 +93,7 @@ export function useDeleteChecklistItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
       notifyTabs({ type: 'checklist-updated' })
-      void router.refresh()
+      void syncMilestoneCompletion().then(() => router.refresh())
       toast.success('항목이 삭제되었습니다.')
     },
     onError: () => toast.error('삭제 실패. 다시 시도해주세요.'),

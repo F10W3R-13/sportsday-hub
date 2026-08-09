@@ -3,6 +3,7 @@ const CHANNEL_NAME = 'sportsday-sync'
 export type SyncMessage =
   | { type: 'checklist-updated' }
   | { type: 'milestone-updated' }
+  | { type: 'decision-updated' }
 
 /**
  * 다른 탭에 상태 변경을 알린다.

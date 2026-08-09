@@ -1,8 +1,11 @@
 'use client'
 
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
+import { queryKeys } from '@/lib/queries/keys'
+import { notifyTabs } from '@/lib/sync'
 import type { DecisionStatus } from '@/lib/types/models'
 
 type DecisionUpdate = {
@@ -12,6 +15,9 @@ type DecisionUpdate = {
 }
 
 export function useUpdateDecision() {
+  const queryClient = useQueryClient()
+  const router = useRouter()
+
   return useMutation({
     mutationFn: async (input: {
       id: string
@@ -33,6 +39,11 @@ export function useUpdateDecision() {
         .single()
       if (error) throw error
       return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.decisions })
+      notifyTabs({ type: 'decision-updated' })
+      void router.refresh()
     },
     onError: () => toast.error('저장 실패. 다시 시도해주세요.'),
   })

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import {
   CalendarClock,
   LayoutDashboard,
@@ -40,13 +41,19 @@ function getIcon(name: string): IconComponent {
 
 export function AppSidebar({ teams }: { teams: Team[] }) {
   const pathname = usePathname()
+  // D-day 카운트다운을 주기적으로 재계산하여 자정 경과 시 자동 갱신.
+  const [days, setDays] = useState(() => daysUntil())
+  useEffect(() => {
+    const id = setInterval(() => setDays(daysUntil()), 60 * 1000)
+    return () => clearInterval(id)
+  }, [])
 
   return (
     <Sidebar>
       <SidebarHeader className="px-4 py-3">
         <div className="text-lg font-bold">HI-Side Out Hub</div>
         <div className="text-xs text-muted-foreground">
-          2026. 9. 19 (토) · D-{daysUntil()}
+          2026. 9. 19 (토) · D-{days}
         </div>
       </SidebarHeader>
       <SidebarContent>

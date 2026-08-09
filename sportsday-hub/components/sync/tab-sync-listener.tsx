@@ -26,6 +26,10 @@ export function TabSyncListener() {
         queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
         void router.refresh()
       }
+      if (msg.type === 'decision-updated') {
+        queryClient.invalidateQueries({ queryKey: queryKeys.decisions })
+        void router.refresh()
+      }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

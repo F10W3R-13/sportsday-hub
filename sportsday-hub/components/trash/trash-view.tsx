@@ -8,6 +8,7 @@ import { RotateCcw, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queries/keys'
+import { notifyTabs } from '@/lib/sync'
 import { format, parseISO } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import type { ChecklistItem, Issue } from '@/lib/types/models'
@@ -90,6 +91,9 @@ export function TrashView() {
       toast.success('복원되었습니다.')
       queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
       queryClient.invalidateQueries({ queryKey: queryKeys.issues })
+      if (entry.kind === 'checklist_items') {
+        notifyTabs({ type: 'checklist-updated' })
+      }
       void router.refresh()
       setItems((prev) => prev.filter((i) => i.id !== entry.id))
     } catch {

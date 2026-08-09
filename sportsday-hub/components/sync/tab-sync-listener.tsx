@@ -15,6 +15,7 @@ export function TabSyncListener() {
   const queryClient = useQueryClient()
   const router = useRouter()
 
+  // queryClient와 router는 앱 전역 싱글톤 — 재구독 불필요. 마운트 시 1회만 구독.
   useEffect(() => {
     return onTabSync((msg) => {
       if (msg.type === 'checklist-updated') {
@@ -26,7 +27,8 @@ export function TabSyncListener() {
         void router.refresh()
       }
     })
-  }, [queryClient, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return null
 }

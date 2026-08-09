@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { computeProgress } from '@/lib/progress'
 import type { Decision, ChecklistItem } from '@/lib/types/models'
 
 export function StatsCards({
@@ -13,11 +14,7 @@ export function StatsCards({
   const pending = decisions.filter(
     (d) => d.status === 'pending' || d.status === 'deferred'
   ).length
-  const completedChecks = checklist.filter((c) => c.completed).length
-  const progress =
-    checklist.length > 0
-      ? Math.round((completedChecks / checklist.length) * 100)
-      : 0
+  const { percent: progress } = computeProgress(checklist)
 
   const cards = [
     { label: '확정 결정', value: confirmed, accent: 'text-green-600' },

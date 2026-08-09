@@ -9,6 +9,7 @@ import { PriorityBadge } from '@/components/shared/priority-badge'
 import { EditableChecklistCheckbox } from '@/components/editor/editable-checkbox'
 import { EditableMilestoneCheckbox } from '@/components/editor/editable-checkbox'
 import type { Milestone, ChecklistItem, Team } from '@/lib/types/models'
+import { computeProgress } from '@/lib/progress'
 
 const CATEGORY_LABEL: Record<string, string> = {
   meeting: '회의',
@@ -87,23 +88,11 @@ export function TimelineList({
     return map
   }, [visibleMilestones])
 
-  // 전체 진행률
-  const { completedCount, totalCount, progressPercent } = useMemo(() => {
-    const checkableItems = checklistItems
-    const checkableMilestones = milestones.filter(
-      (m) => (checklistByMilestone.get(m.id) ?? []).length === 0
-    )
-    const total =
-      checkableItems.length + checkableMilestones.length
-    const completed =
-      checkableItems.filter((i) => i.completed).length +
-      checkableMilestones.filter((m) => m.completed).length
-    return {
-      completedCount: completed,
-      totalCount: total,
-      progressPercent: total > 0 ? Math.round((completed / total) * 100) : 0,
-    }
-  }, [checklistItems, milestones, checklistByMilestone])
+  // 전체 진행률 — 체크리스트만 기준 (마일스톤 자체 completed는 제외)
+  const { completed: completedCount, total: totalCount, percent: progressPercent } = useMemo(
+    () => computeProgress(checklistItems),
+    [checklistItems],
+  )
 
   if (milestones.length === 0 && checklistItems.length === 0) {
     return <EmptyState title="마일스톤과 체크리스트가 없습니다" />

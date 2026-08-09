@@ -6,6 +6,7 @@ import { ChecklistPanel } from './checklist-panel'
 import { MilestonePanel } from './milestone-panel'
 import { IssuePanel } from './issue-panel'
 import { FileList } from '@/components/drive/file-list'
+import { computeProgress } from '@/lib/progress'
 import type { Team, ChecklistItem, Milestone, Issue, DriveFile } from '@/lib/types/models'
 
 export function TeamTabs({
@@ -27,11 +28,7 @@ export function TeamTabs({
   activityFeed?: never
   driveFiles: DriveFile[]
 }) {
-  const completed = checklist.filter((c) => c.completed).length
-  const progress =
-    checklist.length > 0
-      ? Math.round((completed / checklist.length) * 100)
-      : 0
+  const { completed, percent: progress } = computeProgress(checklist)
 
   return (
     <Tabs defaultValue="overview" className="w-full">

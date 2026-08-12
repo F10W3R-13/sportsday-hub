@@ -2,3 +2,7 @@
 # Google OAuth 클라이언트 시크릿 (GCP 콘솔에서 다운로드한 JSON)
 client_secret_*.json
 *_client_secret_*.json
+
+# ===== 로컬 도구 상태 =====
+# ZCode 에이전트 로컬 상태 (세션/캐시 등)
+.zcode/

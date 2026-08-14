@@ -3,15 +3,11 @@
 // 검증 1: 고유명사 보존, 2: 핵심 정보 보존, 3: 작년 참고 잔류, 4: 빈 content
 import { readFileSync } from 'fs'
 import { tmpdir } from 'os'
-import { resolve } from 'path'
 
 const tmp = tmpdir()
 
 // 변환 데이터 로드
 const transformed = JSON.parse(readFileSync(tmp + '/checklist_transformed.json', 'utf8'))
-
-// 원본 데이터 (checklist_parsed.json과 동일)
-const original = JSON.parse(readFileSync(tmp + '/checklist_parsed.json', 'utf8'))
 
 // 보호 대상 고유명사 (절대 훼손/삭제되면 안 됨)
 const PROTECTED_TERMS = [

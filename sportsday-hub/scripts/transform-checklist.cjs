@@ -16,7 +16,7 @@ const JARGON_MAP = {
   '보전 한도': '동아리 예산 보전 한도',
 };
 
-function transformContent(original, existingSource, team, sortOrder) {
+function transformContent(original, existingSource, _team, _sortOrder) {
   let content = original;
   let source = existingSource;
   const changes = [];

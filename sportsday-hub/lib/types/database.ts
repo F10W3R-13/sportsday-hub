@@ -63,7 +63,7 @@ export interface Database {
         Relationships: []
       }
     }
-    Views: {}
+    Views: Record<string, never>
     // RPC 함수
     // - set_user_context(p_nickname text) returns void
     // - update_guideline_section(p_team_id text, p_section_id text, p_content_md text) returns void

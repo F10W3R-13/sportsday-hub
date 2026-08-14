@@ -99,7 +99,7 @@ export function UrgentChecklist({
           <EmptyState title="마감 임박 항목이 없습니다" />
         ) : (
           <div className="space-y-2">
-            {urgent.map(({ item, tier, date, daysFromToday }) => {
+            {urgent.map(({ item, tier, daysFromToday }) => {
               const team = item.team_id ? teamMap.get(item.team_id) : null
               return (
                 <div

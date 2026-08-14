@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToggleCheck } from '@/lib/mutations/checklist'
 import { useToggleMilestone } from '@/lib/mutations/milestones'
@@ -14,10 +14,12 @@ export function EditableChecklistCheckbox({
   const toggle = useToggleCheck()
   const [localChecked, setLocalChecked] = useState(item.completed)
 
-  // item.completed가 외부에서 바뀌면(예: 다른 탭에서 변경) 로컬도 동기화
-  useEffect(() => {
+  // item.completed가 외부에서 바뀌면(예: 다른 탭에서 변경) 로컬도 동기화 — 렌더 중 보정 패턴
+  const [syncedCompleted, setSyncedCompleted] = useState(item.completed)
+  if (syncedCompleted !== item.completed) {
+    setSyncedCompleted(item.completed)
     setLocalChecked(item.completed)
-  }, [item.completed])
+  }
 
   const handleChange = () => {
     setLocalChecked(!localChecked) // 즉시 UI 반영 (낙관적)
@@ -43,9 +45,11 @@ export function EditableMilestoneCheckbox({
   const toggle = useToggleMilestone()
   const [localChecked, setLocalChecked] = useState(milestone.completed)
 
-  useEffect(() => {
+  const [syncedCompleted, setSyncedCompleted] = useState(milestone.completed)
+  if (syncedCompleted !== milestone.completed) {
+    setSyncedCompleted(milestone.completed)
     setLocalChecked(milestone.completed)
-  }, [milestone.completed])
+  }
 
   const handleChange = () => {
     setLocalChecked(!localChecked)

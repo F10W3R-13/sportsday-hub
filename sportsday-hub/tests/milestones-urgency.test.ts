@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { sortByUrgency, startOfToday } from '@/lib/milestones-urgency'
-import type { Milestone, MilestoneCategory, TeamId } from '@/lib/types/models'
+import type { Milestone, MilestoneCategory } from '@/lib/types/models'
 
 // 테스트 기준일: 2026-08-09 자정
 const NOW = new Date('2026-08-09T14:30:00')

@@ -42,7 +42,7 @@ export function UrgentChecklist({
   }, [milestones, now])
 
   // 미완료 + 마일스톤 연결된 항목을 urgency로 정렬
-  const urgent = useMemo(() => {
+  const urgentAll = useMemo(() => {
     const tierOrder: Record<string, number> = {
       overdue: 0,
       today: 1,
@@ -61,8 +61,10 @@ export function UrgentChecklist({
         // 같은 tier면 날짜순
         return a.date.localeCompare(b.date)
       })
-      .slice(0, 5)
   }, [checklist, urgencyMap])
+  // 위젯에는 상위 5개만 표시. 전체 개수(urgentAll.length)는 카운트 표시에 사용 —
+  // 회고(2026-08-12)의 "slice(N) 정보 은닉" 지적 반영.
+  const urgent = urgentAll.slice(0, 5)
 
   const tierStyle = (tier: string): string => {
     if (tier === 'overdue') return 'border-red-300 bg-red-50'
@@ -83,7 +85,14 @@ export function UrgentChecklist({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>긴급 체크리스트</CardTitle>
+        <CardTitle>
+          긴급 체크리스트
+          {urgentAll.length > urgent.length && (
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              전체 {urgentAll.length}개 중 상위 {urgent.length}개
+            </span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {urgent.length === 0 ? (

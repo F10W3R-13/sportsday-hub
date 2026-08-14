@@ -18,7 +18,8 @@ import type { ChecklistItem, Milestone } from '@/lib/types/models'
  * router.refresh()가 대시보드 서버 컴포넌트를 재실행하므로 갱신된 마일스톤이
  * 반영된다.
  *
- * 에러는 잠식(swallow)한다 — 마일스톤 동기화 실패가 체크 토글 자체를 실패시키면 안 됨.
+ * 에러는 삼킨다(swallow) — 마일스톤 동기화 실패가 체크 토글 자체를 실패시키면 안 됨.
+ * 단, 조용히 무시하면 디버깅이 막히므로 console.error로 기록은 남긴다 (회고 2026-08-12 반영).
  * (체크는 이미 DB에 저장됨)
  */
 export async function syncMilestoneCompletion(): Promise<void> {
@@ -64,7 +65,9 @@ export async function syncMilestoneCompletion(): Promise<void> {
         .update({ completed: false })
         .eq('id', m.id)
     }
-  } catch {
-    // 잠식: 체크 토글은 성공했으므로 마일스톤 동기화 실패를 토글 실패로 만들지 않음
+  } catch (err) {
+    // 삼킴(throw 안 함): 체크 토글은 성공했으므로 동기화 실패를 토글 실패로 만들지 않음.
+    // 단, 로깅하지 않으면 "체크했는데 마일스톤이 안 닫혔다"를 디버깅하기 어렵다.
+    console.error('[milestone-sync] 체크리스트 동기화 실패:', err)
   }
 }

@@ -50,7 +50,14 @@ export function UpcomingMilestones({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>다가오는 마일스톤</CardTitle>
+        <CardTitle>
+          다가오는 마일스톤
+          {milestones.length > sorted.length && (
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              전체 {milestones.length}개 중 상위 {sorted.length}개
+            </span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {sorted.length === 0 ? (

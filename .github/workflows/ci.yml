@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+defaults:
+  run:
+    working-directory: sportsday-hub
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: sportsday-hub/package-lock.json
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 타입체크 (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: 린트 (eslint)
+        run: npm run lint
+
+      - name: 테스트 (vitest)
+        run: npm test

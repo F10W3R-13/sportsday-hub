@@ -36,6 +36,13 @@ describe('lib/drive/crypto — 저장 토큰 AES-256-GCM', () => {
     expect(() => decryptToken(tampered)).toThrow()
   })
 
+  it('형식이 틀린 입력은 복호화 거부 — 가비지를 반환하지 않음', () => {
+    // nonce(12B)+태그(16B)보다 짧은 입력
+    expect(() => decryptToken(Buffer.alloc(13).toString('base64'))).toThrow()
+    // 길이는 유효하나 내용이 쓰레기인 입력 (인증 태그 불일치)
+    expect(() => decryptToken(Buffer.alloc(28).toString('base64'))).toThrow()
+  })
+
   it('키 미설정 시 명확한 에러', () => {
     vi.stubEnv('DRIVE_ENCRYPTION_KEY', '')
     expect(() => encryptToken('x')).toThrow('DRIVE_ENCRYPTION_KEY not set')

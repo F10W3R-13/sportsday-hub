@@ -82,13 +82,36 @@ describe('GET /api/auth/google-callback', () => {
     })
     vi.mocked(syncDriveFiles).mockResolvedValue({ success: true, syncedTeams: 1, totalFiles: 3 })
     const eq = vi.fn().mockResolvedValue({})
-    const from = vi.fn().mockReturnValue({ update: vi.fn().mockReturnValue({ eq }) })
+    const update = vi.fn().mockReturnValue({ eq })
+    const from = vi.fn().mockReturnValue({ update })
     vi.mocked(createServiceClient).mockReturnValue({ from } as never)
 
     const res = await get({ code: 'authcode' })
 
     expect(discoverTeamFolders).toHaveBeenCalledWith('root-folder')
+    // management는 상위 폴더로 강제 매핑, content는 키워드 매핑 — 2건만 업데이트
+    expect(update).toHaveBeenCalledTimes(2)
+    expect(update).toHaveBeenCalledWith({ drive_folder_id: 'root-folder' })
+    expect(update).toHaveBeenCalledWith({ drive_folder_id: 'c1' })
     expect(syncDriveFiles).toHaveBeenCalledWith(undefined, true)
+    expect(res.headers.get('location')).toMatch(/[?&]connected=true/)
+    // expiry_date 미제공 → 만료시각은 지금부터 약 1시간 뒤
+    const saved = vi.mocked(saveDriveTokens).mock.calls[0][0]
+    const deltaMs = new Date(saved.expiresAt).getTime() - Date.now()
+    expect(deltaMs).toBeGreaterThan(3500 * 1000)
+    expect(deltaMs).toBeLessThan(3700 * 1000)
+  })
+
+  it('이메일 조회 실패는 연결을 실패시키지 않음 — unknown으로 저장', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
+    vi.mocked(exchangeCodeForTokens).mockResolvedValue({
+      access_token: 'at', refresh_token: 'rt',
+    } as never)
+
+    const res = await get({ code: 'authcode' })
+
+    expect(saveDriveTokens).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(saveDriveTokens).mock.calls[0][0].email).toBe('unknown')
     expect(res.headers.get('location')).toMatch(/[?&]connected=true/)
   })
 

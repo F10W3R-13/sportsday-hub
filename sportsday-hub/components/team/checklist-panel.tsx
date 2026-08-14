@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -21,10 +21,13 @@ export function ChecklistPanel({
   items,
   milestones,
   teamId,
+  focusItemId = null,
 }: {
   items: ChecklistItem[]
   milestones: Milestone[]
   teamId: TeamId | null
+  // 대시보드 긴급 위젯 딥링크(?focus=) 도착 시 스크롤+하이라이트 대상 항목 ID
+  focusItemId?: string | null
 }) {
   const addItem = useAddChecklistItem()
   const deleteItem = useDeleteChecklistItem()
@@ -54,6 +57,15 @@ export function ChecklistPanel({
     }
     if (changed) setOverrides(next)
   }
+
+  // 딥링크 도착: 대상 항목을 화면 중앙으로 부드럽게. 요소가 없으면(삭제된
+  // 항목 등) 조용히 무시. setState 없음 — set-state-in-effect 회피.
+  useEffect(() => {
+    if (!focusItemId) return
+    document
+      .getElementById(`checklist-item-${focusItemId}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [focusItemId])
 
   // effectiveItems = SSR items를 낙관적 override로 덮은 버전
   const effectiveItems = items.map((i) =>
@@ -131,7 +143,10 @@ export function ChecklistPanel({
               {groupItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-start gap-3 rounded-md border p-2"
+                  id={`checklist-item-${item.id}`}
+                  className={`flex items-start gap-3 rounded-md border p-2 ${
+                    item.id === focusItemId ? 'checklist-focus-flash' : ''
+                  }`}
                 >
                   <Checkbox
                     checked={item.completed}

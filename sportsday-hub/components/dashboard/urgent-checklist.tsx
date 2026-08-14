@@ -10,6 +10,8 @@ import {
 import { EmptyState } from '@/components/shared/empty-state'
 import { sortByUrgency } from '@/lib/milestones-urgency'
 import type { ChecklistItem, Milestone, Team } from '@/lib/types/models'
+import Link from 'next/link'
+import { buildChecklistFocusUrl } from '@/lib/checklist-focus-url'
 
 /**
  * 긴급 체크리스트 — 미완료 체크리스트 항목 중 소속 마일스톤 날짜가 임박/지연인 것 상위 5개.
@@ -101,11 +103,9 @@ export function UrgentChecklist({
           <div className="space-y-2">
             {urgent.map(({ item, tier, daysFromToday }) => {
               const team = item.team_id ? teamMap.get(item.team_id) : null
-              return (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-3 rounded-md border p-3 text-sm ${tierStyle(tier)}`}
-                >
+              const href = buildChecklistFocusUrl(item.team_id, item.id)
+              const rowContent = (
+                <>
                   <span className={`w-16 shrink-0 text-xs font-medium ${labelColor(tier)}`}>
                     {dateLabel(tier, daysFromToday)}
                   </span>
@@ -121,6 +121,22 @@ export function UrgentChecklist({
                       {team.name}
                     </span>
                   )}
+                </>
+              )
+              return href ? (
+                <Link
+                  key={item.id}
+                  href={href}
+                  className={`flex items-center gap-3 rounded-md border p-3 text-sm transition-colors hover:bg-accent ${tierStyle(tier)}`}
+                >
+                  {rowContent}
+                </Link>
+              ) : (
+                <div
+                  key={item.id}
+                  className={`flex items-center gap-3 rounded-md border p-3 text-sm ${tierStyle(tier)}`}
+                >
+                  {rowContent}
                 </div>
               )
             })}

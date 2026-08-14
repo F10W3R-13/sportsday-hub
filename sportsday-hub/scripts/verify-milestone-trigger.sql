@@ -64,7 +64,7 @@ end $$;
 -- ===== S5: 순수 마일스톤(자식 없음)은 recompute가 건드리지 않음 =====
 insert into public.milestones (id, date, title, completed)
 values ('33333333-3333-3333-3333-333333333333', '2026-12-31', '[VERIFY] 순수', false);
-perform public.recompute_milestone('33333333-3333-3333-3333-333333333333');  -- total=0 → noop
+select public.recompute_milestone('33333333-3333-3333-3333-333333333333');  -- total=0 → noop
 do $$ declare c boolean; begin
   select completed into c from public.milestones where id='33333333-3333-3333-3333-333333333333';
   if c is false then raise notice 'S5 PASS 순수마일스톤 noop (기대=false 유지)';

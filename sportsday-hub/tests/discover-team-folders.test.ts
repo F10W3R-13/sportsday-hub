@@ -5,9 +5,12 @@ import { createDriveClient } from '@/lib/drive/client'
 vi.mock('@/lib/drive/client', () => ({ createDriveClient: vi.fn() }))
 vi.mock('googleapis', () => ({ google: { drive: vi.fn() } }))
 
+const listMock = vi.fn()
+
 function stubFolders(folders: { id: string; name: string }[]) {
+  listMock.mockResolvedValue({ data: { files: folders } })
   vi.mocked(createDriveClient).mockResolvedValue({
-    drive: { files: { list: vi.fn().mockResolvedValue({ data: { files: folders } }) } },
+    drive: { files: { list: listMock } },
     email: 'test@example.com',
   } as unknown as Awaited<ReturnType<typeof createDriveClient>>)
 }
@@ -54,6 +57,16 @@ describe('lib/drive/sync — discoverTeamFolders 키워드 자동 매핑', () =>
     const { mapping } = await discoverTeamFolders('root-1')
     expect(mapping.management).toBe('f-both') // '전체'
     expect(mapping.budget).toBe('f-both') // '예산'
+  })
+
+  it('드라이브 조회 쿼리가 상위 폴더·폴더 mimeType·미삭제 조건을 유지', async () => {
+    stubFolders([])
+    await discoverTeamFolders('root-1')
+    expect(listMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        q: `'root-1' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      })
+    )
   })
 
   it('드라이브 미연결 시 에러', async () => {

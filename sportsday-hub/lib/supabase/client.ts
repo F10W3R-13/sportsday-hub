@@ -1,6 +1,18 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/lib/types/database'
 
+export interface NicknameGateInput {
+  hasNickname: boolean
+  promptedThisSession: boolean
+  providerReady: boolean
+}
+
+// 닉네임 게이트 순수 판정 — provider 준비 + 닉네임 부재 + 세션 내 미프롬프트일 때만 프롬프트.
+// SSR은 providerReady=false로 자연 처리된다.
+export function shouldPromptNickname(input: NicknameGateInput): boolean {
+  return input.providerReady && !input.hasNickname && !input.promptedThisSession
+}
+
 const NICKNAME_KEY = 'sportsday-nickname'
 
 export function getNickname(): string | null {

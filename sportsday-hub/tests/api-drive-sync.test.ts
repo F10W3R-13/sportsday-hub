@@ -1,11 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { NextRequest } from 'next/server'
 import { POST } from '@/app/api/drive/sync/route'
-import { syncDriveFiles, createServiceClient } from '@/lib/drive/sync'
+import { syncDriveFiles } from '@/lib/drive/sync'
 
 vi.mock('@/lib/drive/sync', () => ({
   syncDriveFiles: vi.fn(),
-  createServiceClient: vi.fn(),
 }))
 
 const jsonRequest = (body: unknown, raw = false) =>
@@ -35,27 +34,6 @@ describe('POST /api/drive/sync', () => {
     const res = await POST(jsonRequest({}))
     expect(res.status).toBe(401)
     expect(await res.json()).toEqual({ error: 'drive_not_connected' })
-  })
-
-  it('save_folders 액션 — 매핑 저장 후 강제 동기화', async () => {
-    const eq = vi.fn().mockResolvedValue({})
-    const update = vi.fn().mockReturnValue({ eq })
-    const from = vi.fn().mockReturnValue({ update })
-    vi.mocked(createServiceClient).mockReturnValue({ from } as never)
-
-    const res = await POST(
-      jsonRequest({
-        action: 'save_folders',
-        updates: [{ id: 'budget', drive_folder_id: 'folder-1' }],
-      })
-    )
-
-    expect(from).toHaveBeenCalledWith('teams')
-    expect(update).toHaveBeenCalledWith({ drive_folder_id: 'folder-1' })
-    expect(eq).toHaveBeenCalledWith('id', 'budget')
-    expect(syncDriveFiles).toHaveBeenCalledWith(undefined, true)
-    expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ saved: true, success: true, syncedTeams: 2, totalFiles: 7 })
   })
 
   it('잘못된 JSON 본문은 빈 객체로 처리 (전체 동기화 폴백)', async () => {

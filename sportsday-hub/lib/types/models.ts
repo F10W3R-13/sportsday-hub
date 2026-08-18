@@ -177,3 +177,8 @@ export const driveFileSchema = z.object({
   last_synced: z.string().optional(),
 })
 export type DriveFile = z.infer<typeof driveFileSchema>
+
+// 전체 팀 파일 피드 — 드라이브 파일 + 병합된 팀 메타 (스펙 §4)
+export type RecentFileItem = DriveFile & {
+  team: { id: TeamId; name: string; color: string; icon: string }
+}

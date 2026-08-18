@@ -182,3 +182,28 @@ export type DriveFile = z.infer<typeof driveFileSchema>
 export type RecentFileItem = DriveFile & {
   team: { id: TeamId; name: string; color: string; icon: string }
 }
+
+// ===== 인계 (handoffs) — 팀 간 파일 공유 2단계 =====
+export const handoffSchema = z.object({
+  id: z.string().uuid(),
+  from_team_id: z.enum(TEAM_IDS),
+  to_team_id: z.enum(TEAM_IDS).nullable(),
+  to_external: z.string().nullable(),   // 외부 조직명 (홍보부 등) — to_team_id와 상호배타
+  title: z.string(),
+  due_date: z.string().nullable(),      // 'YYYY-MM-DD' or null (기한 없음)
+  completed: z.boolean(),
+  checklist_item_id: z.string().uuid().nullable(),
+  sort_order: z.number(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  deleted_at: z.string().nullable().optional(),
+})
+export type Handoff = z.infer<typeof handoffSchema>
+
+// 팀 메타·체크리스트 맥락 병합형 (getHandoffs가 반환)
+export type HandoffItem = Handoff & {
+  from_team: { id: TeamId; name: string; color: string }
+  to_team: { id: TeamId; name: string; color: string } | null
+  checklist_content: string | null   // 링크된 항목 내용 (표시 라벨용)
+  checklist_team_id: TeamId | null   // 링크된 항목의 소속 팀 — 딥링크 대상
+}

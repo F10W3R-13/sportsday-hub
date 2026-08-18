@@ -36,7 +36,7 @@ export function NicknameDialog({
         <DialogHeader>
           <DialogTitle>닉네임을 입력해주세요</DialogTitle>
           <DialogDescription>
-            편집 시 누가 변경했는지 기록하는 데 사용됩니다. 나중에 언제든 변경할 수 있습니다.
+            편집 시 누가 변경했는지 기록하는 데 사용됩니다. 건너뛰면 &apos;익명&apos;으로 기록돼요.
           </DialogDescription>
         </DialogHeader>
         <Input
@@ -47,6 +47,9 @@ export function NicknameDialog({
           autoFocus
         />
         <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            건너뛰기
+          </Button>
           <Button onClick={handleSave} disabled={!value.trim()}>
             저장
           </Button>

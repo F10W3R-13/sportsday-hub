@@ -13,6 +13,7 @@ export const queryKeys = {
   auditLog: ['audit-log'] as const,
   auditForRecord: (table: string, recordId: string) =>
     ['audit-log', table, recordId] as const,
+  handoffs: ['handoffs'] as const,
   driveFiles: ['drive-files'] as const,
   driveFilesByTeam: (teamId: string) => ['drive-files', 'team', teamId] as const,
   driveStatus: ['drive-status'] as const,

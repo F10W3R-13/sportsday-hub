@@ -7,6 +7,7 @@ import type {
   AuditLog,
   DriveToken,
   DriveFile,
+  Handoff,
 } from './models'
 
 // Supabase 자동 생성 타입과 호환되는 수동 정의
@@ -60,6 +61,12 @@ export interface Database {
         Row: DriveFile
         Insert: Partial<DriveFile>
         Update: Partial<DriveFile>
+        Relationships: []
+      }
+      handoffs: {
+        Row: Handoff
+        Insert: Partial<Handoff>
+        Update: Partial<Handoff>
         Relationships: []
       }
     }

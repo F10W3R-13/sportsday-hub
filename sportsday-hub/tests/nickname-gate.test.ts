@@ -1,6 +1,12 @@
-import { describe, it, expect } from 'vitest'
-import { shouldPromptNickname } from '@/lib/supabase/client'
-import type { NicknameGateInput } from '@/lib/supabase/client'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import {
+  shouldPromptNickname,
+  ensureContext,
+  requestNicknameViaProvider,
+  NICKNAME_PROMPT_EVENT,
+  type NicknameGateInput,
+  type NicknamePromptDetail,
+} from '@/lib/supabase/client'
 
 describe('shouldPromptNickname (닉네임 게이트 순수 판정)', () => {
   it('provider 미준비(SSR·테스트 환경)면 절대 프롬프트하지 않는다', () => {
@@ -39,5 +45,118 @@ describe('shouldPromptNickname (닉네임 게이트 순수 판정)', () => {
       providerReady: true,
     }
     expect(shouldPromptNickname(input)).toBe(false)
+  })
+})
+
+describe('ensureContext 닉네임 게이트 배선', () => {
+  beforeEach(() => {
+    vi.unstubAllGlobals()
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  function stubStorage() {
+    const local = new Map<string, string>()
+    const session = new Map<string, string>()
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => local.get(k) ?? null,
+      setItem: (k: string, v: string) => local.set(k, v),
+    })
+    vi.stubGlobal('sessionStorage', {
+      getItem: (k: string) => session.get(k) ?? null,
+      setItem: (k: string, v: string) => session.set(k, v),
+    })
+    return { local, session }
+  }
+
+  function stubWindow(options: { ready: boolean }) {
+    const listeners = new Map<string, Set<(e: Event) => void>>()
+    const win = {
+      __sportsdayNicknameGateReady: options.ready,
+      addEventListener: (type: string, fn: (e: Event) => void) => {
+        if (!listeners.has(type)) listeners.set(type, new Set())
+        listeners.get(type)!.add(fn)
+      },
+      removeEventListener: (type: string, fn: (e: Event) => void) => {
+        listeners.get(type)?.delete(fn)
+      },
+      dispatchEvent: (event: Event) => {
+        listeners.get(event.type)?.forEach((fn) => fn(event))
+        return true
+      },
+    }
+    vi.stubGlobal('window', win)
+    return win
+  }
+
+  const fakeClient = () => ({ rpc: vi.fn().mockResolvedValue(undefined) })
+
+  it('provider 미준비면 프롬프트 없이 익명으로 진행 (데드락 방지)', async () => {
+    const { session } = stubStorage()
+    stubWindow({ ready: false })
+    const client = fakeClient()
+
+    await ensureContext(client as never)
+
+    expect(client.rpc).toHaveBeenCalledWith('set_user_context', { p_nickname: '익명' })
+    expect(session.has('sportsday-nickname-prompted')).toBe(false)
+  })
+
+  it('닉네임 있으면 프롬프트 없이 닉네임으로 진행', async () => {
+    const { local } = stubStorage()
+    local.set('sportsday-nickname', '지훈')
+    stubWindow({ ready: true })
+    const client = fakeClient()
+
+    await ensureContext(client as never)
+
+    expect(client.rpc).toHaveBeenCalledWith('set_user_context', { p_nickname: '지훈' })
+  })
+
+  it('닉네임 없으면 이벤트 발행 → 설정 해소 대기 → 세션 마킹', async () => {
+    const { local, session } = stubStorage()
+    const win = stubWindow({ ready: true })
+    win.addEventListener(NICKNAME_PROMPT_EVENT, (e) => {
+      const detail = (e as CustomEvent<NicknamePromptDetail>).detail
+      local.set('sportsday-nickname', '민수')
+      detail.resolve()
+    })
+    const client = fakeClient()
+
+    await ensureContext(client as never)
+
+    expect(client.rpc).toHaveBeenCalledWith('set_user_context', { p_nickname: '민수' })
+    expect(session.get('sportsday-nickname-prompted')).toBe('1')
+  })
+
+  it('건너뛰기(resolve만)도 세션 마킹 후 익명으로 진행', async () => {
+    const { session } = stubStorage()
+    const win = stubWindow({ ready: true })
+    win.addEventListener(NICKNAME_PROMPT_EVENT, (e) => {
+      ;(e as CustomEvent<NicknamePromptDetail>).detail.resolve()
+    })
+    const client = fakeClient()
+
+    await ensureContext(client as never)
+
+    expect(client.rpc).toHaveBeenCalledWith('set_user_context', { p_nickname: '익명' })
+    expect(session.get('sportsday-nickname-prompted')).toBe('1')
+  })
+
+  it('대기 중 추가 호출은 같은 Promise를 재사용', async () => {
+    stubStorage()
+    const win = stubWindow({ ready: true })
+    let release: (() => void) | null = null
+    win.addEventListener(NICKNAME_PROMPT_EVENT, (e) => {
+      release = (e as CustomEvent<NicknamePromptDetail>).detail.resolve
+    })
+
+    const first = requestNicknameViaProvider()
+    const second = requestNicknameViaProvider()
+    expect(first).toBe(second)
+
+    release!()
+    await first
   })
 })

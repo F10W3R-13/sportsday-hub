@@ -136,6 +136,7 @@ function TeamChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
         active ? 'bg-primary/10' : 'text-muted-foreground hover:bg-muted'
       }`}

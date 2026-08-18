@@ -6,7 +6,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function SettingsPage() {
   const [status, teams] = await Promise.all([
-    getDriveConnectionStatus(),
+    // 상태 조회 실패(토큰 복호화 오류 등)는 미연결로 취급 — 페이지 전체가 죽지 않도록 (스펙 §7)
+    getDriveConnectionStatus().catch(() => ({ connected: false, email: null })),
     getTeams(),
   ])
 

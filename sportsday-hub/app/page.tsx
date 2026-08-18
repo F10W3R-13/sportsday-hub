@@ -3,20 +3,27 @@ import { DecisionTracker } from '@/components/dashboard/decision-tracker'
 import { TeamStatusCard } from '@/components/dashboard/team-status-card'
 import { UpcomingMilestones } from '@/components/dashboard/upcoming-milestones'
 import { UrgentChecklist } from '@/components/dashboard/urgent-checklist'
+import { RecentFilesWidget } from '@/components/drive/recent-files-widget'
 import { getDecisions } from '@/lib/queries/decisions'
 import { getTeams } from '@/lib/queries/teams'
 import { getMilestones } from '@/lib/queries/milestones'
 import { getChecklistItems } from '@/lib/queries/checklist'
 import { getIssues } from '@/lib/queries/issues'
+import { getRecentDriveFiles, getLastSyncedAt } from '@/lib/queries/drive-files'
+import { getDriveConnectionStatus } from '@/lib/drive/sync'
 
 export default async function DashboardPage() {
-  const [decisions, teams, milestones, checklist, issues] = await Promise.all([
-    getDecisions(),
-    getTeams(),
-    getMilestones(),
-    getChecklistItems(),
-    getIssues(),
-  ])
+  const [decisions, teams, milestones, checklist, issues, recentFiles, lastSyncedAt, driveStatus] =
+    await Promise.all([
+      getDecisions(),
+      getTeams(),
+      getMilestones(),
+      getChecklistItems(),
+      getIssues(),
+      getRecentDriveFiles(8),
+      getLastSyncedAt(),
+      getDriveConnectionStatus(),
+    ])
 
   return (
     <div className="space-y-6">
@@ -41,6 +48,12 @@ export default async function DashboardPage() {
           teams={teams}
         />
       </div>
+
+      <RecentFilesWidget
+        files={recentFiles}
+        lastSyncedAt={lastSyncedAt}
+        connected={driveStatus.connected}
+      />
 
       <div>
         <h2 className="mb-3 text-lg font-semibold">팀별 현황</h2>

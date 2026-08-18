@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { google } from 'googleapis'
 import type { Database } from '@/lib/types/database'
 import { TEAM_IDS, type TeamId } from '@/lib/types/models'
+import { shouldSkipSync } from '@/lib/file-feed'
 
 // drive 클라이언트 타입
 type DriveClient = ReturnType<typeof google.drive>
@@ -90,10 +91,10 @@ async function syncTeamFolder(
 export async function syncDriveFiles(
   teamId?: TeamId,
   force = false
-): Promise<{ success: boolean; syncedTeams: number; totalFiles: number; error?: string }> {
+): Promise<{ success: boolean; syncedTeams: number; totalFiles: number; skipped?: boolean; error?: string }> {
   const supabase = createServiceClient()
 
-  // 중복 방지: 1분 이내 동기화 스킵 (force가 아니면)
+  // 중복 방지: 마지막 동기화가 5분 이내면 스킵 (force가 아니면) — skipped 플래그로 응답
   if (!force) {
     const { data: recent } = await supabase
       .from('drive_files')
@@ -102,11 +103,8 @@ export async function syncDriveFiles(
       .limit(1)
       .maybeSingle()
 
-    if (recent?.last_synced) {
-      const elapsed = Date.now() - new Date(recent.last_synced).getTime()
-      if (elapsed < 60_000) {
-        return { success: true, syncedTeams: 0, totalFiles: 0 }
-      }
+    if (recent?.last_synced && shouldSkipSync(recent.last_synced)) {
+      return { success: true, syncedTeams: 0, totalFiles: 0, skipped: true }
     }
   }
 

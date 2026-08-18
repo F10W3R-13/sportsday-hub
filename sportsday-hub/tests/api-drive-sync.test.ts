@@ -70,4 +70,15 @@ describe('POST /api/drive/sync', () => {
     expect(res.status).toBe(500)
     expect(await res.json()).toEqual({ error: 'sync_failed' })
   })
+
+  it('skipped(신선도 스킵) 결과도 클라이언트에 그대로 전달', async () => {
+    vi.mocked(syncDriveFiles).mockResolvedValue({
+      success: true, syncedTeams: 0, totalFiles: 0, skipped: true,
+    })
+    const res = await POST(jsonRequest({}))
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({
+      success: true, syncedTeams: 0, totalFiles: 0, skipped: true,
+    })
+  })
 })

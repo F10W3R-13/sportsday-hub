@@ -4,27 +4,40 @@ import { TeamStatusCard } from '@/components/dashboard/team-status-card'
 import { UpcomingMilestones } from '@/components/dashboard/upcoming-milestones'
 import { UrgentChecklist } from '@/components/dashboard/urgent-checklist'
 import { RecentFilesWidget } from '@/components/drive/recent-files-widget'
+import { HandoffsWidget } from '@/components/handoffs/handoffs-widget'
 import { getDecisions } from '@/lib/queries/decisions'
 import { getTeams } from '@/lib/queries/teams'
 import { getMilestones } from '@/lib/queries/milestones'
 import { getChecklistItems } from '@/lib/queries/checklist'
 import { getIssues } from '@/lib/queries/issues'
 import { getRecentDriveFiles, getLastSyncedAt } from '@/lib/queries/drive-files'
+import { getHandoffs } from '@/lib/queries/handoffs'
 import { getDriveConnectionStatus } from '@/lib/drive/sync'
 
 export default async function DashboardPage() {
-  const [decisions, teams, milestones, checklist, issues, recentFiles, lastSyncedAt, driveStatus] =
-    await Promise.all([
-      getDecisions(),
-      getTeams(),
-      getMilestones(),
-      getChecklistItems(),
-      getIssues(),
-      getRecentDriveFiles(8),
-      getLastSyncedAt(),
-      // 상태 조회 실패(토큰 복호화 오류 등)는 미연결로 취급 — 페이지 전체가 죽지 않도록 (스펙 §7)
-      getDriveConnectionStatus().catch(() => ({ connected: false, email: null })),
-    ])
+  const [
+    decisions,
+    teams,
+    milestones,
+    checklist,
+    issues,
+    recentFiles,
+    lastSyncedAt,
+    driveStatus,
+    handoffs,
+  ] = await Promise.all([
+    getDecisions(),
+    getTeams(),
+    getMilestones(),
+    getChecklistItems(),
+    getIssues(),
+    getRecentDriveFiles(50),
+    getLastSyncedAt(),
+    // 상태 조회 실패(토큰 복호화 오류 등)는 미연결로 취급 — 페이지 전체가 죽지 않도록 (스펙 §7)
+    getDriveConnectionStatus().catch(() => ({ connected: false, email: null })),
+    // handoffs 테이블 부재(마이그레이션 미적용 배포) 시 빈 위젯으로 폴백 (스펙 §7)
+    getHandoffs().catch(() => []),
+  ])
 
   return (
     <div className="space-y-6">
@@ -51,10 +64,12 @@ export default async function DashboardPage() {
       </div>
 
       <RecentFilesWidget
-        files={recentFiles}
+        files={recentFiles.slice(0, 8)}
         lastSyncedAt={lastSyncedAt}
         connected={driveStatus.connected}
       />
+
+      <HandoffsWidget handoffs={handoffs} recentFiles={recentFiles} />
 
       <div>
         <h2 className="mb-3 text-lg font-semibold">팀별 현황</h2>

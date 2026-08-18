@@ -172,6 +172,7 @@ export const driveFileSchema = z.object({
   icon_link: z.string().nullable(),
   modified_time: z.string().nullable(),
   modified_by: z.string().nullable(),
+  created_time: z.string().nullable().optional(),
   web_view_link: z.string().nullable(),
   last_synced: z.string().optional(),
 })

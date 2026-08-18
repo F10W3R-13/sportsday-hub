@@ -20,11 +20,28 @@ export function createServiceClient() {
 interface DriveFileMeta {
   id: string
   name: string
-  mimeType: string
+  mimeType?: string
   iconLink?: string
+  createdTime?: string
   modifiedTime?: string
   lastModifyingUser?: { displayName?: string }
   webViewLink?: string
+}
+
+// 드라이브 파일 메타 → drive_files upsert 행 변환 (순수함수 — 테스트 대상)
+export function toDriveFileRow(teamId: TeamId, file: DriveFileMeta, now: string) {
+  return {
+    team_id: teamId,
+    file_id: file.id,
+    name: file.name,
+    mime_type: file.mimeType ?? null,
+    icon_link: file.iconLink ?? null,
+    created_time: file.createdTime ?? null,
+    modified_time: file.modifiedTime ?? null,
+    modified_by: file.lastModifyingUser?.displayName ?? null,
+    web_view_link: file.webViewLink ?? null,
+    last_synced: now,
+  }
 }
 
 // 단일 팀 폴더 동기화
@@ -38,7 +55,7 @@ async function syncTeamFolder(
   // 폴더 내 파일 목록 조회
   const res = await drive.files.list({
     q: `'${folderId}' in parents and trashed = false`,
-    fields: 'files(id,name,mimeType,iconLink,modifiedTime,lastModifyingUser/displayName,webViewLink)',
+    fields: 'files(id,name,mimeType,iconLink,createdTime,modifiedTime,lastModifyingUser/displayName,webViewLink)',
     orderBy: 'modifiedTime desc',
     pageSize: 50,
   })
@@ -61,20 +78,9 @@ async function syncTeamFolder(
   // 파일 upsert
   const now = new Date().toISOString()
   for (const file of files) {
-    await supabase.from('drive_files').upsert(
-      {
-        team_id: teamId,
-        file_id: file.id,
-        name: file.name,
-        mime_type: file.mimeType ?? null,
-        icon_link: file.iconLink ?? null,
-        modified_time: file.modifiedTime ?? null,
-        modified_by: file.lastModifyingUser?.displayName ?? null,
-        web_view_link: file.webViewLink ?? null,
-        last_synced: now,
-      },
-      { onConflict: 'file_id' }
-    )
+    await supabase
+      .from('drive_files')
+      .upsert(toDriveFileRow(teamId, file, now), { onConflict: 'file_id' })
   }
 
   return files.length

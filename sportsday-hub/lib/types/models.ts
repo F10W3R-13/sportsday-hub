@@ -176,15 +176,3 @@ export const driveFileSchema = z.object({
   last_synced: z.string().optional(),
 })
 export type DriveFile = z.infer<typeof driveFileSchema>
-
-// ===== 통합 활동 피드 =====
-export type ActivityFeedItem = {
-  id: string
-  type: 'file' | 'checklist' | 'decision' | 'issue'
-  title: string
-  timestamp: string
-  actor: string
-  link?: string
-  icon?: string
-  mimeType?: string
-}

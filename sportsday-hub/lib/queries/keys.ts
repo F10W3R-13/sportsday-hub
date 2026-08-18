@@ -15,6 +15,5 @@ export const queryKeys = {
     ['audit-log', table, recordId] as const,
   driveFiles: ['drive-files'] as const,
   driveFilesByTeam: (teamId: string) => ['drive-files', 'team', teamId] as const,
-  activityFeed: (teamId: string) => ['activity-feed', teamId] as const,
   driveStatus: ['drive-status'] as const,
 }

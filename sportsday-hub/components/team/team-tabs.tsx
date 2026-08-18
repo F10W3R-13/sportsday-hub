@@ -23,7 +23,6 @@ interface TeamTabsProps {
   // (팀 범위)를 사용한다.
   allMilestones: Milestone[]
   issues: Issue[]
-  activityFeed?: never
   driveFiles: DriveFile[]
 }
 

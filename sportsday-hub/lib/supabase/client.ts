@@ -15,14 +15,23 @@ export function shouldPromptNickname(input: NicknameGateInput): boolean {
 
 const NICKNAME_KEY = 'sportsday-nickname'
 
+// 스토리지 접근 불가 환경(일부 프라이버시 모드)은 null 취급 — 게이트 방어와 정책 일치
 export function getNickname(): string | null {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem(NICKNAME_KEY)
+  try {
+    return localStorage.getItem(NICKNAME_KEY)
+  } catch {
+    return null
+  }
 }
 
 export function setNickname(name: string): void {
   if (typeof window === 'undefined') return
-  localStorage.setItem(NICKNAME_KEY, name)
+  try {
+    localStorage.setItem(NICKNAME_KEY, name)
+  } catch {
+    /* no-op */
+  }
 }
 
 export function hasNickname(): boolean {

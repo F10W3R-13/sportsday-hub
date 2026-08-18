@@ -3,6 +3,8 @@ import {
   shouldPromptNickname,
   ensureContext,
   requestNicknameViaProvider,
+  getNickname,
+  setNickname,
   NICKNAME_PROMPT_EVENT,
   type NicknameGateInput,
   type NicknamePromptDetail,
@@ -103,6 +105,30 @@ describe('ensureContext 닉네임 게이트 배선', () => {
     expect(session.has('sportsday-nickname-prompted')).toBe(false)
   })
 
+  it('스토리지 접근이 throw하는 환경(프라이버시 모드)이어도 reject 없이 익명으로 진행', async () => {
+    const throwOnAccess = () => {
+      throw new Error('The operation is insecure.')
+    }
+    vi.stubGlobal('localStorage', {
+      getItem: throwOnAccess,
+      setItem: throwOnAccess,
+    })
+    vi.stubGlobal('sessionStorage', {
+      getItem: throwOnAccess,
+      setItem: throwOnAccess,
+    })
+    const win = stubWindow({ ready: true })
+    const onPrompt = vi.fn()
+    win.addEventListener(NICKNAME_PROMPT_EVENT, onPrompt)
+    const client = fakeClient()
+
+    await expect(ensureContext(client as never)).resolves.toBeUndefined()
+
+    expect(client.rpc).toHaveBeenCalledWith('set_user_context', { p_nickname: '익명' })
+    // 세션 플래그 접근 불가 → 프롬프트 생략 정책: 이벤트 없이 진행
+    expect(onPrompt).not.toHaveBeenCalled()
+  })
+
   it('닉네임 있으면 프롬프트 없이 닉네임으로 진행', async () => {
     const { local } = stubStorage()
     local.set('sportsday-nickname', '지훈')
@@ -158,5 +184,28 @@ describe('ensureContext 닉네임 게이트 배선', () => {
 
     release!()
     await first
+  })
+})
+
+describe('닉네임 helpers 스토리지 방어', () => {
+  beforeEach(() => {
+    vi.unstubAllGlobals()
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('localStorage 접근이 throw하면 getNickname은 null, setNickname은 no-op', () => {
+    const throwOnAccess = () => {
+      throw new Error('The operation is insecure.')
+    }
+    vi.stubGlobal('window', {})
+    vi.stubGlobal('localStorage', {
+      getItem: throwOnAccess,
+      setItem: throwOnAccess,
+    })
+
+    expect(getNickname()).toBeNull()
+    expect(() => setNickname('지훈')).not.toThrow()
   })
 })

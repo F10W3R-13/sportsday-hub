@@ -74,7 +74,7 @@ async function sendKakaoMemo(accessToken: string, text: string): Promise<void> {
     text,
     link: { web_url: 'https://sportsday-hub.vercel.app' },
   }
-  const res = await fetch('https://kapi.kakao.com/v2/api/kakao/v2/memo/send', {
+  const res = await fetch('https://kapi.kakao.com/v2/api/talk/memo/default/send', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,

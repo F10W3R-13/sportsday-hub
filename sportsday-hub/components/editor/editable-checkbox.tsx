@@ -8,8 +8,10 @@ import type { ChecklistItem, Milestone } from '@/lib/types/models'
 
 export function EditableChecklistCheckbox({
   item,
+  label,
 }: {
   item: ChecklistItem
+  label?: string
 }) {
   const toggle = useToggleCheck()
   const [localChecked, setLocalChecked] = useState(item.completed)
@@ -33,14 +35,17 @@ export function EditableChecklistCheckbox({
       checked={localChecked}
       onCheckedChange={handleChange}
       disabled={toggle.isPending}
+      aria-label={label ?? `${item.content} 완료 여부`}
     />
   )
 }
 
 export function EditableMilestoneCheckbox({
   milestone,
+  label,
 }: {
   milestone: Milestone
+  label?: string
 }) {
   const toggle = useToggleMilestone()
   const [localChecked, setLocalChecked] = useState(milestone.completed)
@@ -63,6 +68,7 @@ export function EditableMilestoneCheckbox({
       checked={localChecked}
       onCheckedChange={handleChange}
       disabled={toggle.isPending}
+      aria-label={label ?? `${milestone.title} 완료 여부`}
     />
   )
 }

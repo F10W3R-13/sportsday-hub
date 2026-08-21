@@ -26,13 +26,16 @@ export default async function SettingsPage() {
         {status.connected ? (
           <div className="space-y-2">
             <p className="text-sm text-green-600">
-              ✓ 연결됨: {status.email}
+              ✓ 연결됨
+              {status.email && status.email !== 'unknown'
+                ? `: ${status.email}`
+                : ' (계정 정보를 가져올 수 없습니다)'}
             </p>
             <a
               href="/api/auth/google-connect"
               className="inline-block rounded-md border px-3 py-1 text-sm hover:bg-muted"
             >
-              다른 계정으로 재연결
+              다른 계정으로 재연결 (현재 연결이 교체됩니다)
             </a>
           </div>
         ) : (

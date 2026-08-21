@@ -12,20 +12,16 @@ import type { HandoffItem, RecentFileItem } from '@/lib/types/models'
 export function HandoffRow({
   handoff,
   hintFile,
+  actions,
 }: {
   handoff: HandoffItem
   hintFile?: RecentFileItem | null
+  actions?: React.ReactNode
 }) {
   const tier = handoffUrgency(handoff.due_date, handoff.completed)
   const dueLabel = handoff.due_date
     ? format(parseISO(handoff.due_date), 'M/d (E)', { locale: ko })
     : '—'
-  const dueColor =
-    tier === 'overdue'
-      ? 'text-red-500'
-      : tier === 'due_soon'
-        ? 'text-amber-500'
-        : 'text-muted-foreground'
   const focusUrl =
     handoff.checklist_item_id && handoff.checklist_team_id
       ? buildChecklistFocusUrl(handoff.checklist_team_id, handoff.checklist_item_id)
@@ -36,7 +32,7 @@ export function HandoffRow({
       {handoff.completed ? (
         <CheckCircle2 className="h-5 w-5 shrink-0 text-green-500" />
       ) : (
-        <Circle className="h-5 w-5 shrink-0 text-muted-foreground/40" />
+        <Circle className="h-5 w-5 shrink-0 text-muted-foreground" />
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
@@ -61,7 +57,7 @@ export function HandoffRow({
             />
             {handoff.to_team ? handoff.to_team.name : handoff.to_external}
           </span>
-          <span className={handoff.completed ? 'text-muted-foreground/60' : dueColor}>
+          <span className="text-muted-foreground">
             · {dueLabel}
             {tier === 'overdue' && !handoff.completed && ' 지연'}
           </span>
@@ -77,6 +73,7 @@ export function HandoffRow({
           관련 항목 →
         </Link>
       )}
+      {actions}
     </div>
   )
 }

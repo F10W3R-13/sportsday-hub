@@ -51,6 +51,7 @@ export function RecentFileRow({
           rel="noopener noreferrer"
           className="shrink-0 rounded-md p-2 hover:bg-muted transition-colors"
           title="드라이브에서 열기"
+          aria-label={`${file.name} 드라이브에서 열기`}
         >
           <ExternalLink className="h-4 w-4" />
         </a>

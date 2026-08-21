@@ -13,6 +13,7 @@ import { getIssues } from '@/lib/queries/issues'
 import { getRecentDriveFiles, getLastSyncedAt } from '@/lib/queries/drive-files'
 import { getHandoffs } from '@/lib/queries/handoffs'
 import { getDriveConnectionStatus } from '@/lib/drive/sync'
+import { sortByUrgency } from '@/lib/milestones-urgency'
 
 export default async function DashboardPage() {
   const [
@@ -39,6 +40,11 @@ export default async function DashboardPage() {
     getHandoffs().catch(() => []),
   ])
 
+  // 대시보드 위젯 간 중복 방지 — UpcomingMilestones와 동일한 정렬로 상위 5개 마일스톤 id 산출
+  const topMilestoneIds = sortByUrgency(milestones, new Date())
+    .slice(0, 5)
+    .map(({ milestone }) => milestone.id)
+
   return (
     <div className="space-y-6">
       <div>
@@ -60,6 +66,7 @@ export default async function DashboardPage() {
           checklist={checklist}
           milestones={milestones}
           teams={teams}
+          excludeMilestoneIds={topMilestoneIds}
         />
       </div>
 

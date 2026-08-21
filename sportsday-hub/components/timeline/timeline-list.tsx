@@ -128,6 +128,7 @@ export function TimelineList({
           <button
             key={key}
             onClick={() => setFilter(key)}
+            aria-pressed={filter === key}
             className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-md px-4 text-sm transition-colors sm:flex-none md:min-h-9 md:px-3 ${
               filter === key
                 ? 'bg-primary text-primary-foreground'

@@ -22,10 +22,12 @@ export function UrgentChecklist({
   checklist,
   milestones,
   teams,
+  excludeMilestoneIds,
 }: {
   checklist: ChecklistItem[]
   milestones: Milestone[]
   teams: Team[]
+  excludeMilestoneIds?: string[]
 }) {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
@@ -52,7 +54,13 @@ export function UrgentChecklist({
       upcoming: 2,
     }
     return checklist
-      .filter((c) => !c.completed && c.milestone_id && urgencyMap.has(c.milestone_id))
+      .filter(
+        (c) =>
+          !c.completed &&
+          c.milestone_id &&
+          !excludeMilestoneIds?.includes(c.milestone_id) &&
+          urgencyMap.has(c.milestone_id),
+      )
       .map((c) => {
         const u = urgencyMap.get(c.milestone_id!)!
         return { item: c, ...u }
@@ -64,7 +72,7 @@ export function UrgentChecklist({
         // 같은 tier면 날짜순
         return a.date.localeCompare(b.date)
       })
-  }, [checklist, urgencyMap])
+  }, [checklist, urgencyMap, excludeMilestoneIds])
   // 위젯에는 상위 5개만 표시. 전체 개수(urgentAll.length)는 카운트 표시에 사용 —
   // 회고(2026-08-12)의 "slice(N) 정보 은닉" 지적 반영.
   const urgent = urgentAll.slice(0, 5)

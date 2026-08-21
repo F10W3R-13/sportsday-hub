@@ -9,7 +9,7 @@ import { FilterChip } from '@/components/shared/filter-chip'
 import { DriveSyncTrigger } from './drive-sync-trigger'
 import { RecentFileRow } from './recent-file-row'
 import { EmptyState } from '@/components/shared/empty-state'
-import { parseTeamFilter } from '@/lib/file-feed'
+import { parseTeamFilter, dedupeRecentFiles } from '@/lib/file-feed'
 import { timeAgo } from '@/lib/format/time-ago'
 import { toast } from 'sonner'
 import type { RecentFileItem, Team } from '@/lib/types/models'
@@ -38,7 +38,9 @@ function FileFeedInner({ files, teams, lastSyncedAt, connected }: FileFeedClient
 
   // 필터는 URL(?team=)이 진실 원천 — 무효 값은 '전체' 폴백 (스펙 §5)
   const teamFilter = parseTeamFilter(searchParams.get('team'))
-  const visible = teamFilter ? files.filter((f) => f.team.id === teamFilter) : files
+  // 동일 파일 중복 노출 제거 (최신 수정본 우선)
+  const filtered = teamFilter ? files.filter((f) => f.team.id === teamFilter) : files
+  const visible = dedupeRecentFiles(filtered)
 
   const handleChip = (id: string | null) => {
     router.replace(id ? `${pathname}?team=${id}` : pathname, { scroll: false })

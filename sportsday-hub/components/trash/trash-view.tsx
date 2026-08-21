@@ -74,10 +74,12 @@ export function TrashView() {
       ])
       if (checklist.error) {
         toast.error('체크리스트 불러오기 실패')
+        setLoaded(true)
         return
       }
       if (issues.error) {
         toast.error('이슈 불러오기 실패')
+        setLoaded(true)
         return
       }
       const entries: TrashEntry[] = [

@@ -147,25 +147,32 @@ function HandoffsInner({ handoffs, teams, checklistItems, recentFiles }: Handoff
                 />
               </label>
               <div className="min-w-0 flex-1">
-                <HandoffRow handoff={h} hintFile={latestByTeam.get(h.from_team_id)} />
+                <HandoffRow
+                  handoff={h}
+                  hintFile={latestByTeam.get(h.from_team_id)}
+                  actions={
+                    <>
+                      <Button
+                        variant="ghost"
+                        className="shrink-0 text-muted-foreground"
+                        onClick={() => {
+                          setEditing(h)
+                          setFormOpen(true)
+                        }}
+                      >
+                        편집
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleDelete(h)}
+                      >
+                        삭제
+                      </Button>
+                    </>
+                  }
+                />
               </div>
-              <Button
-                variant="ghost"
-                className="shrink-0 text-muted-foreground"
-                onClick={() => {
-                  setEditing(h)
-                  setFormOpen(true)
-                }}
-              >
-                편집
-              </Button>
-              <Button
-                variant="ghost"
-                className="shrink-0 text-muted-foreground hover:text-destructive"
-                onClick={() => handleDelete(h)}
-              >
-                삭제
-              </Button>
             </div>
           ))}
         </div>

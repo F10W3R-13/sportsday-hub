@@ -3,7 +3,9 @@
 import { Suspense, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { RefreshCw } from 'lucide-react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { FilterChip } from '@/components/shared/filter-chip'
 import { DriveSyncTrigger } from './drive-sync-trigger'
 import { RecentFileRow } from './recent-file-row'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -66,8 +68,13 @@ function FileFeedInner({ files, teams, lastSyncedAt, connected }: FileFeedClient
 
   if (!connected) {
     return (
-      <div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">
-        구글 드라이브 연결이 필요합니다. 설정 페이지에서 연결해주세요.
+      <div className="rounded-lg border p-8 text-center">
+        <p className="text-sm text-muted-foreground">
+          구글 드라이브가 연결되지 않았습니다. 연결 후 파일이 표시됩니다.
+        </p>
+        <Button className="mt-4" render={<Link href="/settings" />}>
+          설정에서 연결하기
+        </Button>
       </div>
     )
   }
@@ -75,18 +82,18 @@ function FileFeedInner({ files, teams, lastSyncedAt, connected }: FileFeedClient
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <TeamChip active={teamFilter === null} onClick={() => handleChip(null)}>
+        <FilterChip active={teamFilter === null} onClick={() => handleChip(null)}>
           전체
-        </TeamChip>
+        </FilterChip>
         {teams.map((team) => (
-          <TeamChip
+          <FilterChip
             key={team.id}
             active={teamFilter === team.id}
             color={team.color}
             onClick={() => handleChip(team.id)}
           >
             {team.name}
-          </TeamChip>
+          </FilterChip>
         ))}
         <span className="ml-auto text-xs text-muted-foreground">
           {lastSyncedAt ? `마지막 동기화 ${timeAgo(lastSyncedAt)}` : '동기화 이력 없음'}
@@ -121,28 +128,3 @@ function FileFeedInner({ files, teams, lastSyncedAt, connected }: FileFeedClient
   )
 }
 
-function TeamChip({
-  active,
-  color,
-  onClick,
-  children,
-}: {
-  active: boolean
-  color?: string
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-        active ? 'bg-primary/10' : 'text-muted-foreground hover:bg-muted'
-      }`}
-      style={active && color ? { borderColor: color, color } : undefined}
-    >
-      {children}
-    </button>
-  )
-}

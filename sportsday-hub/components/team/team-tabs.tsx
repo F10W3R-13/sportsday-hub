@@ -9,6 +9,7 @@ import { MilestonePanel } from './milestone-panel'
 import { IssuePanel } from './issue-panel'
 import { FileList } from '@/components/drive/file-list'
 import { computeProgress } from '@/lib/progress'
+import { readableColor } from '@/lib/color'
 import type { Team, ChecklistItem, Milestone, Issue, DriveFile } from '@/lib/types/models'
 
 const TAB_VALUES = ['overview', 'guideline', 'checklist', 'milestones', 'issues'] as const
@@ -82,7 +83,11 @@ function TeamTabsInner({
         <div className="rounded-lg border p-4">
           <div className="mb-2 flex items-center justify-between">
             <h3 className="font-semibold">진행률</h3>
-            <span className="text-2xl font-bold" style={{ color: team.color }}>
+            {/* 큰 텍스트(2xl bold) 기준 AA 3:1 충족하도록 보정 */}
+            <span
+              className="text-2xl font-bold"
+              style={{ color: readableColor(team.color, 3) }}
+            >
               {progress}%
             </span>
           </div>

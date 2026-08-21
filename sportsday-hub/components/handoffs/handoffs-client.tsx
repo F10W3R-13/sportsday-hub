@@ -4,6 +4,8 @@ import { Suspense, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { FilterChip } from '@/components/shared/filter-chip'
+import { EmptyState } from '@/components/shared/empty-state'
 import { HandoffRow } from './handoff-row'
 import { HandoffFormDialog, type HandoffFormValues } from './handoff-form-dialog'
 import { latestFileByTeamMap, parseHandoffToFilter, sortHandoffs } from '@/lib/handoff'
@@ -94,27 +96,26 @@ function HandoffsInner({ handoffs, teams, checklistItems, recentFiles }: Handoff
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <ToChip active={toFilter === null} onClick={() => handleChip(null)}>
+        <FilterChip active={toFilter === null} onClick={() => handleChip(null)}>
           전체
-        </ToChip>
+        </FilterChip>
         {teams.map((t) => (
-          <ToChip
+          <FilterChip
             key={t.id}
             active={toFilter === t.id}
             color={t.color}
             onClick={() => handleChip(t.id)}
           >
             {t.name}
-          </ToChip>
+          </FilterChip>
         ))}
-        <ToChip
+        <FilterChip
           active={toFilter === 'external'}
           onClick={() => handleChip('external')}
         >
           외부
-        </ToChip>
+        </FilterChip>
         <Button
-          size="sm"
           className="ml-auto"
           onClick={() => {
             setEditing(null)
@@ -126,26 +127,29 @@ function HandoffsInner({ handoffs, teams, checklistItems, recentFiles }: Handoff
       </div>
 
       {sorted.length === 0 ? (
-        <div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">
-          해당 조건에 인계가 없습니다.
-        </div>
+        <EmptyState
+          title="해당 조건에 인계가 없습니다"
+          description="인계 등록 버튼으로 새 인계를 추가할 수 있습니다."
+        />
       ) : (
         <div className="space-y-1">
           {sorted.map((h) => (
             <div key={h.id} className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                checked={h.completed}
-                onChange={() => handleToggle(h)}
-                className="h-4 w-4 shrink-0 cursor-pointer"
-                title="완료 토글"
-                aria-label={`${h.title} 완료 여부`}
-              />
+              {/* label로 클릭 영역 확장 — 모바일 터치 타겟 44px 확보 */}
+              <label className="flex shrink-0 cursor-pointer items-center p-2.5 -m-2.5">
+                <input
+                  type="checkbox"
+                  checked={h.completed}
+                  onChange={() => handleToggle(h)}
+                  className="h-4 w-4 cursor-pointer"
+                  title="완료 토글"
+                  aria-label={`${h.title} 완료 여부`}
+                />
+              </label>
               <div className="min-w-0 flex-1">
                 <HandoffRow handoff={h} hintFile={latestByTeam.get(h.from_team_id)} />
               </div>
               <Button
-                size="sm"
                 variant="ghost"
                 className="shrink-0 text-muted-foreground"
                 onClick={() => {
@@ -156,9 +160,8 @@ function HandoffsInner({ handoffs, teams, checklistItems, recentFiles }: Handoff
                 편집
               </Button>
               <Button
-                size="sm"
                 variant="ghost"
-                className="shrink-0 text-muted-foreground"
+                className="shrink-0 text-muted-foreground hover:text-destructive"
                 onClick={() => handleDelete(h)}
               >
                 삭제
@@ -183,28 +186,3 @@ function HandoffsInner({ handoffs, teams, checklistItems, recentFiles }: Handoff
   )
 }
 
-function ToChip({
-  active,
-  color,
-  onClick,
-  children,
-}: {
-  active: boolean
-  color?: string
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-        active ? 'bg-primary/10' : 'text-muted-foreground hover:bg-muted'
-      }`}
-      style={active && color ? { borderColor: color, color } : undefined}
-    >
-      {children}
-    </button>
-  )
-}

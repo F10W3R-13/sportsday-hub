@@ -6,6 +6,7 @@ import { ko } from 'date-fns/locale'
 import { ChevronDown, Settings2 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/empty-state'
 import { PriorityBadge } from '@/components/shared/priority-badge'
+import { TeamBadge } from '@/components/shared/team-badge'
 import { EditableChecklistCheckbox } from '@/components/editor/editable-checkbox'
 import { EditableMilestoneCheckbox } from '@/components/editor/editable-checkbox'
 import type { Milestone, ChecklistItem, Team } from '@/lib/types/models'
@@ -199,17 +200,7 @@ function UnassignedBucket({
           const team = teamId ? teamMap.get(teamId) : null
           return (
             <div key={teamId ?? 'global'}>
-              {team && (
-                <span
-                  className="mb-1 inline-block rounded px-1.5 py-0.5 text-xs"
-                  style={{
-                    backgroundColor: `${team.color}20`,
-                    color: team.color,
-                  }}
-                >
-                  {team.name}
-                </span>
-              )}
+              {team && <TeamBadge name={team.name} color={team.color} />}
               <div className="space-y-1">
                 {teamItems
                   .sort((a, b) => a.sort_order - b.sort_order)
@@ -270,17 +261,7 @@ function MilestoneRow({
         <span className="min-w-0 flex-1 truncate text-sm">
           {milestone.title}
         </span>
-        {team && (
-          <span
-            className="shrink-0 rounded px-1.5 py-0.5 text-xs"
-            style={{
-              backgroundColor: `${team.color}20`,
-              color: team.color,
-            }}
-          >
-            {team.name}
-          </span>
-        )}
+        {team && <TeamBadge name={team.name} color={team.color} />}
         {hasSubItems && (
           <button
             onClick={() => setOpen(!open)}
@@ -342,17 +323,7 @@ function ChecklistRow({
           </span>
         )}
       </div>
-      {team && (
-        <span
-          className="shrink-0 rounded px-1.5 py-0.5 text-xs"
-          style={{
-            backgroundColor: `${team.color}20`,
-            color: team.color,
-          }}
-        >
-          {team.name}
-        </span>
-      )}
+      {team && <TeamBadge name={team.name} color={team.color} />}
     </div>
   )
 }

@@ -23,6 +23,9 @@ export const metadata: Metadata = {
   description: '26-2 스포츠데이 기획팀 협업 허브',
 }
 
+// 첫 페인트 전에 다크 클래스 적용 — 테마 깜빡임(FOUC) 방지
+const themeInitScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`
+
 export default function RootLayout({
   children,
 }: {
@@ -31,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className={`${inter.variable} ${notoSansKr.variable}`}>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Providers>
           <NicknameProvider>
             <SidebarLayout>{children}</SidebarLayout>

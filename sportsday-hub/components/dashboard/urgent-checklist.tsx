@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { EmptyState } from '@/components/shared/empty-state'
+import { TeamBadge } from '@/components/shared/team-badge'
 import { sortByUrgency } from '@/lib/milestones-urgency'
 import type { ChecklistItem, Milestone, Team } from '@/lib/types/models'
 import Link from 'next/link'
@@ -110,17 +111,7 @@ export function UrgentChecklist({
                     {dateLabel(tier, daysFromToday)}
                   </span>
                   <span className="min-w-0 flex-1 truncate">{item.content}</span>
-                  {team && (
-                    <span
-                      className="shrink-0 rounded px-1.5 py-0.5 text-xs"
-                      style={{
-                        backgroundColor: `${team.color}20`,
-                        color: team.color,
-                      }}
-                    >
-                      {team.name}
-                    </span>
-                  )}
+                  {team && <TeamBadge name={team.name} color={team.color} />}
                 </>
               )
               return href ? (

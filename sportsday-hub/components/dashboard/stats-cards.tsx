@@ -16,11 +16,12 @@ export function StatsCards({
   ).length
   const { percent: progress } = computeProgress(checklist)
 
+  // 숫자 강조색은 흰 배경 대비 4.5:1 이상(WCAG AA)인 -700 톤 사용
   const cards = [
-    { label: '확정 결정', value: confirmed, accent: 'text-green-600' },
-    { label: '논의중', value: discussing, accent: 'text-yellow-600' },
-    { label: '보류/미정', value: pending, accent: 'text-gray-500' },
-    { label: '전체 진행률', value: `${progress}%`, accent: 'text-blue-600' },
+    { label: '확정 결정', value: confirmed, accent: 'text-green-700' },
+    { label: '논의중', value: discussing, accent: 'text-amber-700' },
+    { label: '보류/미정', value: pending, accent: 'text-gray-600' },
+    { label: '전체 진행률', value: `${progress}%`, accent: 'text-blue-700' },
   ]
 
   return (

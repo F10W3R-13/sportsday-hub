@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Settings2 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/empty-state'
 import { PriorityBadge } from '@/components/shared/priority-badge'
 import { EditableChecklistCheckbox } from '@/components/editor/editable-checkbox'
@@ -127,10 +127,10 @@ export function TimelineList({
           <button
             key={key}
             onClick={() => setFilter(key)}
-            className={`rounded-md px-3 py-1 text-sm ${
+            className={`inline-flex min-h-11 flex-1 items-center justify-center rounded-md px-4 text-sm transition-colors sm:flex-none md:min-h-9 md:px-3 ${
               filter === key
                 ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground'
+                : 'bg-muted text-muted-foreground hover:text-foreground'
             }`}
           >
             {label}
@@ -190,8 +190,9 @@ function UnassignedBucket({
 
   return (
     <div className="rounded-lg border border-dashed p-3">
-      <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-        ⚙ 상시 / 특정 시점 없음
+      <h3 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+        <Settings2 className="size-3.5" aria-hidden />
+        상시 / 특정 시점 없음
       </h3>
       <div className="space-y-3">
         {Array.from(byTeam.entries()).map(([teamId, teamItems]) => {
@@ -283,7 +284,9 @@ function MilestoneRow({
         {hasSubItems && (
           <button
             onClick={() => setOpen(!open)}
-            className="shrink-0 text-muted-foreground hover:text-foreground"
+            aria-expanded={open}
+            aria-label={open ? '하위 항목 접기' : '하위 항목 펼치기'}
+            className="shrink-0 p-2 -m-2 text-muted-foreground hover:text-foreground"
           >
             <ChevronDown
               className={`h-4 w-4 transition-transform ${

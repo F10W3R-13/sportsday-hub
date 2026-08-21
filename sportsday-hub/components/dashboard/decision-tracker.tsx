@@ -36,7 +36,17 @@ export function DecisionTracker({ decisions }: { decisions: Decision[] }) {
       </CardHeader>
       <CardContent>
         {sorted.length === 0 ? (
-          <EmptyState title="결정 항목이 없습니다" />
+          <EmptyState
+            title="결정 항목이 없습니다"
+            description="회의에서 결정된 항목을 추가해 추적하세요"
+            action={
+              <AddItemButton
+                onAdd={(title) => addDecision.mutate({ title })}
+                label="결정 추가"
+                placeholder="새 결정 항목 제목..."
+              />
+            }
+          />
         ) : (
           <>
             <div className="space-y-2">
@@ -79,13 +89,14 @@ export function DecisionTracker({ decisions }: { decisions: Decision[] }) {
                       </div>
                       <DecisionStatusSelect decision={d} />
                       <Button
-                        size="icon-sm"
+                        size="icon"
                         variant="ghost"
+                        aria-label={`${d.title} 삭제`}
                         className="text-muted-foreground hover:text-destructive"
                         disabled={deleteDecision.isPending}
                         onClick={() => deleteDecision.mutate(d.id)}
                       >
-                        <Trash2 className="h-3 w-3" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>

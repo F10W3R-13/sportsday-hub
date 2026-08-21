@@ -22,6 +22,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import type { Team } from '@/lib/types/models'
+import { daysUntilEvent } from '@/lib/dday'
 import * as Icons from 'lucide-react'
 import type { ComponentType, CSSProperties } from 'react'
 
@@ -42,9 +43,9 @@ function getIcon(name: string): IconComponent {
 export function AppSidebar({ teams }: { teams: Team[] }) {
   const pathname = usePathname()
   // D-day 카운트다운을 주기적으로 재계산하여 자정 경과 시 자동 갱신.
-  const [days, setDays] = useState(() => daysUntil())
+  const [days, setDays] = useState(() => daysUntilEvent())
   useEffect(() => {
-    const id = setInterval(() => setDays(daysUntil()), 60 * 1000)
+    const id = setInterval(() => setDays(daysUntilEvent()), 60 * 1000)
     return () => clearInterval(id)
   }, [])
 
@@ -109,11 +110,3 @@ export function AppSidebar({ teams }: { teams: Team[] }) {
   )
 }
 
-function daysUntil(): number {
-  const event = new Date('2026-09-19')
-  const now = new Date()
-  return Math.max(
-    0,
-    Math.ceil((event.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  )
-}

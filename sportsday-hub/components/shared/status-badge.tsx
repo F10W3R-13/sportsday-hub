@@ -1,5 +1,12 @@
 import { Badge } from '@/components/ui/badge'
 import {
+  CheckCircle2,
+  CircleDashed,
+  MessagesSquare,
+  PauseCircle,
+  type LucideIcon,
+} from 'lucide-react'
+import {
   DECISION_STATUS_LABEL,
   type DecisionStatus,
 } from '@/lib/types/models'
@@ -11,17 +18,19 @@ const STATUS_STYLE: Record<DecisionStatus, string> = {
   deferred: 'bg-blue-100 text-blue-700 border-blue-300',
 }
 
-const STATUS_ICON: Record<DecisionStatus, string> = {
-  confirmed: '🟢',
-  discussing: '🟡',
-  pending: '⚪',
-  deferred: '⚪',
+// 이모지 대신 아웃라인 아이콘 — pending/deferred가 아이콘만으로도 구분되도록
+const STATUS_ICON: Record<DecisionStatus, LucideIcon> = {
+  confirmed: CheckCircle2,
+  discussing: MessagesSquare,
+  pending: CircleDashed,
+  deferred: PauseCircle,
 }
 
 export function StatusBadge({ status }: { status: DecisionStatus }) {
+  const Icon = STATUS_ICON[status]
   return (
     <Badge variant="outline" className={STATUS_STYLE[status]}>
-      <span className="mr-1">{STATUS_ICON[status]}</span>
+      <Icon className="mr-1 size-3" aria-hidden />
       {DECISION_STATUS_LABEL[status]}
     </Badge>
   )

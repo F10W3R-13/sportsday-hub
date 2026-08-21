@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,18 @@ import { ko } from 'date-fns/locale'
 import type { ChecklistItem, Issue } from '@/lib/types/models'
 
 type TrashEntryKind = 'checklist_items' | 'issues'
+
+const RETENTION_DAYS = 30
+
+function daysLeft(deletedAt: string | null): number | null {
+  if (!deletedAt) return null
+  const deleted = Date.parse(deletedAt)
+  if (Number.isNaN(deleted)) return null
+  return Math.max(
+    0,
+    Math.ceil((deleted + RETENTION_DAYS * 86_400_000 - Date.now()) / 86_400_000),
+  )
+}
 
 type TrashEntry = {
   id: string
@@ -43,40 +55,53 @@ function entryFromIssue(item: Issue): TrashEntry {
 export function TrashView() {
   const [items, setItems] = useState<TrashEntry[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [restoringId, setRestoringId] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const router = useRouter()
 
   const loadTrash = async () => {
-    const client = createClient()
-    const [checklist, issues] = await Promise.all([
-      client
-        .from('checklist_items')
-        .select('*')
-        .not('deleted_at', 'is', null),
-      client.from('issues').select('*').not('deleted_at', 'is', null),
-    ])
-    if (checklist.error) {
-      toast.error('체크리스트 불러오기 실패')
-      return
+    await Promise.resolve()
+    setLoading(true)
+    try {
+      const client = createClient()
+      const [checklist, issues] = await Promise.all([
+        client
+          .from('checklist_items')
+          .select('*')
+          .not('deleted_at', 'is', null),
+        client.from('issues').select('*').not('deleted_at', 'is', null),
+      ])
+      if (checklist.error) {
+        toast.error('체크리스트 불러오기 실패')
+        return
+      }
+      if (issues.error) {
+        toast.error('이슈 불러오기 실패')
+        return
+      }
+      const entries: TrashEntry[] = [
+        ...((checklist.data ?? []) as ChecklistItem[]).map(entryFromChecklist),
+        ...((issues.data ?? []) as Issue[]).map(entryFromIssue),
+      ]
+      // 삭제일 내림차순
+      entries.sort((a, b) => {
+        const at = a.deletedAt ? Date.parse(a.deletedAt) : 0
+        const bt = b.deletedAt ? Date.parse(b.deletedAt) : 0
+        return bt - at
+      })
+      setItems(entries)
+      setLoaded(true)
+    } finally {
+      setLoading(false)
     }
-    if (issues.error) {
-      toast.error('이슈 불러오기 실패')
-      return
-    }
-    const entries: TrashEntry[] = [
-      ...((checklist.data ?? []) as ChecklistItem[]).map(entryFromChecklist),
-      ...((issues.data ?? []) as Issue[]).map(entryFromIssue),
-    ]
-    // 삭제일 내림차순
-    entries.sort((a, b) => {
-      const at = a.deletedAt ? Date.parse(a.deletedAt) : 0
-      const bt = b.deletedAt ? Date.parse(b.deletedAt) : 0
-      return bt - at
-    })
-    setItems(entries)
-    setLoaded(true)
   }
+
+  // 페이지 진입 시 자동 로드 — 수동 '불러오기' 단계 제거 (Nielsen #6)
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadTrash()
+  }, [])
 
   const handleRestore = async (entry: TrashEntry) => {
     setRestoringId(entry.id)
@@ -103,8 +128,15 @@ export function TrashView() {
     }
   }
 
-  if (!loaded) {
-    return <Button onClick={loadTrash}>삭제된 항목 불러오기</Button>
+  if (!loaded || loading) {
+    return (
+      <div className="space-y-2" aria-busy="true">
+        <p className="text-sm text-muted-foreground">삭제된 항목을 불러오는 중…</p>
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-[52px] animate-pulse rounded-md border bg-muted/40" />
+        ))}
+      </div>
+    )
   }
 
   if (items.length === 0) {
@@ -146,6 +178,19 @@ export function TrashView() {
                 })}
               </span>
             )}
+            {(() => {
+              const left = daysLeft(entry.deletedAt)
+              if (left === null) return null
+              return (
+                <span
+                  className={`shrink-0 rounded px-1.5 py-0.5 text-xs ${
+                    left <= 7 ? 'bg-red-50 text-red-600' : 'bg-muted'
+                  }`}
+                >
+                  복원 {left}일 남음
+                </span>
+              )
+            })()}
             <Button
               size="sm"
               variant="outline"

@@ -21,12 +21,12 @@ function item(over: Partial<HandoffItem> = {}): HandoffItem {
     title: '물품 리스트',
     due_date: null,
     completed: false,
-    checklist_item_id: null,
+    item_id: null,
     sort_order: 0,
     from_team: { id: 'content', name: '컨텐츠팀', color: '#ec4899' },
     to_team: { id: 'budget', name: '예산팀', color: '#10b981' },
-    checklist_content: null,
-    checklist_team_id: null,
+    item_title: null,
+    item_team_id: null,
     ...over,
   }
 }

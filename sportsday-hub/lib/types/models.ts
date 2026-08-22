@@ -66,37 +66,25 @@ export const MILESTONE_CATEGORIES = [
 ] as const
 export type MilestoneCategory = (typeof MILESTONE_CATEGORIES)[number]
 
+export const PRIORITY = ['high', 'medium', 'low'] as const
+export type Priority = (typeof PRIORITY)[number]
+
+// 체크리스트를 병합한 통합 엔터티 (구 checklist_items 포함)
 export const milestoneSchema = z.object({
-  id: z.string().uuid(),
-  date: z.string(),            // ISO date
+  id: z.string(),
+  date: z.string().nullable(),          // null = 상시
   title: z.string(),
-  team_id: z.enum(TEAM_IDS).nullable(),
+  team_id: z.string().nullable(),
   category: z.enum(MILESTONE_CATEGORIES),
   completed: z.boolean(),
-  depends_on: z.array(z.string().uuid()).nullable(),
-  sort_order: z.number(),
+  depends_on: z.array(z.string()).nullable().optional(),
+  sort_order: z.number().optional(),
+  priority: z.enum(PRIORITY).nullable().optional(),
+  source: z.string().nullable().optional(),
   updated_at: z.string().optional(),
   deleted_at: z.string().nullable().optional(),
 })
 export type Milestone = z.infer<typeof milestoneSchema>
-
-// ===== 체크리스트 =====
-export const PRIORITY = ['high', 'medium', 'low'] as const
-export type Priority = (typeof PRIORITY)[number]
-
-export const checklistItemSchema = z.object({
-  id: z.string().uuid(),
-  team_id: z.enum(TEAM_IDS).nullable(),
-  milestone_id: z.string().uuid().nullable(),
-  content: z.string(),
-  priority: z.enum(PRIORITY).nullable(),
-  completed: z.boolean(),
-  source: z.string().nullable(),
-  sort_order: z.number(),
-  updated_at: z.string().optional(),
-  deleted_at: z.string().nullable().optional(),
-})
-export type ChecklistItem = z.infer<typeof checklistItemSchema>
 
 // ===== 이슈 =====
 export const ISSUE_STATUS = ['open', 'in_progress', 'resolved'] as const
@@ -192,7 +180,7 @@ export const handoffSchema = z.object({
   title: z.string(),
   due_date: z.string().nullable(),      // 'YYYY-MM-DD' or null (기한 없음)
   completed: z.boolean(),
-  checklist_item_id: z.string().uuid().nullable(),
+  item_id: z.string().nullable(),
   sort_order: z.number(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
@@ -200,10 +188,10 @@ export const handoffSchema = z.object({
 })
 export type Handoff = z.infer<typeof handoffSchema>
 
-// 팀 메타·체크리스트 맥락 병합형 (getHandoffs가 반환)
+// 팀 메타·마일스톤 맥락 병합형 (getHandoffs가 반환)
 export type HandoffItem = Handoff & {
   from_team: { id: TeamId; name: string; color: string }
   to_team: { id: TeamId; name: string; color: string } | null
-  checklist_content: string | null   // 링크된 항목 내용 (표시 라벨용)
-  checklist_team_id: TeamId | null   // 링크된 항목의 소속 팀 — 딥링크 대상
+  item_title: string | null         // 링크된 항목 제목 (표시 라벨용)
+  item_team_id: TeamId | null       // 링크된 항목의 소속 팀 — 딥링크 대상
 }

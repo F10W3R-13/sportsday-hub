@@ -7,7 +7,8 @@ export async function getMilestones(): Promise<Milestone[]> {
     .from('milestones')
     .select('*')
     .is('deleted_at', null)
-    .order('date')
+    .order('date', { nullsFirst: false })
+    .order('sort_order')
   if (error) throw error
   return data ?? []
 }
@@ -21,7 +22,20 @@ export async function getMilestonesByTeam(
     .select('*')
     .eq('team_id', teamId)
     .is('deleted_at', null)
-    .order('date')
+    .order('date', { nullsFirst: false })
+    .order('sort_order')
   if (error) throw error
   return data ?? []
+}
+
+export async function getMilestoneById(id: string): Promise<Milestone | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('milestones')
+    .select('*')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (error) throw error
+  return data ?? null
 }

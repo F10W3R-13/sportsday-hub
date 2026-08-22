@@ -20,20 +20,17 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = await createClient()
-    const [{ data: milestones }, { data: handoffs }, { data: teams }, { data: checklistItems }] =
-      await Promise.all([
-        supabase.from('milestones').select('*').is('deleted_at', null),
-        supabase.from('handoffs').select('*').is('deleted_at', null),
-        supabase.from('teams').select('*').is('deleted_at', null),
-        supabase.from('checklist_items').select('*').eq('completed', false).is('deleted_at', null),
-      ])
+    const [{ data: milestones }, { data: handoffs }, { data: teams }] = await Promise.all([
+      supabase.from('milestones').select('*').is('deleted_at', null),
+      supabase.from('handoffs').select('*').is('deleted_at', null),
+      supabase.from('teams').select('*').is('deleted_at', null),
+    ])
 
     const digest = buildKakaoDigest(
       {
-        milestones: milestones ?? [],
+        tasks: milestones ?? [],
         handoffs: handoffs ?? [],
         teams: teams ?? [],
-        checklistItems: checklistItems ?? [],
       },
       { style: 'detailed', maxItems: 20, textLimit: 2000 }
     )

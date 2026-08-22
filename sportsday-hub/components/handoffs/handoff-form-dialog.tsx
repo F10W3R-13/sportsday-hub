@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { validateHandoffTarget } from '@/lib/handoff'
-import type { ChecklistItem, Handoff, Team } from '@/lib/types/models'
+import type { Handoff, Milestone, Team } from '@/lib/types/models'
 
 export interface HandoffFormValues {
   fromTeamId: string
@@ -26,7 +26,7 @@ export interface HandoffFormValues {
   toExternal: string | null
   title: string
   dueDate: string | null
-  checklistItemId: string | null
+  itemId: string | null
 }
 
 // 등록(initial=null)·편집(initial=Handoff) 겸용. 저장은 부모가 뮤테이션으로.
@@ -37,14 +37,14 @@ export function HandoffFormDialog({
   open,
   onClose,
   teams,
-  checklistItems,
+  milestones,
   initial,
   onSave,
 }: {
   open: boolean
   onClose: () => void
   teams: Team[]
-  checklistItems: ChecklistItem[]
+  milestones: Milestone[]
   initial: Handoff | null
   onSave: (values: HandoffFormValues) => void
 }) {
@@ -54,15 +54,13 @@ export function HandoffFormDialog({
   const [isExternal, setIsExternal] = useState(initial ? initial.to_team_id === null : false)
   const [title, setTitle] = useState(initial?.title ?? '')
   const [dueDate, setDueDate] = useState(initial?.due_date ?? '')
-  const [checklistItemId, setChecklistItemId] = useState<string>(
-    initial?.checklist_item_id ?? 'none'
-  )
+  const [itemId, setItemId] = useState<string>(initial?.item_id ?? 'none')
   const [error, setError] = useState<string | null>(null)
 
   // Base UI Select 라벨 맵 — SelectValue가 원시 id 대신 이름을 렌더하도록
   const teamLabels = Object.fromEntries(teams.map((t) => [t.id, t.name]))
-  const checklistLabels: Record<string, string> = Object.fromEntries(
-    checklistItems.map((c) => [c.id, c.content.slice(0, 30)])
+  const itemLabels: Record<string, string> = Object.fromEntries(
+    milestones.map((m) => [m.id, m.title.slice(0, 30)])
   )
 
   const handleSave = () => {
@@ -92,7 +90,7 @@ export function HandoffFormDialog({
       toExternal: isExternal ? toExternal.trim() : null,
       title: title.trim(),
       dueDate: dueDate || null,
-      checklistItemId: checklistItemId === 'none' ? null : checklistItemId,
+      itemId: itemId === 'none' ? null : itemId,
     })
     onClose()
   }
@@ -181,18 +179,18 @@ export function HandoffFormDialog({
               관련 체크리스트 (선택)
             </label>
             <Select
-              value={checklistItemId}
-              onValueChange={(v) => setChecklistItemId(v ?? 'none')}
-              items={{ none: '없음', ...checklistLabels }}
+              value={itemId}
+              onValueChange={(v) => setItemId(v ?? 'none')}
+              items={{ none: '없음', ...itemLabels }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="없음" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">없음</SelectItem>
-                {checklistItems.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.content.slice(0, 30)}
+                {milestones.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.title.slice(0, 30)}
                   </SelectItem>
                 ))}
               </SelectContent>

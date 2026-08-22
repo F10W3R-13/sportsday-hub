@@ -1,14 +1,14 @@
 import { HandoffsClient } from '@/components/handoffs/handoffs-client'
 import { getHandoffs } from '@/lib/queries/handoffs'
 import { getTeams } from '@/lib/queries/teams'
-import { getChecklistItems } from '@/lib/queries/checklist'
+import { getMilestones } from '@/lib/queries/milestones'
 import { getRecentDriveFiles } from '@/lib/queries/drive-files'
 
 export default async function HandoffsPage() {
-  const [handoffs, teams, checklist, recentFiles] = await Promise.all([
+  const [handoffs, teams, milestones, recentFiles] = await Promise.all([
     getHandoffs(),
     getTeams(),
-    getChecklistItems(),
+    getMilestones(),
     getRecentDriveFiles(50),
   ])
 
@@ -23,7 +23,7 @@ export default async function HandoffsPage() {
       <HandoffsClient
         handoffs={handoffs}
         teams={teams}
-        checklistItems={checklist}
+        milestones={milestones}
         recentFiles={recentFiles}
       />
     </div>

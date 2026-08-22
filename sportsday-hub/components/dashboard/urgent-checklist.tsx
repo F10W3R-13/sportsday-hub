@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Card,
   CardContent,
@@ -9,25 +9,23 @@ import {
 } from '@/components/ui/card'
 import { EmptyState } from '@/components/shared/empty-state'
 import { TeamBadge } from '@/components/shared/team-badge'
+import { EditableTaskCheckbox } from '@/components/editor/editable-checkbox'
 import { sortByUrgency } from '@/lib/milestones-urgency'
-import type { ChecklistItem, Milestone, Team } from '@/lib/types/models'
-import Link from 'next/link'
-import { buildChecklistFocusUrl } from '@/lib/checklist-focus-url'
+import type { Milestone, Team } from '@/lib/types/models'
+
+const MAX_VISIBLE = 8
 
 /**
- * 긴급 체크리스트 — 미완료 체크리스트 항목 중 소속 마일스톤 날짜가 임박/지연인 것 상위 5개.
- * milestone_id가 없는(상시) 항목은 마감일 정보가 없으므로 제외.
+ * 긴급 체크리스트 — 통합 작업 엔터티(milestones)를 긴급도 순으로 하나의 위젯에 표시.
+ * overdue/today 먼저, 이어서 다가오는 항목 상위 8개.
+ * undated(상시) 항목은 마감일 정보가 없어 타임라인 담당이므로 제외.
  */
 export function UrgentChecklist({
-  checklist,
-  milestones,
+  tasks,
   teams,
-  excludeMilestoneIds,
 }: {
-  checklist: ChecklistItem[]
-  milestones: Milestone[]
+  tasks: Milestone[]
   teams: Team[]
-  excludeMilestoneIds?: string[]
 }) {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
@@ -35,47 +33,13 @@ export function UrgentChecklist({
     return () => clearInterval(id)
   }, [])
 
-  const teamMap = new Map(teams.map((t) => [t.id, t]))
+  const teamMap: Map<string, Team> = new Map(teams.map((t) => [t.id, t]))
 
-  // 마일스톤 urgency 맵 (id → urgency 정보)
-  const urgencyMap = useMemo(() => {
-    const map = new Map<string, { tier: string; date: string; daysFromToday: number }>()
-    for (const { milestone, tier, daysFromToday } of sortByUrgency(milestones, now)) {
-      map.set(milestone.id, { tier, date: milestone.date, daysFromToday })
-    }
-    return map
-  }, [milestones, now])
-
-  // 미완료 + 마일스톤 연결된 항목을 urgency로 정렬
-  const urgentAll = useMemo(() => {
-    const tierOrder: Record<string, number> = {
-      overdue: 0,
-      today: 1,
-      upcoming: 2,
-    }
-    return checklist
-      .filter(
-        (c) =>
-          !c.completed &&
-          c.milestone_id &&
-          !excludeMilestoneIds?.includes(c.milestone_id) &&
-          urgencyMap.has(c.milestone_id),
-      )
-      .map((c) => {
-        const u = urgencyMap.get(c.milestone_id!)!
-        return { item: c, ...u }
-      })
-      .sort((a, b) => {
-        const ta = tierOrder[a.tier] ?? 3
-        const tb = tierOrder[b.tier] ?? 3
-        if (ta !== tb) return ta - tb
-        // 같은 tier면 날짜순
-        return a.date.localeCompare(b.date)
-      })
-  }, [checklist, urgencyMap, excludeMilestoneIds])
-  // 위젯에는 상위 5개만 표시. 전체 개수(urgentAll.length)는 카운트 표시에 사용 —
-  // 회고(2026-08-12)의 "slice(N) 정보 은닉" 지적 반영.
-  const urgent = urgentAll.slice(0, 5)
+  // 상위 표시 개수 카운트는 undated 제외 기준 — slice(N) 정보 은닉 방지
+  const datedSorted = sortByUrgency(tasks, now).filter(
+    ({ tier }) => tier !== 'undated',
+  )
+  const visible = datedSorted.slice(0, MAX_VISIBLE)
 
   const tierStyle = (tier: string): string => {
     if (tier === 'overdue') return 'border-red-300 bg-red-50'
@@ -84,7 +48,8 @@ export function UrgentChecklist({
   }
   const dateLabel = (tier: string, daysFromToday: number): string => {
     if (tier === 'overdue') return `지연 ${Math.abs(daysFromToday)}일`
-    if (tier === 'today') return '오늘 마감'
+    if (tier === 'today') return '오늘'
+    if (tier === 'undated') return '상시'
     return `${daysFromToday}일 후`
   }
   const labelColor = (tier: string): string => {
@@ -98,44 +63,31 @@ export function UrgentChecklist({
       <CardHeader>
         <CardTitle>
           긴급 체크리스트
-          {urgentAll.length > urgent.length && (
+          {datedSorted.length > visible.length && (
             <span className="ml-2 text-xs font-normal text-muted-foreground">
-              전체 {urgentAll.length}개 중 상위 {urgent.length}개
+              전체 {datedSorted.length}개 중 상위 {visible.length}개
             </span>
           )}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {urgent.length === 0 ? (
+        {visible.length === 0 ? (
           <EmptyState title="마감 임박 항목이 없습니다" />
         ) : (
           <div className="space-y-2">
-            {urgent.map(({ item, tier, daysFromToday }) => {
-              const team = item.team_id ? teamMap.get(item.team_id) : null
-              const href = buildChecklistFocusUrl(item.team_id, item.id)
-              const rowContent = (
-                <>
+            {visible.map(({ milestone, tier, daysFromToday }) => {
+              const team = milestone.team_id ? teamMap.get(milestone.team_id) : null
+              return (
+                <div
+                  key={milestone.id}
+                  className={`flex items-center gap-3 rounded-md border p-3 text-sm ${tierStyle(tier)}`}
+                >
+                  <EditableTaskCheckbox task={milestone} />
                   <span className={`w-16 shrink-0 text-xs font-medium ${labelColor(tier)}`}>
                     {dateLabel(tier, daysFromToday)}
                   </span>
-                  <span className="min-w-0 flex-1 truncate">{item.content}</span>
+                  <span className="min-w-0 flex-1 truncate">{milestone.title}</span>
                   {team && <TeamBadge name={team.name} color={team.color} />}
-                </>
-              )
-              return href ? (
-                <Link
-                  key={item.id}
-                  href={href}
-                  className={`flex items-center gap-3 rounded-md border p-3 text-sm transition-colors hover:bg-accent ${tierStyle(tier)}`}
-                >
-                  {rowContent}
-                </Link>
-              ) : (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-3 rounded-md border p-3 text-sm ${tierStyle(tier)}`}
-                >
-                  {rowContent}
                 </div>
               )
             })}

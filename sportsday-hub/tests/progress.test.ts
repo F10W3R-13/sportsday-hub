@@ -1,17 +1,18 @@
 import { describe, it, expect } from 'vitest'
 import { computeProgress } from '@/lib/progress'
-import type { ChecklistItem } from '@/lib/types/models'
+import type { Milestone, MilestoneCategory } from '@/lib/types/models'
 
-// 테스트용 최소 ChecklistItem 팩토리. computeProgress는 completed 필드만 본다.
-function item(completed: boolean): ChecklistItem {
+// 테스트용 최소 Milestone 팩토리. computeProgress는 completed 필드만 본다.
+function item(completed: boolean): Milestone {
   return {
     id: crypto.randomUUID(),
     team_id: 'management',
-    milestone_id: null,
-    content: 'x',
+    date: null,
+    title: 'x',
+    category: 'deliverable' as MilestoneCategory,
     priority: null,
-    completed,
     source: null,
+    completed,
     sort_order: 0,
   }
 }

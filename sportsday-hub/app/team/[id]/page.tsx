@@ -1,8 +1,7 @@
 import { notFound } from 'next/navigation'
 import { TeamTabs } from '@/components/team/team-tabs'
 import { getTeam } from '@/lib/queries/teams'
-import { getChecklistByTeam } from '@/lib/queries/checklist'
-import { getMilestones, getMilestonesByTeam } from '@/lib/queries/milestones'
+import { getMilestonesByTeam } from '@/lib/queries/milestones'
 import { getIssuesByTeam } from '@/lib/queries/issues'
 import { getDriveFilesByTeam } from '@/lib/queries/drive-files'
 import { TEAM_IDS } from '@/lib/types/models'
@@ -24,18 +23,12 @@ export default async function TeamPage({
   const team = await getTeam(id)
   if (!team) notFound()
 
-  // milestones: 이 팀이 소유한 마일스톤만(MilestonePanel 탭은 팀 범위 유지).
-  // allMilestones: 모든 팀의 마일스톤 — ChecklistPanel에서 다른 팀 소유
-  // 마일스톤 아래에 배정된 체크리스트 항목(예: 예산팀 항목 → 컨텐츠팀 마일스톤)의
-  // 라벨을 "상시"로 잘못 빠뜨리지 않도록 함께 전달.
-  const [checklist, milestones, allMilestones, issues, driveFiles] =
-    await Promise.all([
-      getChecklistByTeam(id as (typeof TEAM_IDS)[number]),
-      getMilestonesByTeam(id as (typeof TEAM_IDS)[number]),
-      getMilestones(),
-      getIssuesByTeam(id as (typeof TEAM_IDS)[number]),
-      getDriveFilesByTeam(id as (typeof TEAM_IDS)[number]),
-    ])
+  // 통합 작업 엔터티(마일스톤, 구 checklist_items 포함) — 팀 범위 단일 호출.
+  const [tasks, issues, driveFiles] = await Promise.all([
+    getMilestonesByTeam(id as (typeof TEAM_IDS)[number]),
+    getIssuesByTeam(id as (typeof TEAM_IDS)[number]),
+    getDriveFilesByTeam(id as (typeof TEAM_IDS)[number]),
+  ])
 
   return (
     <div className="space-y-6">
@@ -48,9 +41,7 @@ export default async function TeamPage({
       </div>
       <TeamTabs
         team={team}
-        checklist={checklist}
-        milestones={milestones}
-        allMilestones={allMilestones}
+        tasks={tasks}
         issues={issues}
         driveFiles={driveFiles}
       />

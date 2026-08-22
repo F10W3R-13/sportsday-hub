@@ -5,24 +5,19 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { GuidelineViewer } from './guideline-viewer'
 import { ChecklistPanel } from './checklist-panel'
-import { MilestonePanel } from './milestone-panel'
 import { IssuePanel } from './issue-panel'
 import { FileList } from '@/components/drive/file-list'
 import { computeProgress } from '@/lib/progress'
 import { readableColor } from '@/lib/color'
-import type { Team, ChecklistItem, Milestone, Issue, DriveFile } from '@/lib/types/models'
+import type { Team, Milestone, Issue, DriveFile } from '@/lib/types/models'
 
-const TAB_VALUES = ['overview', 'guideline', 'checklist', 'milestones', 'issues'] as const
+const TAB_VALUES = ['overview', 'guideline', 'checklist', 'issues'] as const
 type TabValue = (typeof TAB_VALUES)[number]
 
 interface TeamTabsProps {
   team: Team
-  checklist: ChecklistItem[]
-  milestones: Milestone[]
-  // ChecklistPanel은 다른 팀 소유 마일스톤 아래 배정된 항목까지 올바른 라벨을
-  // 표시해야 하므로 전체 마일스톤을 받는다. MilestonePanel은 여전히 milestones
-  // (팀 범위)를 사용한다.
-  allMilestones: Milestone[]
+  // 통합 작업 엔터티(마일스톤, 구 checklist_items 포함) — 체크리스트 탭 단일 소스
+  tasks: Milestone[]
   issues: Issue[]
   driveFiles: DriveFile[]
 }
@@ -36,18 +31,11 @@ export function TeamTabs(props: TeamTabsProps) {
   )
 }
 
-function TeamTabsInner({
-  team,
-  checklist,
-  milestones,
-  allMilestones,
-  issues,
-  driveFiles,
-}: TeamTabsProps) {
+function TeamTabsInner({ team, tasks, issues, driveFiles }: TeamTabsProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
-  const { completed, percent: progress } = computeProgress(checklist)
+  const { completed, percent: progress } = computeProgress(tasks)
 
   // 탭 상태는 URL(?tab=)이 진실 원천 — 로컬 state 중복 없음. 무효 값은 개요 폴백.
   const tabParam = searchParams.get('tab')
@@ -69,9 +57,8 @@ function TeamTabsInner({
         <TabsTrigger className="shrink-0" value="overview">개요</TabsTrigger>
         <TabsTrigger className="shrink-0" value="guideline">지침</TabsTrigger>
         <TabsTrigger className="shrink-0" value="checklist">
-          체크리스트 ({completed}/{checklist.length})
+          체크리스트 ({completed}/{tasks.length})
         </TabsTrigger>
-        <TabsTrigger className="shrink-0" value="milestones">마일스톤</TabsTrigger>
         <TabsTrigger className="shrink-0" value="issues">이슈 ({issues.length})</TabsTrigger>
       </TabsList>
 
@@ -108,15 +95,10 @@ function TeamTabsInner({
 
       <TabsContent value="checklist" className="mt-4">
         <ChecklistPanel
-          items={checklist}
-          milestones={allMilestones}
+          tasks={tasks}
           teamId={team.id}
           focusItemId={focusItemId}
         />
-      </TabsContent>
-
-      <TabsContent value="milestones" className="mt-4">
-        <MilestonePanel milestones={milestones} />
       </TabsContent>
 
       <TabsContent value="issues" className="mt-4">

@@ -3,7 +3,7 @@ import { notifyTabs, onTabSync } from '@/lib/sync'
 
 describe('lib/sync (node 환경 — BroadcastChannel 미지원)', () => {
   it('notifyTabs는 BroadcastChannel 없을 때 에러 없이 no-op', () => {
-    expect(() => notifyTabs({ type: 'checklist-updated' })).not.toThrow()
+    expect(() => notifyTabs({ type: 'tasks-updated' })).not.toThrow()
   })
 
   it('onTabSync는 BroadcastChannel 없을 때 더미 해제 함수 반환', () => {

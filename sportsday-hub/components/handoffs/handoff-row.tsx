@@ -23,8 +23,8 @@ export function HandoffRow({
     ? format(parseISO(handoff.due_date), 'M/d (E)', { locale: ko })
     : '—'
   const focusUrl =
-    handoff.checklist_item_id && handoff.checklist_team_id
-      ? buildChecklistFocusUrl(handoff.checklist_team_id, handoff.checklist_item_id)
+    handoff.item_id && handoff.item_team_id
+      ? buildChecklistFocusUrl(handoff.item_team_id, handoff.item_id)
       : null
 
   return (
@@ -68,7 +68,7 @@ export function HandoffRow({
         <Link
           href={focusUrl}
           className="shrink-0 rounded-md px-2 py-1 text-xs text-primary hover:bg-muted transition-colors"
-          title={handoff.checklist_content ?? '관련 체크리스트 항목'}
+          title={handoff.item_title ?? '관련 체크리스트 항목'}
         >
           관련 항목 →
         </Link>

@@ -1,20 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { computeProgress } from '@/lib/progress'
-import type { Decision, ChecklistItem } from '@/lib/types/models'
+import type { Decision, Milestone } from '@/lib/types/models'
 
 export function StatsCards({
   decisions,
-  checklist,
+  tasks,
 }: {
   decisions: Decision[]
-  checklist: ChecklistItem[]
+  tasks: Milestone[]
 }) {
   const confirmed = decisions.filter((d) => d.status === 'confirmed').length
   const discussing = decisions.filter((d) => d.status === 'discussing').length
   const pending = decisions.filter(
     (d) => d.status === 'pending' || d.status === 'deferred'
   ).length
-  const { percent: progress } = computeProgress(checklist)
+  const { percent: progress } = computeProgress(tasks)
 
   // 숫자 강조색은 흰 배경 대비 4.5:1 이상(WCAG AA)인 -700 톤 사용
   const cards = [

@@ -1,11 +1,5 @@
 import { randomUUID } from 'crypto'
-import type {
-  Decision,
-  Milestone,
-  ChecklistItem,
-  Issue,
-  TeamId,
-} from '@/lib/types/models'
+import type { Decision, Milestone, Issue, TeamId } from '@/lib/types/models'
 
 // 마크다운 강조 표시 제거 (**, *, __, _) — 텍스트는 유지
 export function stripMarkdown(s: string): string {
@@ -259,27 +253,26 @@ export function parseMilestones(md: string): Milestone[] {
   return milestones
 }
 
-// ===== 체크리스트 파서 (각 팀 §진행 체크리스트 / 피드백 체크리스트) =====
-
-function mapPriority(text: string): ChecklistItem['priority'] {
+function mapPriority(text: string): Milestone['priority'] {
   if (text.includes('🔴') || text.includes('HIGH')) return 'high'
   if (text.includes('🟡') || text.includes('MID')) return 'medium'
   if (text.includes('🟢') || text.includes('LOW')) return 'low'
   return null
 }
 
+// ===== 체크리스트 파서 (각 팀 §진행 체크리스트 / 피드백 체크리스트) =====
+// 통합 엔터티(Milestone) 형태로 반환 — checklist_items 병합 이후 기준.
+// 마크다운 파서는 milestone UUID를 알 수 없으므로 모든 항목을
+// 상시(date=null, category='deliverable')로 분류한다.
+
 export function parseTeamChecklists(
   md: string,
   teamId: TeamId
-): ChecklistItem[] {
+): Milestone[] {
   const sections = splitSections(md)
-  const items: ChecklistItem[] = []
+  const items: Milestone[] = []
   let sortOrder = 0
 
-  // NOTE: 마크다운 파서는 milestone UUID를 알 수 없으므로 모든 파싱 항목을
-  // 상시(unassigned, milestone_id=null)로 분류한다. 이 스크립트들은 더 이상
-  // 사용되지 않으며(supabase migration 0008이 명시적 milestone_id 매핑으로
-  // 시드를 대체함) 컴파일만 통과하면 된다.
   for (const section of sections) {
     if (
       section.title.toLowerCase().includes('체크리스트') ||
@@ -321,13 +314,15 @@ export function parseTeamChecklists(
         if (content) {
           items.push({
             id: randomUUID(),
+            date: null, // 상시 — 마크다운에는 개별 항목 날짜가 없다
+            title: content,
             team_id: teamId,
-            milestone_id: null,
-            content,
-            priority,
+            category: 'deliverable',
             completed: c.checked,
-            source,
+            depends_on: null,
             sort_order: sortOrder++,
+            priority,
+            source,
           })
         }
       }

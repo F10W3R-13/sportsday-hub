@@ -1,8 +1,8 @@
 import { sortByUrgency, startOfToday } from '@/lib/milestones-urgency'
-import type { ChecklistItem, Handoff, Milestone, Team } from '@/lib/types/models'
+import type { Handoff, Milestone, Team } from '@/lib/types/models'
 
 /**
- * 카카오 임박 알림 다이제스트 — 마일스톤·인계·체크리스트 중 지연/D-Day/horizon일 내 항목을 묶는다.
+ * 카카오 임박 알림 다이제스트 — 작업(마일스톤 통합 엔터티)·인계 중 지연/D-Day/horizon일 내 항목을 묶는다.
  * 대시보드 긴급 위젯과 같은 긴급 척도(sortByUrgency)를 재사용.
  *
  * - compact: 카카오 메모('나에게 보내기') 200자 제한용. 제목·팀명을 짧게 자른 요약 나열식.
@@ -29,7 +29,7 @@ const DETAILED_TITLE_LIMIT = 80 // 이상 길이 방지용 안전망 (실제로�
 
 interface UrgentEntry {
   days: number // 음수=지연, 0=오늘, 양수=남은 일수
-  kind: 'milestone' | 'checklist' | 'handoff'
+  kind: 'milestone' | 'handoff'
   title: string
   team?: string
 }
@@ -60,8 +60,7 @@ function renderCompactLine(entry: UrgentEntry): string {
   if (entry.kind === 'handoff') {
     return `${label} 인계: ${trim(entry.title, 12)}${entry.team ? ` → ${trim(entry.team, 6)}` : ''}`
   }
-  const prefix = entry.kind === 'checklist' ? '☐ ' : ''
-  return `${label} ${prefix}${trim(entry.title, 14)}${entry.team ? ` (${trim(entry.team, 6)})` : ''}`
+  return `${label} ${trim(entry.title, 14)}${entry.team ? ` (${trim(entry.team, 6)})` : ''}`
 }
 
 function renderDetailedBlock(entry: UrgentEntry): string[] {
@@ -76,7 +75,7 @@ function renderDetailedBlock(entry: UrgentEntry): string[] {
  * 임박 항목이 하나도 없으면 null을 반환한다 (알림 없음 = 미발송).
  */
 export function buildKakaoDigest(
-  input: { milestones: Milestone[]; handoffs: Handoff[]; teams: Team[]; checklistItems?: ChecklistItem[] },
+  input: { tasks: Milestone[]; handoffs: Handoff[]; teams: Team[] },
   options: KakaoDigestOptions = {}
 ): KakaoDigest | null {
   const {
@@ -88,36 +87,14 @@ export function buildKakaoDigest(
     style = 'compact',
   } = options
   const todayStart = startOfToday(now)
-  const teamName = new Map(input.teams.map((t) => [t.id, t.name]))
+  const teamName = new Map<string, string>(input.teams.map((t) => [t.id, t.name]))
 
   const entries: UrgentEntry[] = []
 
-  // 체크리스트: 미완료 항목 중 연결된 마일스톤이 horizon 내인 것만.
-  // 마일스톤에 묶이지 않은 '상시' 항목은 날짜 판단 근거가 없어 제외.
-  // 세부 할 일이 표시되는 마일스톤은 마일스톤 줄 자체를 생략한다 (중복 방지).
-  const milestoneById = new Map(input.milestones.map((m) => [m.id, m]))
-  const coveredMilestoneIds = new Set<string>()
-  if (input.checklistItems?.length) {
-    for (const item of input.checklistItems) {
-      if (item.completed || !item.milestone_id) continue
-      const milestone = milestoneById.get(item.milestone_id)
-      if (!milestone || milestone.completed) continue
-      const days = daysFrom(milestone.date, todayStart)
-      if (days > horizonDays) continue
-      coveredMilestoneIds.add(item.milestone_id)
-      entries.push({
-        days,
-        kind: 'checklist',
-        title: item.content,
-        team: item.team_id ? teamName.get(item.team_id) : undefined,
-      })
-    }
-  }
-
-  // 마일스톤: sortByUrgency 재사용 (완료 제외·정렬 포함).
-  for (const { milestone, daysFromToday } of sortByUrgency(input.milestones, now)) {
+  // 작업: sortByUrgency 재사용 (미완료 필터·overdue/today/upcoming 분류·정렬 포함).
+  // horizon 밖(undated 포함)은 제외.
+  for (const { milestone, daysFromToday } of sortByUrgency(input.tasks, now)) {
     if (daysFromToday > horizonDays) continue
-    if (coveredMilestoneIds.has(milestone.id)) continue
     entries.push({
       days: daysFromToday,
       kind: 'milestone',

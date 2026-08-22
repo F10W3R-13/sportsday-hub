@@ -11,9 +11,9 @@ import { queryKeys } from '@/lib/queries/keys'
 import { notifyTabs } from '@/lib/sync'
 import { format, parseISO } from 'date-fns'
 import { ko } from 'date-fns/locale'
-import type { ChecklistItem, Issue } from '@/lib/types/models'
+import type { Issue, Milestone } from '@/lib/types/models'
 
-type TrashEntryKind = 'checklist_items' | 'issues'
+type TrashEntryKind = 'milestones' | 'issues'
 
 const RETENTION_DAYS = 30
 
@@ -34,11 +34,11 @@ type TrashEntry = {
   deletedAt: string | null
 }
 
-function entryFromChecklist(item: ChecklistItem): TrashEntry {
+function entryFromChecklist(item: Milestone): TrashEntry {
   return {
     id: item.id,
-    kind: 'checklist_items',
-    label: item.content,
+    kind: 'milestones',
+    label: item.title,
     deletedAt: item.deleted_at ?? null,
   }
 }
@@ -65,14 +65,14 @@ export function TrashView() {
     setLoading(true)
     try {
       const client = createClient()
-      const [checklist, issues] = await Promise.all([
+      const [milestones, issues] = await Promise.all([
         client
-          .from('checklist_items')
+          .from('milestones')
           .select('*')
           .not('deleted_at', 'is', null),
         client.from('issues').select('*').not('deleted_at', 'is', null),
       ])
-      if (checklist.error) {
+      if (milestones.error) {
         toast.error('체크리스트 불러오기 실패')
         setLoaded(true)
         return
@@ -83,7 +83,7 @@ export function TrashView() {
         return
       }
       const entries: TrashEntry[] = [
-        ...((checklist.data ?? []) as ChecklistItem[]).map(entryFromChecklist),
+        ...((milestones.data ?? []) as Milestone[]).map(entryFromChecklist),
         ...((issues.data ?? []) as Issue[]).map(entryFromIssue),
       ]
       // 삭제일 내림차순
@@ -116,11 +116,9 @@ export function TrashView() {
         .eq('id', entry.id)
       if (error) throw error
       toast.success('복원되었습니다.')
-      queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
+      queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
       queryClient.invalidateQueries({ queryKey: queryKeys.issues })
-      if (entry.kind === 'checklist_items') {
-        notifyTabs({ type: 'checklist-updated' })
-      }
+      notifyTabs({ type: 'tasks-updated' })
       void router.refresh()
       setItems((prev) => prev.filter((i) => i.id !== entry.id))
     } catch {
@@ -168,7 +166,7 @@ export function TrashView() {
             className="flex items-center gap-3 rounded-md border p-3"
           >
             <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs">
-              {entry.kind === 'checklist_items' ? '체크리스트' : '이슈'}
+              {entry.kind === 'milestones' ? '체크리스트' : '이슈'}
             </span>
             <span className="min-w-0 flex-1 truncate text-sm">
               {entry.label}

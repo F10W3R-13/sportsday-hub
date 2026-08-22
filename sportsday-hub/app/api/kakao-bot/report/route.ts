@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { buildKakaoDigest } from '@/lib/kakao-digest'
 import { sendMemoViaEnv } from '@/lib/kakao-memo'
 import { kstTodayDate, buildBotAlert } from '@/lib/kakao-bot'
@@ -24,24 +24,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'status must be success|fail' }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    // service_role 필요: 0020 마이그레이션이 bot_runs을 RLS 정책 0개(서버 전용)로 둠
+    const supabase = createServiceClient()
     const { error: insertError } = await supabase
       .from('bot_runs')
       .insert({ run_date: kstTodayDate(), status: body.status, detail: body.detail ?? null })
     if (insertError) throw new Error(insertError.message)
 
-    // 실패 보고는 즉시 경보 — 다이제스트를 새로 만들어 수동 폴백 텍스트로 포함
+    // 실패 보고는 즉시 경보 — 다이제스트를 새로 만들어 수동 폴백 텍스트로 포함.
+    // 조회 실패 시에도 경보 자체는 링크 안내 형태로 발송된다.
     if (body.status === 'fail') {
-      const [{ data: milestones }, { data: handoffs }, { data: teams }] = await Promise.all([
-        supabase.from('milestones').select('*').is('deleted_at', null),
-        supabase.from('handoffs').select('*').is('deleted_at', null),
-        supabase.from('teams').select('*'),
-      ])
-      const digest = buildKakaoDigest(
-        { tasks: milestones ?? [], handoffs: handoffs ?? [], teams: teams ?? [] },
-        { style: 'detailed', maxItems: 20, textLimit: 2000 }
-      )
-      const alert = buildBotAlert('fail', body.detail ?? null, digest.text)
+      let digestText: string | null = null
+      try {
+        const [milestones, handoffs, teams] = await Promise.all([
+          supabase.from('milestones').select('*').is('deleted_at', null),
+          supabase.from('handoffs').select('*').is('deleted_at', null),
+          supabase.from('teams').select('*'),
+        ])
+        const firstError = milestones.error ?? handoffs.error ?? teams.error
+        if (firstError) throw new Error(firstError.message)
+        digestText = buildKakaoDigest(
+          { tasks: milestones.data ?? [], handoffs: handoffs.data ?? [], teams: teams.data ?? [] },
+          { style: 'compact', textLimit: 100 }
+        ).text
+      } catch {
+        digestText = null
+      }
+      const alert = buildBotAlert('fail', body.detail ?? null, digestText)
       const result = await sendMemoViaEnv(alert)
       return NextResponse.json({ recorded: true, alerted: result.sent, alertError: result.error ?? null })
     }

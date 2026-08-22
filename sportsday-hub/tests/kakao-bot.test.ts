@@ -31,6 +31,14 @@ describe('kakao-bot 헬퍼', () => {
     expect(text.length).toBeLessThanOrEqual(200)
     expect(text).toContain('sportsday-hub.vercel.app')
   })
+  it('fail 경보: 300자 사유는 80자로 클램프되고 URL은 잘리지 않음', () => {
+    const longDetail = '에'.repeat(300)
+    const text = buildBotAlert('fail', longDetail, null, NOW)
+    expect(text).toContain('sportsday-hub.vercel.app')
+    expect(text.length).toBeLessThanOrEqual(200)
+    expect(text).toContain('사유:')
+    expect(text).toContain('…')
+  })
   it('watchdog 경보: 미실행 안내 + 다이제스트 포함', () => {
     const text = buildBotAlert(
       'watchdog',

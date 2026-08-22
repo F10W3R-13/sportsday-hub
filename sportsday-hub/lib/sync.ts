@@ -1,8 +1,7 @@
 const CHANNEL_NAME = 'sportsday-sync'
 
 export type SyncMessage =
-  | { type: 'checklist-updated' }
-  | { type: 'milestone-updated' }
+  | { type: 'tasks-updated' }
   | { type: 'decision-updated' }
 
 /**

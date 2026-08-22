@@ -119,7 +119,7 @@ export function TrashView() {
       queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
       queryClient.invalidateQueries({ queryKey: queryKeys.issues })
       if (entry.kind === 'checklist_items') {
-        notifyTabs({ type: 'checklist-updated' })
+        notifyTabs({ type: 'tasks-updated' })
       }
       void router.refresh()
       setItems((prev) => prev.filter((i) => i.id !== entry.id))

@@ -7,8 +7,7 @@ import { ChevronDown, Settings2 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/empty-state'
 import { PriorityBadge } from '@/components/shared/priority-badge'
 import { TeamBadge } from '@/components/shared/team-badge'
-import { EditableChecklistCheckbox } from '@/components/editor/editable-checkbox'
-import { EditableMilestoneCheckbox } from '@/components/editor/editable-checkbox'
+import { EditableTaskCheckbox } from '@/components/editor/editable-checkbox'
 import type { Milestone, ChecklistItem, Team } from '@/lib/types/models'
 import { computeProgress } from '@/lib/progress'
 
@@ -247,7 +246,7 @@ function MilestoneRow({
             {subCompleted}/{subItems.length}
           </span>
         ) : (
-          <EditableMilestoneCheckbox milestone={milestone} />
+          <EditableTaskCheckbox task={milestone} />
         )}
         <span className="w-24 shrink-0 text-sm font-medium">
           {format(parseISO(milestone.date), 'M/d (E)', { locale: ko })}
@@ -306,7 +305,7 @@ function ChecklistRow({
 }) {
   return (
     <div className="flex items-start gap-3 rounded-md border bg-background p-2">
-      <EditableChecklistCheckbox item={item} />
+      <EditableTaskCheckbox task={item} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <PriorityBadge priority={item.priority} />

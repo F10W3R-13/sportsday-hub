@@ -1,7 +1,7 @@
 'use client'
 
 import { EmptyState } from '@/components/shared/empty-state'
-import { EditableMilestoneCheckbox } from '@/components/editor/editable-checkbox'
+import { EditableTaskCheckbox } from '@/components/editor/editable-checkbox'
 import type { Milestone } from '@/lib/types/models'
 import { format, parseISO } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -20,7 +20,7 @@ export function MilestonePanel({ milestones }: { milestones: Milestone[] }) {
     <div className="space-y-2">
       {milestones.map((m) => (
         <div key={m.id} className="flex items-center gap-3 rounded-md border p-3">
-          <EditableMilestoneCheckbox milestone={m} />
+          <EditableTaskCheckbox task={m} />
           <span className="w-24 shrink-0 text-sm font-medium">
             {format(parseISO(m.date), 'M/d (E)', { locale: ko })}
           </span>

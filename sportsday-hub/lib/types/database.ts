@@ -2,7 +2,6 @@ import type {
   Team,
   Decision,
   Milestone,
-  ChecklistItem,
   Issue,
   AuditLog,
   DriveToken,
@@ -31,12 +30,6 @@ export interface Database {
         Row: Milestone
         Insert: Partial<Milestone>
         Update: Partial<Milestone>
-        Relationships: []
-      }
-      checklist_items: {
-        Row: ChecklistItem
-        Insert: Partial<ChecklistItem>
-        Update: Partial<ChecklistItem>
         Relationships: []
       }
       issues: {

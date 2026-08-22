@@ -17,9 +17,9 @@ import {
   type HandoffInput,
 } from '@/lib/mutations/handoffs'
 import type {
-  ChecklistItem,
   Handoff,
   HandoffItem,
+  Milestone,
   RecentFileItem,
   Team,
   TeamId,
@@ -28,7 +28,7 @@ import type {
 interface HandoffsClientProps {
   handoffs: HandoffItem[]
   teams: Team[]
-  checklistItems: ChecklistItem[]
+  milestones: Milestone[]
   recentFiles: RecentFileItem[]
 }
 
@@ -41,7 +41,7 @@ export function HandoffsClient(props: HandoffsClientProps) {
   )
 }
 
-function HandoffsInner({ handoffs, teams, checklistItems, recentFiles }: HandoffsClientProps) {
+function HandoffsInner({ handoffs, teams, milestones, recentFiles }: HandoffsClientProps) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -184,7 +184,7 @@ function HandoffsInner({ handoffs, teams, checklistItems, recentFiles }: Handoff
           open={formOpen}
           onClose={() => setFormOpen(false)}
           teams={teams}
-          checklistItems={checklistItems}
+          milestones={milestones}
           initial={editing}
           onSave={handleSave}
         />

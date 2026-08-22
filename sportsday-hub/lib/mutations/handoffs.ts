@@ -13,7 +13,7 @@ export interface HandoffInput {
   toExternal: string | null
   title: string
   dueDate: string | null
-  checklistItemId: string | null
+  itemId: string | null
 }
 
 // ===== 등록 =====
@@ -31,7 +31,7 @@ export function useCreateHandoff() {
         to_external: input.toExternal,
         title: input.title,
         due_date: input.dueDate,
-        checklist_item_id: input.checklistItemId,
+        item_id: input.itemId,
         completed: false,
         sort_order: Math.floor(Date.now() / 1000) % 100000,
       })
@@ -63,7 +63,7 @@ export function useUpdateHandoff() {
           to_external: input.toExternal,
           title: input.title,
           due_date: input.dueDate,
-          checklist_item_id: input.checklistItemId,
+          item_id: input.itemId,
           // DB에 updated_at 자동갱신 트리거가 없어 명시 갱신 — 수정 시점 기준으로 기록.
           updated_at: new Date().toISOString(),
         })

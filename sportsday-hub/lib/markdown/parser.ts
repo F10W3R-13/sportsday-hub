@@ -1,11 +1,19 @@
 import { randomUUID } from 'crypto'
-import type {
-  Decision,
-  Milestone,
-  ChecklistItem,
-  Issue,
-  TeamId,
-} from '@/lib/types/models'
+import type { Decision, Milestone, Issue, TeamId } from '@/lib/types/models'
+
+// 레거시 체크리스트 파서 전용 형태 — checklist_items는 milestones로 병합되어
+// 타입이 삭제됐으나, 이 파서·마이그레이션 스크립트는 더 이상 사용되지 않으며
+// 컴파일만 통과하면 된다 (파서 상단 NOTE 참조).
+interface ParsedChecklistItem {
+  id: string
+  team_id: TeamId | null
+  milestone_id: string | null
+  content: string
+  priority: Milestone['priority']
+  completed: boolean
+  source: string | null
+  sort_order: number
+}
 
 // 마크다운 강조 표시 제거 (**, *, __, _) — 텍스트는 유지
 export function stripMarkdown(s: string): string {
@@ -261,7 +269,7 @@ export function parseMilestones(md: string): Milestone[] {
 
 // ===== 체크리스트 파서 (각 팀 §진행 체크리스트 / 피드백 체크리스트) =====
 
-function mapPriority(text: string): ChecklistItem['priority'] {
+function mapPriority(text: string): ParsedChecklistItem['priority'] {
   if (text.includes('🔴') || text.includes('HIGH')) return 'high'
   if (text.includes('🟡') || text.includes('MID')) return 'medium'
   if (text.includes('🟢') || text.includes('LOW')) return 'low'
@@ -271,9 +279,9 @@ function mapPriority(text: string): ChecklistItem['priority'] {
 export function parseTeamChecklists(
   md: string,
   teamId: TeamId
-): ChecklistItem[] {
+): ParsedChecklistItem[] {
   const sections = splitSections(md)
-  const items: ChecklistItem[] = []
+  const items: ParsedChecklistItem[] = []
   let sortOrder = 0
 
   // NOTE: 마크다운 파서는 milestone UUID를 알 수 없으므로 모든 파싱 항목을

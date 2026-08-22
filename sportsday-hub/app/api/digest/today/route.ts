@@ -6,7 +6,7 @@ import { buildKakaoDigest } from '@/lib/kakao-digest'
  * PC 자동화 스크립트(kakao_group_sender.py)가 오늘의 다이제스트 텍스트를
  * 가져가는 엔드포인트. 단체방 전송은 길이 제한이 없으므로
  * 잘라내지 않는 detailed 스타일로 넉넉하게 만든다.
- * - 임박 항목이 없으면 text: null 반환 (스크립트는 이 경우 전송하지 않음)
+ * - 임박 항목이 없으면 "오늘 마감 없음 + 다음 마감" 안내를 반환한다 (매일 일정 도착).
  * - CRON_SECRET이 설정돼 있으면 Bearer 인증 필요
  */
 
@@ -35,9 +35,7 @@ export async function GET(request: NextRequest) {
       { style: 'detailed', maxItems: 20, textLimit: 2000 }
     )
 
-    if (!digest) {
-      return NextResponse.json({ text: null, total: 0 })
-    }
+    // 임박 항목이 없어도 안내 텍스트를 반환한다 (매일 일정 도착 = 봇 생존 확인).
     return NextResponse.json({ text: digest.text, total: digest.total })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)

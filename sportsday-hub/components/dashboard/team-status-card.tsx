@@ -1,18 +1,18 @@
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import type { Team, ChecklistItem, Issue } from '@/lib/types/models'
+import type { Team, Milestone, Issue } from '@/lib/types/models'
 
 export function TeamStatusCard({
   team,
-  checklist,
+  tasks,
   issues,
 }: {
   team: Team
-  checklist: ChecklistItem[]
+  tasks: Milestone[]
   issues: Issue[]
 }) {
-  const teamChecks = checklist.filter((c) => c.team_id === team.id)
+  const teamChecks = tasks.filter((c) => c.team_id === team.id)
   const completed = teamChecks.filter((c) => c.completed).length
   const total = teamChecks.length
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0

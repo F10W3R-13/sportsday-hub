@@ -15,7 +15,7 @@ import {
   parseTeamChecklists,
   parseGuidelineSections,
 } from '@/lib/markdown/parser'
-import type { TeamId } from '@/lib/types/models'
+import type { Milestone, TeamId } from '@/lib/types/models'
 
 // tsx/ESM 환경에서 __dirname 대체
 const ROOT = resolve(__dirname, '..')
@@ -139,31 +139,26 @@ function generateSeed(): string {
   }
   lines.push('')
 
-  // ===== milestones (마스터에서) =====
+  // ===== milestones (마스터 회의/산출물 + 각 팀 체크리스트 통합) =====
   lines.push('-- ===== milestones =====')
   const milestones = parseMilestones(masterMd)
-  // 기존 데이터 정리 (재실행 시 중복 방지) — uuid 라 새로 생기므로 전체 삭제 후 재삽입
-  lines.push('DELETE FROM public.milestones;')
-  for (const m of milestones) {
-    lines.push(
-      `INSERT INTO public.milestones (id, date, title, team_id, category, completed, depends_on, sort_order) VALUES (${sqlStr(m.id)}, ${sqlDate(m.date)}, ${sqlStr(m.title)}, ${sqlStr(m.team_id)}, ${sqlStr(m.category)}, ${sqlBool(m.completed)}, ${m.depends_on ? sqlArray(m.depends_on) : 'NULL'}, ${m.sort_order});`
-    )
-  }
-  lines.push('')
 
-  // ===== checklist_items (각 팀에서) =====
-  lines.push('-- ===== checklist_items =====')
-  lines.push('DELETE FROM public.checklist_items;')
+  // 각 팀 체크리스트 → priority/source 포함 milestones 행으로 통합
+  const teamChecklistTasks: Milestone[] = []
   for (const teamId of TEAM_ORDER) {
     if (teamId === 'management') continue // 관리팀은 마스터에 체크리스트 없음
     const teamMdPath = join(srcDir, 'teams', `${teamId}.md`)
     const teamMd = readFileSync(teamMdPath, 'utf-8')
-    const items = parseTeamChecklists(teamMd, teamId)
-    for (const item of items) {
-      lines.push(
-        `INSERT INTO public.checklist_items (id, team_id, milestone_id, content, priority, completed, source, sort_order) VALUES (${sqlStr(item.id)}, ${sqlStr(item.team_id)}, NULL, ${sqlStr(item.content)}, ${sqlStr(item.priority)}, ${sqlBool(item.completed)}, ${sqlStr(item.source)}, ${item.sort_order});`
-      )
-    }
+    teamChecklistTasks.push(...parseTeamChecklists(teamMd, teamId))
+  }
+
+  // 기존 데이터 정리 (재실행 시 중복 방지) — uuid 라 새로 생기므로 전체 삭제 후 재삽입
+  lines.push('DELETE FROM public.milestones;')
+  const allMilestoneRows = [...milestones, ...teamChecklistTasks]
+  for (const m of allMilestoneRows) {
+    lines.push(
+      `INSERT INTO public.milestones (id, date, title, team_id, category, completed, depends_on, sort_order, priority, source) VALUES (${sqlStr(m.id)}, ${sqlDate(m.date)}, ${sqlStr(m.title)}, ${sqlStr(m.team_id)}, ${sqlStr(m.category)}, ${sqlBool(m.completed)}, ${m.depends_on ? sqlArray(m.depends_on) : 'NULL'}, ${m.sort_order}, ${sqlStr(m.priority)}, ${sqlStr(m.source)});`
+    )
   }
   lines.push('')
 
@@ -226,8 +221,9 @@ function main() {
   console.log('=== 이주 결과 리포트 ===')
   console.log(`teams:           ${TEAM_ORDER.length}`)
   console.log(`decisions:       ${decisions.length}`)
-  console.log(`milestones:      ${milestones.length}`)
-  console.log(`checklist_items: ${totalChecklist}`)
+  console.log(
+    `milestones:      ${milestones.length + totalChecklist} (회의/산출물 ${milestones.length} + 체크리스트 ${totalChecklist})`
+  )
   console.log(
     `issues:          ${masterIssues.length + totalTeamIssues} (마스터 ${masterIssues.length} + 팀 ${totalTeamIssues})`
   )

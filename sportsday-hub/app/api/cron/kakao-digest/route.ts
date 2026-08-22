@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { buildKakaoDigest } from '@/lib/kakao-digest'
 import { sendMemoViaEnv } from '@/lib/kakao-memo'
+import { isBotEnded } from '@/lib/kakao-bot'
 
 /**
  * 매일 아침 임박 마일스톤·인계를 총괄 카카오톡('나에게 보내기')으로 발송하는 크론 엔드포인트.
  * - 임박 항목이 없으면 "오늘 마감 없음 + 다음 마감" 안내를 발송한다 (매일 일정 도착).
+ * - 봇 종료 시점(행사일 2026-09-20 18:00 KST) 이후에는 발송하지 않는다.
  * - KAKAO_CLIENT_ID/KAKAO_REFRESH_TOKEN이 없으면 dry-run(미리보기만 반환) — 배포 전 검증용.
  */
 
@@ -16,6 +18,9 @@ export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET
   if (cronSecret && request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+  if (isBotEnded()) {
+    return NextResponse.json({ sent: false, reason: 'event_ended' })
   }
 
   try {

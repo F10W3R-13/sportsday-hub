@@ -14,19 +14,26 @@ export function kstClockLabel(now: Date = new Date()): string {
   return `${kst.getUTCMonth() + 1}/${kst.getUTCDate()}(${DOW[kst.getUTCDay()]}) ${hh}:${mm}`
 }
 
+/** 행사 종료 후 봇 무동작 시점 (2026-09-20 18:00 KST) — 이후 알림·경보·watchdog 모두 중단. */
+export const BOT_END_KST = new Date('2026-09-20T18:00:00+09:00')
+
+/** now가 봇 종료 시점 이후인지 (KST 기준). */
+export function isBotEnded(now: Date = new Date()): boolean {
+  return now.getTime() >= BOT_END_KST.getTime()
+}
+
 const SITE_URL = 'https://sportsday-hub.vercel.app'
 const KAKAO_TEXT_LIMIT = 200
 const DETAIL_CLAMP = 80
 
 /**
  * 봇 이상 경보 텍스트(카카오 메모 200자 제한 준수).
- * 가능하면 수동 폴백용 다이제스트 전문을 포함하고, 공간이 없으면 링크 안내로 축약한다.
- * 축약 시 사유는 80자로 클램프하고 URL이 잘리지 않도록 남는 공간에 배치한다.
+ * 사유 한 줄 + 링크만 담는다 — 상세 내용은 웹앱 링크로 대체 (200자엔 폴백 텍스트가 안 담기는 게 실측 확인됨).
+ * 사유는 80자로 클램프하고 URL이 잘리지 않도록 남는 공간에 배치한다.
  */
 export function buildBotAlert(
   kind: 'fail' | 'watchdog',
   detail: string | null,
-  digestText: string | null,
   now: Date = new Date()
 ): string {
   const when = kstClockLabel(now)
@@ -34,10 +41,6 @@ export function buildBotAlert(
     kind === 'fail'
       ? `[봇 알림] 단체방 자동 발송 실패 (${when})`
       : `[봇 알림] 18:00 단체방 발송이 실행되지 않았습니다 (${when}) — PC 전원·로그인·카카오톡 상태 확인`
-  const withDigest = `${head}${detail ? `\n사유: ${detail}` : ''}\n아래 복사해 단체방에 붙여넣어주세요:\n\n${digestText ?? ''}`
-  if (withDigest.length <= KAKAO_TEXT_LIMIT && digestText) return withDigest
-
-  // 폴백: 사유(80자 클램프)를 head+URL을 제외한 남는 공간에 안전하게 배치 (URL 절단 방지)
   const tail = `\n오늘의 할 일: ${SITE_URL}`
   const budget = KAKAO_TEXT_LIMIT - head.length - tail.length
   let cause = ''

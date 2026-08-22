@@ -23,6 +23,7 @@ import os
 import subprocess
 import sys
 import time
+from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -141,7 +142,13 @@ def send_message(room, text):
     pyautogui.press("enter")
 
 
+BOT_END = datetime(2026, 9, 20, 18, 0)  # 행사 종료 후 봇 중단 시점 (로컬=KST 기준)
+
+
 def main():
+    if datetime.now() >= BOT_END:
+        log.info("행사 종료(9/20 18:00) 이후 — 봇 중단, 발송하지 않음")
+        return
     log.info("실행 시작: room=%r api=%s secret=%s", ROOM_NAME, API_URL, "설정됨" if CRON_SECRET else "없음(인증 생략)")
     try:
         text = fetch_digest()

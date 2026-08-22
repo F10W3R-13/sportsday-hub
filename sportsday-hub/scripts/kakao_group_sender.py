@@ -17,9 +17,12 @@ PC 카카오톡에서 지정한 일반 채팅방에 붙여넣고 전송한다.
   set KAKAO_ROOM_NAME=스포츠데이 && python kakao_group_sender.py
 """
 
+import logging
 import os
 import sys
 import time
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 import pyautogui
 import pyperclip
@@ -31,6 +34,16 @@ ROOM_NAME = os.environ.get("KAKAO_ROOM_NAME", "스포츠데이")
 
 SEARCH_WAIT_SEC = 1.5
 ROOM_OPEN_WAIT_SEC = 1.5
+
+# 작업 스케줄러 자동 실행은 콘솔이 곧 닫히므로 결과를 반드시 파일로 남긴다.
+LOG_PATH = Path(__file__).resolve().parent / "logs" / "kakao_sender.log"
+LOG_PATH.parent.mkdir(exist_ok=True)
+logging.basicConfig(
+    handlers=[RotatingFileHandler(LOG_PATH, maxBytes=200_000, backupCount=2, encoding="utf-8")],
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
+log = logging.getLogger("kakao_sender")
 
 
 def fetch_digest():
@@ -81,16 +94,21 @@ def send_message(room, text):
 
 
 def main():
-    text = fetch_digest()
+    log.info("실행 시작: room=%r api=%s secret=%s", ROOM_NAME, API_URL, "설정됨" if CRON_SECRET else "없음(인증 생략)")
+    try:
+        text = fetch_digest()
+    except Exception:
+        log.exception("다이제스트 조회 실패 (API/네트워크 오류)")
+        sys.exit(1)
     if not text:
-        print("임박 항목이 없어 전송하지 않았습니다.")
+        log.info("임박 항목 없음 — 전송 생략")
         return
     try:
         room = open_room(ROOM_NAME)
         send_message(room, text)
-        print(f"'{ROOM_NAME}' 방에 발송 완료:\n{text}")
-    except Exception as exc:
-        print(f"실패: {exc}", file=sys.stderr)
+        log.info("발송 완료: room=%r 길이=%d자 | %s", ROOM_NAME, len(text), text.splitlines()[0])
+    except Exception:
+        log.exception("카카오톡 전송 실패 (창/UI 자동화 오류)")
         sys.exit(1)
 
 

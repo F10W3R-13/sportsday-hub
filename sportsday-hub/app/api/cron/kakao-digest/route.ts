@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { buildKakaoDigest } from '@/lib/kakao-digest'
+import { sendMemoViaEnv } from '@/lib/kakao-memo'
 
 /**
  * 매일 아침 임박 마일스톤·인계를 총괄 카카오톡('나에게 보내기')으로 발송하는 크론 엔드포인트.
@@ -32,55 +33,14 @@ export async function GET(request: NextRequest) {
     })
     // 임박 항목이 없어도 "오늘 마감 없음 + 다음 마감" 안내를 발송한다 (매일 일정 도착 = 봇 생존 확인).
 
-    const clientId = process.env.KAKAO_CLIENT_ID
-    const refreshToken = process.env.KAKAO_REFRESH_TOKEN
-    if (!clientId || !refreshToken) {
+    const result = await sendMemoViaEnv(digest.text)
+    if (!result.sent && result.error) throw new Error(result.error)
+    if (!result.sent && result.dryRun) {
       return NextResponse.json({ sent: false, dryRun: true, text: digest.text, total: digest.total })
     }
-
-    const accessToken = await refreshKakaoToken(clientId, refreshToken)
-    await sendKakaoMemo(accessToken, digest.text)
-
     return NextResponse.json({ sent: true, total: digest.total, text: digest.text })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     return NextResponse.json({ error: message }, { status: 500 })
-  }
-}
-
-/** 리프레시 토큰으로 액세스 토큰 발급. 매일 실행되므로 리프레시 토큰도 함께 연장된다. */
-async function refreshKakaoToken(clientId: string, refreshToken: string): Promise<string> {
-  const body = new URLSearchParams({ grant_type: 'refresh_token', client_id: clientId, refresh_token: refreshToken })
-  if (process.env.KAKAO_CLIENT_SECRET) body.set('client_secret', process.env.KAKAO_CLIENT_SECRET)
-
-  const res = await fetch('https://kauth.kakao.com/oauth/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  })
-  if (!res.ok) {
-    throw new Error(`kakao token refresh 실패 (${res.status}): ${await res.text()}`)
-  }
-  const json = (await res.json()) as { access_token: string }
-  return json.access_token
-}
-
-/** 카카오톡 '나에게 보내기' — 텍스트 템플릿. */
-async function sendKakaoMemo(accessToken: string, text: string): Promise<void> {
-  const template = {
-    object_type: 'text' as const,
-    text,
-    link: { web_url: 'https://sportsday-hub.vercel.app' },
-  }
-  const res = await fetch('https://kapi.kakao.com/v2/api/talk/memo/default/send', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({ template_object: JSON.stringify(template) }),
-  })
-  if (!res.ok) {
-    throw new Error(`kakao memo send 실패 (${res.status}): ${await res.text()}`)
   }
 }

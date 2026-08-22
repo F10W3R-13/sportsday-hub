@@ -129,6 +129,7 @@ export function ChecklistPanel({
             onCheckedChange={() => handleToggle(task)}
             disabled={pendingId === task.id}
             className="mt-0.5"
+            aria-label={`${task.title} 완료 여부`}
           />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
@@ -159,6 +160,7 @@ export function ChecklistPanel({
             className="text-muted-foreground hover:text-destructive"
             disabled={deleteItem.isPending}
             onClick={() => deleteItem.mutate(task.id)}
+            aria-label={`${task.title} 삭제`}
           >
             <Trash2 className="h-3 w-3" />
           </Button>

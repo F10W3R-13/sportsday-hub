@@ -8,7 +8,7 @@ const NOW = new Date('2026-08-09T14:30:00')
 // 테스트용 최소 Milestone 팩토리. sortByUrgency는 date, completed만 본다.
 function milestone(
   id: string,
-  date: string,
+  date: string | null,
   completed: boolean
 ): Milestone {
   return {
@@ -109,6 +109,17 @@ describe('sortByUrgency', () => {
       'u2', // 8/13 (4일 후)
       'u1', // 9/19 (41일 후)
     ])
+  })
+
+  it('date가 null인 항목은 undated tier로 맨 뒤에 정렬된다', () => {
+    const tasks = [
+      milestone('a', '2099-01-01', false),
+      milestone('b', null, false),
+      milestone('c', '2000-01-01', false), // overdue
+    ]
+    const sorted = sortByUrgency(tasks, new Date('2026-09-01'))
+    expect(sorted.map((s) => s.milestone.id)).toEqual(['c', 'a', 'b'])
+    expect(sorted[2].tier).toBe('undated')
   })
 
   it('원본 배열을 변경하지 않는다', () => {

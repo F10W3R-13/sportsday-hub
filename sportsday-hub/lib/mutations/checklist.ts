@@ -27,7 +27,7 @@ export function useToggleCheck() {
       // 체크박스 자체는 낙관적 UI로 즉히 뒤집히지만, 마일스톤별 진행률(1/4)과
       // 상단 진행 바를 서버 데이터와 동기화하려면 캐시 무효화 + 라우트 새로고침이 필요.
       // 마일스톤 자동 완료/롤백을 먼저 동기화한 뒤 새로고침해야 갱신된 마일스톤이 반영됨.
-      queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
+      queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
       notifyTabs({ type: 'checklist-updated' })
       void router.refresh()
     },
@@ -65,7 +65,7 @@ export function useAddChecklistItem() {
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
+      queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
       notifyTabs({ type: 'checklist-updated' })
       void router.refresh()
       toast.success('항목이 추가되었습니다.')
@@ -90,7 +90,7 @@ export function useDeleteChecklistItem() {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
+      queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
       notifyTabs({ type: 'checklist-updated' })
       void router.refresh()
       toast.success('항목이 삭제되었습니다.')

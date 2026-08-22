@@ -19,7 +19,7 @@ export function TabSyncListener() {
   useEffect(() => {
     return onTabSync((msg) => {
       if (msg.type === 'checklist-updated') {
-        queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
+        queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
         void router.refresh()
       }
       if (msg.type === 'milestone-updated') {

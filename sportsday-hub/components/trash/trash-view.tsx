@@ -116,7 +116,7 @@ export function TrashView() {
         .eq('id', entry.id)
       if (error) throw error
       toast.success('복원되었습니다.')
-      queryClient.invalidateQueries({ queryKey: queryKeys.checklist })
+      queryClient.invalidateQueries({ queryKey: queryKeys.milestones })
       queryClient.invalidateQueries({ queryKey: queryKeys.issues })
       if (entry.kind === 'checklist_items') {
         notifyTabs({ type: 'checklist-updated' })

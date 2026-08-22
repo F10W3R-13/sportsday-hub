@@ -1,16 +1,6 @@
 import { google } from 'googleapis'
-import { createClient } from '@supabase/supabase-js'
 import { encryptToken, decryptToken } from './crypto'
-import type { Database } from '@/lib/types/database'
-
-// service_role 클라이언트 (RLS 우회, 서버 전용)
-function createServiceClient() {
-  return createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  )
-}
+import { createServiceClient } from '@/lib/supabase/service'
 
 // 토큰 조회 (복호화)
 export async function getDriveTokens(): Promise<{

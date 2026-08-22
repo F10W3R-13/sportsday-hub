@@ -195,3 +195,13 @@ export type HandoffItem = Handoff & {
   item_title: string | null         // 링크된 항목 제목 (표시 라벨용)
   item_team_id: TeamId | null       // 링크된 항목의 소속 팀 — 딥링크 대상
 }
+
+// ===== 봇 실행 보고 (bot_runs) — 단체방 봇 신뢰성 =====
+export const botRunSchema = z.object({
+  id: z.string().uuid(),
+  run_date: z.string(),             // 'YYYY-MM-DD' (KST 기준)
+  status: z.enum(['success', 'fail']),
+  detail: z.string().nullable(),    // 실패 사유 등
+  created_at: z.string().optional(),
+})
+export type BotRun = z.infer<typeof botRunSchema>

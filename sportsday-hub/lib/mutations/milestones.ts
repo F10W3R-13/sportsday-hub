@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { createClient, ensureContext } from '@/lib/supabase/client'
 import { queryKeys } from '@/lib/queries/keys'
 import { notifyTabs } from '@/lib/sync'
-import type { Milestone, MilestoneCategory } from '@/lib/types/models'
+import type { Milestone, MilestoneCategory, Priority } from '@/lib/types/models'
 
 // ===== 완료 토글 =====
 export function useToggleMilestone() {
@@ -43,6 +43,7 @@ export function useCreateMilestone() {
       title: string
       date?: string | null
       category?: MilestoneCategory
+      priority?: Priority
     }) => {
       const client = createClient()
       await ensureContext(client)
@@ -54,6 +55,7 @@ export function useCreateMilestone() {
           ...(input.date !== undefined ? { date: input.date } : {}),
           // 미지정 시 DB 기본값('deliverable')에 위임
           ...(input.category ? { category: input.category } : {}),
+          ...(input.priority ? { priority: input.priority } : {}),
           completed: false,
           // 기존 항목(0~100 범위) 뒤에 정렬되도록 충분히 큰 값 사용.
           // 정적 상수(999) 대신 타임스탬프 기반으로 변경해 동시 추가 시 충돌을 방지.

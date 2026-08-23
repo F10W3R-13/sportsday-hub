@@ -2,7 +2,7 @@
   "version": 1,
   "rootFolderId": "1gFdRbLxlm36oyP0h39wS1fvLqW0cvxys",
   "localBase": "26-2 Sports Day",
-  "lastSyncedAt": "2026-08-22T15:30:00+09:00",
+  "lastSyncedAt": "2026-08-22T22:00:00+09:00",
   "rules": {
     "source": "드라이브가 원천, 로컬은 스냅샷. pull(다운로드)만 자동, push(업로드)는 수동.",
     "kind": {
@@ -40,7 +40,7 @@
     "1WuSBdCmyKnQehAeiYiiEnQ3hRj8KFauv": { "path": "26-2 Sports Day/교환담당팀/2차 회의 사전 공유 (교환담당팀용).md", "name": "2차 회의 사전 공유 (교환담당팀용).md", "kind": "as-is", "mtime": "2026-08-09T15:09:18.034Z", "size": 2588 },
     "1E46zLgbZE5tabfQhfby7XPjgwVvcjmG7": { "path": "26-2 Sports Day/교환담당팀/3차 회의 사전 공유 (교환담당팀용).md", "name": "3차 회의 사전 공유 (교환담당팀용).md", "kind": "as-is", "mtime": "2026-08-19T02:28:12.196Z", "size": 3984 },
     "1KQApf6WOUeA790fW4a2ibFxAmZh7Haxq": { "path": "26-2 Sports Day/교환담당팀/교환담당팀_지침.md", "name": "교환담당팀_지침.md", "kind": "as-is", "mtime": "2026-08-09T15:09:21.061Z", "size": 4541 },
-    "1royRZIkhWiov_4NhPwXlGZzshuNLo1BVSiiUx2q8glo": { "path": "26-2 Sports Day/예산팀/26-2 Sports Day 예산안.md", "name": "26-2 Sports Day 예산안", "kind": "text-md", "mtime": "2026-08-22T05:22:54.355Z", "size": 7153 },
+    "1royRZIkhWiov_4NhPwXlGZzshuNLo1BVSiiUx2q8glo": { "path": "26-2 Sports Day/예산팀/26-2 Sports Day 예산안.md", "name": "26-2 Sports Day 예산안", "kind": "text-md", "mtime": "2026-08-22T18:38:25.628Z", "size": 7153 },
     "1nUgScnPu77kuSripZq4u_-D4OJqHdWLP": { "path": "26-2 Sports Day/예산팀/2차 회의 사전 공유 (예산팀용).md", "name": "2차 회의 사전 공유 (예산팀용).md", "kind": "as-is", "mtime": "2026-08-09T15:09:24.224Z", "size": 3314 },
     "1EHdYr3T3Yj4YNFwNkyR_g6QarAn_RF2F": { "path": "26-2 Sports Day/예산팀/3차 회의 사전 공유 (예산팀용).md", "name": "3차 회의 사전 공유 (예산팀용).md", "kind": "as-is", "mtime": "2026-08-19T02:28:16.109Z", "size": 4101 },
     "1EErWfOmzK3oieBnVyugvOWfoFx0VYu3DOIQEOo2UVLU": { "path": "26-2 Sports Day/예산팀/단체티 제작 업체별 견적 비교.md", "name": "단체티 제작 업체별 견적 비교", "kind": "text-md", "mtime": "2026-08-20T02:51:16.745Z", "size": 1024 },
@@ -61,7 +61,7 @@
   },
   "skipped": {
     "1tjOXz1q44hTyrGUP6kLhDaJfac8Ngbii9yVN3FTgCKU": { "name": "[26 Fall] Sports Day with HI-Club ⚽️🍀", "reason": "구글 폼 — export 불가 (8/20 수정)" },
-    "1-Bk0T2js2UOby3XlsH6RUpZPyGsrCYA5ixReOkQmEpg": { "name": "00_기획지침_마스터.md", "reason": "8/11 구글문서 사본 — 8/19 text/markdown 원본(1gMIsrX)과 중복, 정리 대상" }
+    "1-Bk0T2js2UOby3XlsH6RUpZPyGsrCYA5ixReOkQmEpg": { "name": "00_기획지침_마스터.md", "reason": "8/11 구글문서 사본 — 8/19 text/markdown 원본(1gMIsrX)과 중복. 2026-08-22 드라이브에서 삭제 확인(로컬 대응 파일 없음)" }
   },
   "folders": {
     "1gFdRbLxlm36oyP0h39wS1fvLqW0cvxys": "26-2 Sports Day",

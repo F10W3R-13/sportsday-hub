@@ -1,6 +1,6 @@
-> 구글 드라이브 동기화 스냅샷 (2026-08-22) — 원본: 구글 시트 「26-2 Sports Day 예산안」 (수정일 2026-08-22 18:38)
+> 구글 드라이브 동기화 스냅샷 (2026-08-24) — 원본: 구글 시트 「26-2 Sports Day 예산안」 (수정일 2026-08-24 09:25)
 > 변환: CSV (셀 정렬은 원본 시트 기준)
-> 요약: 합계 ₩3,739,400 · 입장료 수입 ₩2,250,000 · 차액 ₩1,489,400 (05:22판 대비 우승 금메달·줄다리기 목장갑·결승테이프·단체줄넘기·판뒤집기·피구공 제외, 뿅망치·바·호루라기 추가)
+> 요약: 금액 변동 없음(합계 ₩3,739,400 · 차액 ₩1,489,400). 주석 추가 — 분리배출 봉투·비어퐁·호루라기 "이거 있습니다", 천막 "학교에서 대여 해줍니다"
 
 ```csv
 ,,,,,,,,,
@@ -24,11 +24,11 @@
 ,우승 상품,,,₩0,,,,,
 ,뿅망치*3개 (총 3개),1,"₩10,080","₩10,080",쿠팡,https://www.coupang.com/vp/products/9289511493?itemId=27708409648&vendorItemId=94669986504&sourceType=srp_product_ads&clickEventId=8d301d00-9e57-11f1-b072-93631cfd8a34&korePlacement=15&koreSubPlacement=1&clickEventId=8d301d00-9e57-11f1-b072-93631cfd8a34&korePlacement=15&koreSubPlacement=1&traceId=mt4psqqt,,,
 ,,,,₩0,,,,,
-,분리배출 봉투 50L*60개,1,"₩9,490","₩9,490",쿠팡,https://www.coupang.com/vp/products/7849796436?itemId=21392878497&vendorItemId=88449574662&q=%EB%B6%84%EB%A6%AC%EC%88%98%EA%B1%B0+%EB%B4%89%ED%88%AC&itemsCount=36&searchId=52429e5e2185856&rank=7&searchRank=7&isAddedCart=,,,
+이거 있습니다,분리배출 봉투 50L*60개,1,"₩9,490","₩9,490",쿠팡,https://www.coupang.com/vp/products/7849796436?itemId=21392878497&vendorItemId=88449574662&q=%EB%B6%84%EB%A6%AC%EC%88%98%EA%B1%B0+%EB%B4%89%ED%88%AC&itemsCount=36&searchId=52429e5e2185856&rank=7&searchRank=7&isAddedCart=,,,
 ,,,,₩0,,,,,
 ,바*4개 (총 4개),1,"₩6,200","₩6,200",쿠팡,https://www.coupang.com/vp/products/6936006396?itemId=16802797702&vendorItemId=83983273143&sourceType=srp_product_ads&clickEventId=ed1621b0-9e57-11f1-b611-3c753723965f&korePlacement=15&koreSubPlacement=5&clickEventId=ed1621b0-9e57-11f1-b611-3c753723965f&korePlacement=15&koreSubPlacement=5&traceId=mt4pvptm,,,
-,플라잉타이거 비어퐁 게임 세트,1,"₩4,900","₩4,900",쿠팡,https://www.coupang.com/vp/products/9367122884?itemId=27797653069&vendorItemId=95271441463&sourceType=srp_product_ads&clickEventId=ec3acea0-9d1f-11f1-8089-6a7b4d970d44&korePlacement=15&koreSubPlacement=1&clickEventId=ec3acea0-9d1f-11f1-8089-6a7b4d970d44&korePlacement=15&koreSubPlacement=1&traceId=mt2i3xqc,,,
-,호루라기*5개 (총 5개),1,"₩4,990","₩4,990",쿠팡,https://www.coupang.com/vp/products/8536337026?itemId=24712001027&vendorItemId=91721359780&q=%ED%98%B8%EB%A3%A8%EB%9D%BC%EA%B8%B0&searchId=170c2f3323505891&sourceType=search&itemsCount=60&searchRank=2&rank=2&traceId=mt4pxq1m,,,
+이거 있습니다,플라잉타이거 비어퐁 게임 세트,1,"₩4,900","₩4,900",쿠팡,https://www.coupang.com/vp/products/9367122884?itemId=27797653069&vendorItemId=95271441463&sourceType=srp_product_ads&clickEventId=ec3acea0-9d1f-11f1-8089-6a7b4d970d44&korePlacement=15&koreSubPlacement=1&clickEventId=ec3acea0-9d1f-11f1-8089-6a7b4d970d44&korePlacement=15&koreSubPlacement=1&traceId=mt2i3xqc,,,
+이거 있습니다,호루라기*5개 (총 5개),1,"₩4,990","₩4,990",쿠팡,https://www.coupang.com/vp/products/8536337026?itemId=24712001027&vendorItemId=91721359780&q=%ED%98%B8%EB%A3%A8%EB%9D%BC%EA%B8%B0&searchId=170c2f3323505891&sourceType=search&itemsCount=60&searchRank=2&rank=2&traceId=mt4pxq1m,,,
 ,,,,₩0,,,,,
 ,,,,₩0,,,,,
 ,,,,₩0,,,,,
@@ -39,7 +39,7 @@
 ,  아이스박스,4,"₩12,000","₩48,000",,https://gamerental.kr/product/detail.html?product_no=78&cate_no=28,,,
 ,  접시콘 40개,1,"₩5,000","₩5,000",,https://gamerental.kr/product/detail.html?product_no=202&cate_no=25,,,
 ,  줄다리기 줄(20M),1,"₩20,000","₩20,000",,https://gamerental.kr/product/detail.html?product_no=167&cate_no=24,,,
-,  천막,10,"₩35,000","₩350,000",,https://gamerental.kr/product/detail.html?product_no=73&cate_no=28&display_group=1,,,
+천막 학교에서 대여 해줍니다,  천막,10,"₩35,000","₩350,000",,https://gamerental.kr/product/detail.html?product_no=73&cate_no=28&display_group=1,,,
 ,,,,₩0,,,,,
 ,,,,₩0,,,,,
 ,국제처 대여,,,₩0,,,,,

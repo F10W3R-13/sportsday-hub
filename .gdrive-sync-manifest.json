@@ -7,16 +7,16 @@
     "source": "드라이브가 원천, 로컬은 스냅샷. pull(다운로드)만 자동, push(업로드)는 수동.",
     "kind": {
       "as-is": "바이너리·텍스트 파일 그대로 다운로드",
-      "export-xlsx": "구글 시트를 xlsx로 export (download_file exportMimeType 지정)",
-      "export-docx": "구글 문서를 docx로 export",
-      "text-md": "구글 문서·시트를 read_file_content로 읽어 .md 스냅샷 (기존 관행: 헤더 2줄 + 내용, 시트는 csv 코드블록, 문서는 마크다운·이미지 생략)"
+      "export-xlsx": "구글 시트를 xlsx 원본으로 export (download_file exportMimeType 지정)",
+      "export-docx": "구글 문서를 docx 원본으로 export",
+      "text-md": "[예외 전용] 구글 export 한도 초과(예: 41MB 문서)로 원본 다운로드가 불가한 파일만 read_file_content로 .md 스냅샷. 2026-08-31부터 기본은 원본 export, md는 예외 폐지"
     },
     "folderMap": {
       "탐라/인관팀": "타임라인_인원관리팀"
     },
-    "filenames": "로컬 파일명은 NFC. 드라이브명 변경·공백 차이와 무관하게 매니페스트 path 기준으로 기존 파일에 덮어쓴다(중복 생성 금지). 신규 파일명은 NFC로.",
+    "filenames": "로컬 파일명은 NFC. 드라이브명의 '/'는 '-'로 치환(Windows 금지문자). 드라이브명 변경·공백 차이와 무관하게 매니페스트 path 기준으로 기존 파일에 덮어쓴다(중복 생성 금지).",
     "delete": "드라이브에서 삭제된 파일은 로컬에서 자동 삭제하지 않고 보고만.",
-    "commit": "변동 파일 + 이 매니페스트만 git add하여 'sync: 드라이브 → 로커스 스냅샷 (...)' 커밋. push는 수동."
+    "commit": "변동 파일 + 이 매니페스트만 git add하여 'sync: 드라이브 → 로컬 스냅샷 (...)' 커밋. push는 수동."
   },
   "files": {
     "1gMIsrXAjzi8tcsbpLp7MH6HIyU3iDK2O": {
@@ -62,9 +62,9 @@
       "size": 4657
     },
     "1RVnmJtMRCCxEqqIE0T1T54dD16g1fqsVzITUO4iVpu4": {
-      "path": "26-2 Sports Day/스포츠데이 기획팀 2차 회의록.md",
+      "path": "26-2 Sports Day/스포츠데이 기획팀 2차 회의록.docx",
       "name": "스포츠데이 기획팀 2차 회의록",
-      "kind": "text-md",
+      "kind": "export-docx",
       "mtime": "2026-08-14T08:48:44.718Z",
       "size": 6057
     },
@@ -182,9 +182,9 @@
       "size": 4541
     },
     "1royRZIkhWiov_4NhPwXlGZzshuNLo1BVSiiUx2q8glo": {
-      "path": "26-2 Sports Day/예산팀/26-2 Sports Day 예산안.md",
+      "path": "26-2 Sports Day/예산팀/26-2 Sports Day 예산안.xlsx",
       "name": "26-2 Sports Day 예산안",
-      "kind": "text-md",
+      "kind": "export-xlsx",
       "mtime": "2026-08-25T10:37:10.377Z",
       "size": 8255
     },
@@ -203,9 +203,9 @@
       "size": 4101
     },
     "1EErWfOmzK3oieBnVyugvOWfoFx0VYu3DOIQEOo2UVLU": {
-      "path": "26-2 Sports Day/예산팀/단체티 제작 업체별 견적 비교.md",
+      "path": "26-2 Sports Day/예산팀/단체티 제작 업체별 견적 비교.xlsx",
       "name": "단체티 제작 업체별 견적 비교",
-      "kind": "text-md",
+      "kind": "export-xlsx",
       "mtime": "2026-08-20T02:51:16.745Z",
       "size": 1024
     },
@@ -222,12 +222,12 @@
       "kind": "text-md",
       "mtime": "2026-08-20T19:34:56.128Z",
       "size": 41080369,
-      "note": "원본 41MB(이미지 대부분) — 텍스트 스냅샷만 유지"
+      "note": "원본 41MB — 구글 exportSizeLimitExceeded로 docx 다운로드 API 거부(2026-08-31 확인). 유일한 text-md 예외"
     },
     "1j2qFSC91m8IuHNK3MF71ZSMspwYpYpVtsFMUoyGNns4": {
-      "path": "26-2 Sports Day/예산팀/예산팀 3차 회의 보고 목록.md",
+      "path": "26-2 Sports Day/예산팀/예산팀 3차 회의 보고 목록.docx",
       "name": "예산팀 3차 회의 보고 목록",
-      "kind": "text-md",
+      "kind": "export-docx",
       "mtime": "2026-08-16T13:14:03.903Z",
       "size": 2377367
     },
@@ -253,9 +253,9 @@
       "size": 4309
     },
     "10il6zx90FC7ObhV0un4V29OZ2xID3_HmG7f8o8KFFbM": {
-      "path": "26-2 Sports Day/컨텐츠팀/스포츠데이 컨텐츠팀.md",
+      "path": "26-2 Sports Day/컨텐츠팀/스포츠데이 컨텐츠팀.docx",
       "name": "스포츠데이 컨텐츠팀",
-      "kind": "text-md",
+      "kind": "export-docx",
       "mtime": "2026-08-26T11:17:01.372Z",
       "size": 33021
     },
@@ -274,16 +274,16 @@
       "size": 4930
     },
     "1BVEr0wAixyBpE93f2j67PVY3bGE1qvCWkCqWFJ3WTew": {
-      "path": "26-2 Sports Day/타임라인_인원관리팀/2026 Sports Day - 1. 행사기획안 8-16.md",
+      "path": "26-2 Sports Day/타임라인_인원관리팀/2026 Sports Day - 1. 행사기획안 8-16.xlsx",
       "name": "2026 Sports Day - 1. 행사기획안 8/16",
-      "kind": "text-md",
+      "kind": "export-xlsx",
       "mtime": "2026-08-17T08:43:20.697Z",
       "size": 15626
     },
     "1aouQlM5NAwlmlrzFWu0GskVPdxgsPaNdBBMLl-bcHPE": {
-      "path": "26-2 Sports Day/타임라인_인원관리팀/2026 Sports Day 2. 타임라인 & 인원관리표.md",
+      "path": "26-2 Sports Day/타임라인_인원관리팀/2026 Sports Day 2. 타임라인 & 인원관리표.xlsx",
       "name": "2026 Sports Day 2. 타임라인 & 인원관리표",
-      "kind": "text-md",
+      "kind": "export-xlsx",
       "mtime": "2026-08-17T08:35:21.650Z",
       "size": 10892
     },
@@ -309,16 +309,16 @@
       "size": 4024
     },
     "16P46F-pC4-Pi2WdUoufv09QTHaUyRTt8JJmaxTJROqk": {
-      "path": "26-2 Sports Day/교환담당팀/[26 Fall] Sports Day with HI-Club ⚽️🍀(응답).md",
+      "path": "26-2 Sports Day/교환담당팀/[26 Fall] Sports Day with HI-Club ⚽️🍀(응답).xlsx",
       "name": "[26 Fall] Sports Day with HI-Club ⚽️🍀(응답)",
-      "kind": "text-md",
+      "kind": "export-xlsx",
       "mtime": "2026-08-30T10:06:35.684Z",
       "size": 41416
     },
     "1rMv2mmQvrEWZUV4ChYSdmILSwFpCN9-3BxEbzu1hPb0": {
-      "path": "26-2 Sports Day/교환담당팀/confirmation mail.md",
+      "path": "26-2 Sports Day/교환담당팀/confirmation mail.docx",
       "name": "confirmation mail",
-      "kind": "text-md",
+      "kind": "export-docx",
       "mtime": "2026-08-29T18:18:26.043Z",
       "size": 3049
     }

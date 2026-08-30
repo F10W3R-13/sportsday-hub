@@ -4,6 +4,7 @@ import './globals.css'
 import { Providers } from './providers'
 import { SidebarLayout } from '@/components/layout/sidebar'
 import { NicknameProvider } from '@/components/layout/nickname-provider'
+import { DemoBanner } from '@/components/demo-banner'
 
 // 라틴은 Inter, 한글은 Noto Sans KR로 해결하는 폰트 스택 (globals.css --font-sans 참조)
 const inter = Inter({
@@ -35,6 +36,7 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <body className={`${inter.variable} ${notoSansKr.variable}`}>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <DemoBanner />
         <Providers>
           <NicknameProvider>
             <SidebarLayout>{children}</SidebarLayout>

@@ -74,3 +74,12 @@ npm test          # 마크다운 파서 단위/통합 테스트
 - GET /api/cron/kakao-digest ? ���� ��ħ Vercel ũ���� �ӹ� ���Ͻ��桤�ΰ衤üũ����Ʈ ��������Ʈ�� īī���� '������ ������'�� �߼� (CRON_SECRET Bearer ����)
 - GET /api/digest/today ? PC �ڵ�ȭ ��ũ��Ʈ(scripts/kakao_group_sender.py)�� ��ü�� ���ۿ� detailed ��������Ʈ�� �������� ��������Ʈ (���� ����)
 
+
+## 읽기 전용 데모 인스턴스 (2026-08-31)
+
+채용용 포트폴리오에서는 운영 인스턴스 대신 **가상 데이터 + 읽기 전용** 데모를 노출한다.
+
+- 데모 URL: https://sportsday-hub-demo.vercel.app (가상 데이터 — 실명·예산·구글 돌 링크 없음)
+- `NEXT_PUBLIC_DEMO_MODE=1` 배포에서만: 상단 데모 배너, 클라이언트 쓰기 차단, `/settings` 접근 차단
+- 운영 배포는 기존과 동일하게 동작 (플래그 미설정 시 전부 무동작)
+- 구성/재현 절차: [docs/DEMO-DEPLOY-GUIDE.md](docs/DEMO-DEPLOY-GUIDE.md) 참조

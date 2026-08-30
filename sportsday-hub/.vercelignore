@@ -1,0 +1,17 @@
+# 데모 업로드 제외 — 루트 고정 패턴(/) 주의: lib/supabase 등 하위 동명 폴더는 포함되어야 함
+.env
+.env.*
+/.vercel
+/.git
+/node_modules
+/.next
+/content-source
+/docs
+/gui-test-screenshots
+/tests
+/supabase
+/_rescued
+/coverage
+*.log
+*.db
+/tsconfig.tsbuildinfo

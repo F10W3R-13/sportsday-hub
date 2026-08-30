@@ -1,5 +1,6 @@
 import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/lib/types/database'
+import { guardDemoWrites } from '@/lib/demo'
 
 export interface NicknameGateInput {
   hasNickname: boolean
@@ -39,9 +40,13 @@ export function hasNickname(): boolean {
 }
 
 export function createClient() {
-  return createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  // 데모 배포(NEXT_PUBLIC_DEMO_MODE=1)에서는 쓰기 메서드(insert/update/upsert/delete)를
+  // 클라이언트 단에서 차단한다(lib/demo.ts). 읽기는 그대로.
+  return guardDemoWrites(
+    createBrowserClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
   )
 }
 

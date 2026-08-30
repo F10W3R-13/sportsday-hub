@@ -1,10 +1,15 @@
+import { redirect } from 'next/navigation'
 import { FolderMapping } from '@/components/settings/folder-mapping'
 import { getDriveConnectionStatus } from '@/lib/drive/sync'
 import { getTeams } from '@/lib/queries/teams'
+import { IS_DEMO } from '@/lib/demo'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SettingsPage() {
+  // 데모 인스턴스에는 구글 드라이브 연동이 없다 — 실제 연결 UI 노출/오 유발 방지
+  if (IS_DEMO) redirect('/')
+
   const [status, teams] = await Promise.all([
     // 상태 조회 실패(토큰 복호화 오류 등)는 미연결로 취급 — 페이지 전체가 죽지 않도록 (스펙 §7)
     getDriveConnectionStatus().catch(() => ({ connected: false, email: null })),

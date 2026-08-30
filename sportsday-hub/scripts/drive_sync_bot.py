@@ -88,6 +88,10 @@ class BotError(Exception):
     pass
 
 
+class ExportTooLarge(BotError):
+    """구글 exportSizeLimitExceeded — 원본 export 불가, text-md로 폴백."""
+
+
 def nfc(s):
     return unicodedata.normalize("NFC", s)
 
@@ -157,12 +161,15 @@ def scan_tree(token, root_id, base, folders):
 # ---------------------------------------------------------------- 변경 판정·다운로드
 
 def classify(meta):
-    """신규 파일의 kind 결정(기존 파일은 매니페스트 kind 우선). None이면 skipped."""
+    """신규 파일의 kind 결정(기존 파일은 매니페스트 kind 우선). None이면 skipped.
+    2026-08-31부터 원본 포맷 기본 — 구글 문서=docx·시트=xlsx(text-md는 한도 초과 폴백 전용)."""
     if not meta["mime"].startswith(GOOGLE_NATIVE_PREFIX):
         return "as-is"
     short = meta["mime"].removeprefix(GOOGLE_NATIVE_PREFIX)
-    if short in TEXT_EXPORT_MIME:
-        return "text-md"
+    if short == "spreadsheet":
+        return "export-xlsx"
+    if short == "document":
+        return "export-docx"
     if short == "presentation":
         return "export-pptx"
     return None  # form·drawing 등 — export 불가
@@ -186,8 +193,13 @@ def download(token, fid, kind, meta):
                 + ("> 변환: CSV (셀 정렬은 원본 시트 기준)\n" if short == "spreadsheet"
                    else "> 변환: 마크다운 (이미지 생략)\n"))
         return head.encode("utf-8") + b"\n" + content.encode("utf-8")
-    return drive_get(token, f"{DRIVE_FILES}/{fid}/export",
-                     params={"mimeType": EXPORT_MIME[kind]}, binary=True)
+    try:
+        return drive_get(token, f"{DRIVE_FILES}/{fid}/export",
+                         params={"mimeType": EXPORT_MIME[kind]}, binary=True)
+    except BotError as exc:
+        if "exportSizeLimitExceeded" in str(exc):
+            raise ExportTooLarge(f"{meta['name']}: 구글 export 한도 초과") from exc
+        raise
 
 
 # ---------------------------------------------------------------- diff 엔진
@@ -661,7 +673,16 @@ def main():
 def _prep_change(token, fid, entry, meta, is_new):
     local = REPO_ROOT / entry["path"]
     old_bytes = local.read_bytes() if (not is_new and local.exists()) else None
-    data = download(token, fid, entry["kind"], meta)
+    try:
+        data = download(token, fid, entry["kind"], meta)
+    except ExportTooLarge:
+        # 원본 export가 한도 초과면 text-md 스냅샷으로 전환(확장자·kind 재계산)
+        entry["kind"] = "text-md"
+        entry["path"] = Path(entry["path"]).with_suffix(".md").as_posix()
+        k.log.warning("[sync-bot] %s: export 한도 초과 — text-md 전환", entry["path"])
+        local = REPO_ROOT / entry["path"]
+        old_bytes = local.read_bytes() if (not is_new and local.exists()) else None
+        data = download(token, fid, "text-md", meta)
     groups = diff_for(entry["kind"], entry["path"], old_bytes, data)
     return {"path": entry["path"], "data": data, "old": old_bytes, "groups": groups,
             "mtime": meta["mtime"],

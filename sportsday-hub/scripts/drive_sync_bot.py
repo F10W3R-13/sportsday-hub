@@ -270,11 +270,46 @@ def diff_csv(old_text, new_text):
 
 def _norm(s):
     """비교용 정규화 — 마크다운 이스케이프 제거·공백 접기. (표시는 원문 그대로)"""
-    return re.sub(r"\s+", " ", re.sub(r"\\([_\+\-*.\[\]()#])", r"\1", str(s))).strip()
+    return re.sub(r"\s+", " ", re.sub(r"\\([_\+\-*.\[\]()#!])", r"\1", str(s))).strip()
+
+
+def _disp(s, n=40):
+    """표시용 — 이스케이프 제거·마크다운 마커(#, -, >) 제거 후 클립."""
+    s = _norm(s).lstrip("#->* ").strip()
+    return s[:n]
+
+
+def _changed_span(old, new):
+    """줄 안에서 실제로 바뀐 구간만 '옛값 → 새값'으로 뽑는다(워드 단위)."""
+    old_w, new_w = _norm(old).split(), _norm(new).split()
+    sm = SequenceMatcher(None, old_w, new_w, autojunk=False)
+    olds, news = [], []
+    for op, i1, i2, j1, j2 in sm.get_opcodes():
+        if op != "equal":
+            olds.extend(old_w[i1:i2])
+            news.extend(new_w[j1:j2])
+    if not olds and not news:
+        return ""
+    o = _clip(" ".join(olds), 30) or "(없음)"
+    n = _clip(" ".join(news), 30) or "(삭제)"
+    return f"{o} → {n}"
+
+
+def _condense(groups, old_n, new_n):
+    """변동이 문서 절반 이상이면 전체 나열 대신 '전면 개정' 요약으로 축약."""
+    total = sum(len(v) for v in groups.values())
+    if old_n >= 30 and total > old_n * 0.4:
+        out = OrderedDict([("전면 개정", [
+            ("변경", f"문서 전반 수정 — {old_n}줄 중 {total}줄 변동", "")])])
+        adds = [e for v in groups.values() for e in v if e[0] == "신규"][:8]
+        if adds:
+            out["추가된 내용"] = adds
+        return out
+    return groups
 
 
 def diff_lines(old_text, new_text):
-    """일반 텍스트/마크다운 라인 diff — 정규화해 비교하고 가장 가까운 제목으로 그룹."""
+    """일반 텍스트/마크다운 라인 diff — 바뀐 구간만 짚고 가장 가까운 제목으로 그룹."""
     old_ls = [ln for ln in _extract_body(old_text).splitlines() if _norm(ln)]
     new_ls = [ln for ln in _extract_body(new_text).splitlines() if _norm(ln)]
     sm = SequenceMatcher(None, [_norm(x) for x in old_ls], [_norm(x) for x in new_ls], autojunk=False)
@@ -288,8 +323,9 @@ def diff_lines(old_text, new_text):
 
     for kind, i, j in _opcode_pairs(sm):
         target, idx = (new_ls, j) if kind != "제외" else (old_ls, i)
-        groups.setdefault(heading_of(target, idx), []).append((kind, _clip(target[idx]), ""))
-    return groups
+        detail = _changed_span(old_ls[i], new_ls[j]) if kind == "변경" else ""
+        groups.setdefault(heading_of(target, idx), []).append((kind, _disp(target[idx]), detail))
+    return _condense(groups, len(old_ls), len(new_ls))
 
 
 def diff_docx(old_bytes, new_bytes):
@@ -308,8 +344,9 @@ def diff_docx(old_bytes, new_bytes):
 
     for kind, i, j in _opcode_pairs(sm):
         target, idx = (new_ps, j) if kind != "제외" else (old_ps, i)
-        groups.setdefault(heading_of(target, idx), []).append((kind, _clip(target[idx]), ""))
-    return groups
+        detail = _changed_span(old_ps[i], new_ps[j]) if kind == "변경" else ""
+        groups.setdefault(heading_of(target, idx), []).append((kind, _disp(target[idx]), detail))
+    return _condense(groups, len(old_ps), len(new_ps))
 
 
 def diff_xlsx(old_bytes, new_bytes):
@@ -361,31 +398,31 @@ def diff_for(kind, path, old_bytes, new_bytes):
 
 
 def _summarize_new_md(data):
+    """신규 md/시트 — 전체 나열 대신 규모+제목 한 줄."""
     text = data.decode("utf-8", errors="replace")
     if "```csv" in text:
         rows = _csv_rows(_extract_body(text))
-        entries = [("신규", _row_key(r), "") for r in rows[:10]]
-        label = f"신규 문서 ({len(rows)}행)"
+        title = _disp(_row_key(rows[0])) if rows else ""
+        desc = f"{len(rows)}행 구성 (헤더 포함)" + (f" — {title}" if title else "")
     else:
-        lines = [ln for ln in _extract_body(text).splitlines() if ln.strip()]
-        entries = [("신규", _clip(ln), "") for ln in lines[:10]]
-        label = f"신규 문서 ({len(lines)}줄)"
-    return OrderedDict([(label, entries or [("신규", "내용 있음", "")])])
+        lines = [ln for ln in _extract_body(text).splitlines() if _norm(ln)]
+        title = next((_disp(ln, 30) for ln in lines
+                      if re.match(r"^#{1,3}\s", ln.strip())), _disp(lines[0], 30) if lines else "")
+        desc = f"{len(lines)}줄 구성" + (f" — {title}" if title else "")
+    return OrderedDict([("신규", [("신규", desc, "")])])
 
 
 def _summarize_new_docx(data):
     import docx
-    paras = [p.text for p in docx.Document(io.BytesIO(data)).paragraphs if p.text.strip()]
-    return OrderedDict([(f"신규 문서 (문단 {len(paras)}개)",
-                         [("신규", _clip(t), "") for t in paras[:10]])])
+    paras = [p.text for p in docx.Document(io.BytesIO(data)).paragraphs if _norm(p.text)]
+    return OrderedDict([("신규", [("신규", f"{len(paras)} 문단 구성 — {_disp(paras[0], 30) if paras else ''}", "")])])
 
 
 def _summarize_new_xlsx(data):
     import openpyxl
     wb = openpyxl.load_workbook(io.BytesIO(data), data_only=True)
-    return OrderedDict([(f"신규 시트 {t} ({wb[t].max_row}행)",
-                         [("신규", f"{wb[t].max_row}행 × {wb[t].max_column}열", "")])
-                        for t in wb.sheetnames])
+    desc = " · ".join(f"{t} {wb[t].max_row}행" for t in wb.sheetnames)
+    return OrderedDict([("신규", [("신규", f"시트 {len(wb.sheetnames)}개 — {desc}", "")])])
 
 
 # ---------------------------------------------------------------- 메시지 구성
@@ -399,9 +436,11 @@ def team_of(path):
 
 
 def stat_line(groups, is_new):
+    first = next(iter(groups.values()), None)
+    if "전면 개정" in groups:
+        return groups["전면 개정"][0][1]
     if is_new:
-        total = sum(len(v) for v in groups.values())
-        return f"신규 문서 — 총 {total}행 구성"
+        return f"신규 문서 — {first[0][1]}" if first else "신규 문서"
     counts = {"변경": 0, "신규": 0, "제외": 0}
     for entries in groups.values():
         for kind, _, _ in entries:
@@ -441,8 +480,8 @@ def render_groups(groups, budget):
         used += len(header) + 1
         shown = 0
         for kind, item, detail in entries:
-            bullet = f"• {item}" + (f": {detail[:60]}" if detail else "")
-            bullet += f" ({kind})" if kind != "변경" else ""
+            tag = {"신규": " (+)", "제외": " (−)"}.get(kind, "")
+            bullet = f"• {item}{tag}" + (f": {detail[:70]}" if detail else "")
             if used + len(bullet) > budget - 15:  # '외 N건' 여유 확보
                 break
             put(bullet)

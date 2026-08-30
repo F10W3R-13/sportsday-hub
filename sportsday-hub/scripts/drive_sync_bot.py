@@ -17,6 +17,10 @@ Windows 작업 스케줄러(태스크 GdriveSyncBroadcast)가 직접 실행한�
 도구를 1회 호출해 브라우저 재인증하면 토큰 파일이 갱신돼 봇도 자동 복구된다.
 
 실행: python -X utf8 drive_sync_bot.py
+요약 대상만 추출(발송 없음): python -X utf8 drive_sync_bot.py --pending
+  — 신규·전면개정 문서의 old/new를 logs/summary_cache/에 남긴다. 21:40 ZCode 자동화가
+  이를 읽어 logs/doc_summaries.json에 "path::mtime" 키로 소개문을 채워두면
+  22:00 방송이 📌 소개로 포함한다(없으면 기계 요약 폴백, 발송 신뢰성에는 무관).
 드라이런: SYNC_BOT_DRY=1 — 스캔·diff·메시지 구성까지만(발송·파일 쓰기·커밋 없음).
 종료 코드: 0 성공(변동 없음 포함) / 1 실패(로그에 AUTH_FAIL·SEND_FAIL·COMMIT_FAIL).
 행사 종료(9/20 18:00) 이후에는 아무 것도 하지 않고 종료.
@@ -48,6 +52,11 @@ KEYS_FILE = CREDS_DIR / "gcp-oauth.keys.json"
 TOKEN_FILE = CREDS_DIR / ".gdrive-server-credentials.json"
 
 DRY_RUN = bool(os.environ.get("SYNC_BOT_DRY"))
+PENDING_MODE = "--pending" in sys.argv  # 발송 대신 요약 대상(신규·전면개정)만 캐시로 남긴다
+LOGS_DIR = Path(__file__).resolve().parent / "logs"
+SUMMARIES_PATH = LOGS_DIR / "doc_summaries.json"   # 21:40 ZCode 자동화가 채우는 AI 소개 캐시
+PENDING_PATH = LOGS_DIR / "pending_summary.json"
+CACHE_DIR = LOGS_DIR / "summary_cache"
 KST = timezone(timedelta(hours=9))
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 DRIVE_FILES = "https://www.googleapis.com/drive/v3/files"
@@ -507,7 +516,10 @@ def compose_messages(changes):
     for c in changes:
         new_tag = " · 신규" if c["is_new"] else ""
         lines.append(f"\n• {c['display']} ({c['team']} · {c['mtime_kst']:%H:%M} 수정{new_tag})")
-        lines.append(f"  └ {c['stat']}")
+        if c.get("summary"):
+            lines.append(f"  └ 📌 {c['summary'][:90]}")
+        else:
+            lines.append(f"  └ {c['stat']}")
     lines.append("\n핵심 변화는 다음 메시지에 →")
     msg1 = "\n".join(lines)
     if len(msg1) > 300:
@@ -516,6 +528,9 @@ def compose_messages(changes):
     per_budget = max(250, 1500 // len(changes) - 40)
     parts = []
     for c in changes:
+        if c.get("summary"):  # AI 소개 캐시가 있으면 문서 소개를 2통 맨 앞에 붙인다
+            intro = OrderedDict([("문서 소개", [("변경", c["summary"][:200], "")])])
+            c["groups"] = OrderedDict([*intro.items(), *c["groups"].items()])
         body = render_groups(c["groups"], per_budget)
         header = f"[핵심 변화] {c['display']} {c['mtime_kst'].month}/{c['mtime_kst'].day} 개정분"
         parts.append(f"{header}\n\n{body}" if body else f"{header}\n\n(미세 변경 — 원문 참고)")
@@ -584,10 +599,17 @@ def main():
 
     if deleted:
         k.log.info("[sync-bot] 드라이브 삭제 확인: %s", "; ".join(deleted))
+    if PENDING_MODE:
+        write_pending(changed)
+        return
+
+    summaries = load_summaries()
+    for c in changed:
+        c["summary"] = summaries.get(_summary_key(c["path"], c["mtime"]))
     messages = compose_messages([
         {"path": c["path"], "display": Path(c["path"]).stem, "team": team_of(c["path"]),
          "mtime_kst": c["mtime_kst"], "is_new": c["is_new"], "groups": c["groups"],
-         "stat": c["stat"]}
+         "stat": c["stat"], "summary": c.get("summary")}
         for c in changed])
     k.log.info("[sync-bot] 변동 %d건 — 메시지 %d통", len(changed), len(messages))
     if DRY_RUN:
@@ -609,6 +631,7 @@ def main():
         k.log.exception("[sync-bot] 카톡 발송 실패 — 커밋하지 않음(재시도 시 재발송됨)")
         print(f"SEND_FAIL: {type(exc).__name__}: {exc}", file=sys.stderr)
         sys.exit(1)
+    consume_summaries(changed)
 
     try:
         paths = []
@@ -640,9 +663,55 @@ def _prep_change(token, fid, entry, meta, is_new):
     old_bytes = local.read_bytes() if (not is_new and local.exists()) else None
     data = download(token, fid, entry["kind"], meta)
     groups = diff_for(entry["kind"], entry["path"], old_bytes, data)
-    return {"path": entry["path"], "data": data, "groups": groups,
+    return {"path": entry["path"], "data": data, "old": old_bytes, "groups": groups,
+            "mtime": meta["mtime"],
             "mtime_kst": parse_mtime(meta["mtime"]).astimezone(KST),
             "is_new": is_new, "stat": stat_line(groups, is_new)}
+
+
+# ---------------------------------------------------------------- AI 소개 캐시 (ZCode 자동화 연동)
+
+def _summary_key(path, mtime):
+    return f"{path}::{mtime}"
+
+
+def load_summaries():
+    try:
+        return json.loads(SUMMARIES_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def write_pending(changed):
+    """신규·전면개정 문서의 old/new 내용을 캐시 파일로 남겨 ZCode 요약 세션에 넘긴다."""
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    items = []
+    for n, c in enumerate(changed):
+        if not (c["is_new"] or "전면 개정" in c["groups"]):
+            continue
+        old_f, new_f = CACHE_DIR / f"{n}.old", CACHE_DIR / f"{n}.new"
+        old_f.write_bytes(c["old"] or "(신규 문서 — 이전 판 없음)".encode("utf-8"))
+        new_f.write_bytes(c["data"])
+        items.append({"path": c["path"], "mtime": c["mtime"], "is_new": c["is_new"],
+                      "old_file": str(old_f), "new_file": str(new_f)})
+    PENDING_PATH.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
+    k.log.info("[sync-bot] 요약 대상 %d건 → %s", len(items), PENDING_PATH)
+    return len(items)
+
+
+def consume_summaries(changed):
+    """발송에 사용한 소개 캐시 정리(미사용분은 다음 기회에 재사용)."""
+    used = {_summary_key(c["path"], c["mtime"]) for c in changed if c.get("summary")}
+    if not used:
+        return
+    summaries = load_summaries()
+    for key in used:
+        summaries.pop(key, None)
+    SUMMARIES_PATH.write_text(json.dumps(summaries, ensure_ascii=False, indent=2),
+                              encoding="utf-8")
+    for f in CACHE_DIR.glob("*"):
+        f.unlink(missing_ok=True)
+    k.log.info("[sync-bot] 사용한 AI 소개 %d건 정리", len(used))
 
 
 if __name__ == "__main__":

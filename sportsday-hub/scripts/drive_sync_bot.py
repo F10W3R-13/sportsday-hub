@@ -18,9 +18,10 @@ Windows 작업 스케줄러(태스크 GdriveSyncBroadcast)가 직접 실행한�
 
 실행: python -X utf8 drive_sync_bot.py
 요약 대상만 추출(발송 없음): python -X utf8 drive_sync_bot.py --pending
-  — 신규·전면개정 문서의 old/new를 logs/summary_cache/에 남긴다. 21:40 ZCode 자동화가
-  이를 읽어 logs/doc_summaries.json에 "path::mtime" 키로 소개문을 채워두면
-  22:00 방송이 📌 소개로 포함한다(없으면 기계 요약 폴백, 발송 신뢰성에는 무관).
+  — 변경분 전체의 old/new를 logs/summary_cache/에 남긴다(needs_summary=신규·전면개정 표시).
+  21:40 ZCode 자동화가 이를 읽어 ① 방송용 AI 소개(logs/doc_summaries.json, "path::mtime" 키)
+  ② 체크리스트 정합(문서로 완료 입증되는 미체크 milestones 항목 → completed=true)을 처리하고
+  22:00 방송이 📌 소개를 포함한다(없으면 기계 요약 폴백, 발송 신뢰성에는 무관).
 드라이런: SYNC_BOT_DRY=1 — 스캔·diff·메시지 구성까지만(발송·파일 쓰기·커밋 없음).
 종료 코드: 0 성공(변동 없음 포함) / 1 실패(로그에 AUTH_FAIL·SEND_FAIL·COMMIT_FAIL).
 행사 종료(9/20 18:00) 이후에는 아무 것도 하지 않고 종료.
@@ -704,19 +705,21 @@ def load_summaries():
 
 
 def write_pending(changed):
-    """신규·전면개정 문서의 old/new 내용을 캐시 파일로 남겨 ZCode 요약 세션에 넘긴다."""
+    """변경분 전체의 old/new 내용을 캐시로 남겨 ZCode 세션에 넘긴다.
+    needs_summary=true(신규·전면개정)만 방송용 AI 소개를 쓰고, 전체 항목은
+    체크리스트 정합(문서로 완료 입증되는 미체크 항목 체크) 판단에 쓰인다."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     items = []
     for n, c in enumerate(changed):
-        if not (c["is_new"] or "전면 개정" in c["groups"]):
-            continue
         old_f, new_f = CACHE_DIR / f"{n}.old", CACHE_DIR / f"{n}.new"
         old_f.write_bytes(c["old"] or "(신규 문서 — 이전 판 없음)".encode("utf-8"))
         new_f.write_bytes(c["data"])
         items.append({"path": c["path"], "mtime": c["mtime"], "is_new": c["is_new"],
+                      "needs_summary": bool(c["is_new"] or "전면 개정" in c["groups"]),
                       "old_file": str(old_f), "new_file": str(new_f)})
     PENDING_PATH.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
-    k.log.info("[sync-bot] 요약 대상 %d건 → %s", len(items), PENDING_PATH)
+    k.log.info("[sync-bot] 캐시 %d건(요약 대상 %d건) → %s",
+               len(items), sum(i["needs_summary"] for i in items), PENDING_PATH)
     return len(items)
 
 

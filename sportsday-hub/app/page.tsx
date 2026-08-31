@@ -10,6 +10,7 @@ import { getMilestones } from '@/lib/queries/milestones'
 import { getIssues } from '@/lib/queries/issues'
 import { getRecentDriveFiles, getLastSyncedAt } from '@/lib/queries/drive-files'
 import { getHandoffs } from '@/lib/queries/handoffs'
+import { IS_DEMO } from '@/lib/demo'
 import { getDriveConnectionStatus } from '@/lib/drive/sync'
 
 export default async function DashboardPage() {
@@ -54,11 +55,14 @@ export default async function DashboardPage() {
         <UrgentChecklist tasks={milestones} teams={teams} />
       </div>
 
-      <RecentFilesWidget
-        files={recentFiles.slice(0, 8)}
-        lastSyncedAt={lastSyncedAt}
-        connected={driveStatus.connected}
-      />
+      {/* 데모에서는 드라이브 연동이 없어 "설정에서 연결" 안내가 죽은 링크처럼 보임 → 위젯 자체를 숨긴다 */}
+      {IS_DEMO ? null : (
+        <RecentFilesWidget
+          files={recentFiles.slice(0, 8)}
+          lastSyncedAt={lastSyncedAt}
+          connected={driveStatus.connected}
+        />
+      )}
 
       <HandoffsWidget handoffs={handoffs} recentFiles={recentFiles} />
 

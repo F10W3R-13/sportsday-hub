@@ -23,7 +23,7 @@ import os
 import subprocess
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -35,6 +35,11 @@ API_URL = os.environ.get("DIGEST_API_URL", "https://sportsday-hub.vercel.app/api
 CRON_SECRET = os.environ.get("CRON_SECRET", "")
 ROOM_NAME = os.environ.get("KAKAO_ROOM_NAME", "스포츠데이")
 REPORT_URL = os.environ.get("REPORT_URL", "https://sportsday-hub.vercel.app/api/kakao-bot/report")
+
+KST = timezone(timedelta(hours=9))
+NETWORK_WAIT_SEC = 150   # 깨어난 직후 네트워크 준비를 기다리는 상한
+LOGIN_WAIT_SEC = 180     # 카톡 자동로그인 완료를 기다리는 상한
+PENDING_FLAG = Path(__file__).resolve().parent / "logs" / "digest_pending.flag"  # 발송 실패 → 회복 태스크 재실행 단서
 
 SEARCH_WAIT_SEC = 1.5
 ROOM_OPEN_WAIT_SEC = 1.5
@@ -80,6 +85,63 @@ def find_window(title_part):
         if title_part in window.title:
             return window
     return None
+
+
+def wait_for_network(url, timeout_sec=NETWORK_WAIT_SEC):
+    """깨어난 직후 와이파이·DNS가 늦게 잡히는 경우를 흡수한다.
+    HTTP 응답이 '뭐든'(401 포함) 오면 네트워크는 연 것으로 본다."""
+    deadline = time.time() + timeout_sec
+    while time.time() < deadline:
+        try:
+            requests.get(url, timeout=5)
+            return True
+        except requests.RequestException:
+            time.sleep(5)
+    log.warning("네트워크 대기 초과(%d초): %s", timeout_sec, url)
+    return False
+
+
+def kakao_login_state():
+    """카톡 창 제목만으로 로그인 상태를 추정. '카카오톡' 메인창=로그인됨,
+    '로그인'이 포함된 카카오 창=로그인 필요, 카카오 창 없음=미실행."""
+    titles = [w.title for w in pyautogui.getAllWindows() if "카카오" in w.title]
+    if any("로그인" in t for t in titles):
+        return "logged_out"
+    if any("카카오톡" in t for t in titles):
+        return "logged_in"
+    return "absent"
+
+
+def wait_for_kakao_login(timeout_sec=LOGIN_WAIT_SEC):
+    """로그인(자동로그인 완료 포함)을 기다린다. 미실행이면 1회만 직접 실행해 본다."""
+    launched = False
+    deadline = time.time() + timeout_sec
+    while time.time() < deadline:
+        state = kakao_login_state()
+        if state == "logged_in":
+            return True
+        if state == "absent" and not launched:
+            try:
+                ensure_kakao_running()
+                launched = True
+            except RuntimeError:
+                return False
+        time.sleep(5)
+    titles = [w.title for w in pyautogui.getAllWindows() if "카카오" in w.title]
+    log.warning("카톡 로그인 대기 초과(%d초) — 카카오 창: %r", timeout_sec, titles)
+    return False
+
+
+def write_pending(reason):
+    PENDING_FLAG.parent.mkdir(exist_ok=True)
+    PENDING_FLAG.write_text(f"{datetime.now(KST):%Y-%m-%d}\n{reason}\n", encoding="utf-8")
+    log.info("미발송 마커 기록: %s (%s)", PENDING_FLAG.name, reason)
+
+
+def clear_pending():
+    if PENDING_FLAG.exists():
+        PENDING_FLAG.unlink()
+        log.info("미발송 마커 해제: %s", PENDING_FLAG.name)
 
 
 def ensure_kakao_running():
@@ -151,26 +213,33 @@ def main():
         return
     log.info("실행 시작: room=%r api=%s secret=%s", ROOM_NAME, API_URL, "설정됨" if CRON_SECRET else "없음(인증 생략)")
     try:
+        if not wait_for_network(API_URL):
+            raise RuntimeError("네트워크 대기 초과")
         text = fetch_digest()
     except Exception:
-        detail = "다이제스트 조회 실패 (API/네트워크 오류)"
+        detail = "다이제스트 조회 실패 (네트워크 대기 후에도 API 미접근)"
         log.exception(detail)
         report("fail", detail)
+        write_pending(detail)  # 회복 태스크가 재실행해 오늘 분을 다시 받아 보낸다
         sys.exit(1)
     if not text:
         log.info("임박 항목 없음 — 전송 생략")
         report("success", "임박 항목 없음 — 전송 생략")
+        clear_pending()
         return
     try:
-        ensure_kakao_running()
+        if not wait_for_kakao_login():
+            raise RuntimeError("카톡 로그인 대기 초과 (재로그인 필요)")
         room = open_room_with_retry(ROOM_NAME)
         send_message(room, text)
         log.info("발송 완료: room=%r 길이=%d자 | %s", ROOM_NAME, len(text), text.splitlines()[0])
         report("success")
+        clear_pending()
     except Exception as exc:
         detail = f"{type(exc).__name__}: {exc}"
         log.exception("카카오톡 전송 실패 (창/UI 자동화 오류)")
         report("fail", detail)
+        write_pending(detail)
         sys.exit(1)
 
 

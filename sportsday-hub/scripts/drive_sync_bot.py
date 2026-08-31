@@ -58,6 +58,7 @@ LOGS_DIR = Path(__file__).resolve().parent / "logs"
 SUMMARIES_PATH = LOGS_DIR / "doc_summaries.json"   # 21:40 ZCode 자동화가 채우는 AI 소개 캐시
 PENDING_PATH = LOGS_DIR / "pending_summary.json"
 CACHE_DIR = LOGS_DIR / "summary_cache"
+SYNC_PENDING = LOGS_DIR / "sync_pending.flag"      # 발송 실패 → 회복 태스크(kakao_recover)가 이 스크립트를 재실행
 KST = timezone(timedelta(hours=9))
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 DRIVE_FILES = "https://www.googleapis.com/drive/v3/files"
@@ -570,6 +571,8 @@ def main():
         k.log.info("[sync-bot] 행사 종료(9/20 18:00) 이후 — 실행 안 함")
         return
     k.log.info("[sync-bot] 실행 시작: dry=%s", DRY_RUN)
+    if not k.wait_for_network(TOKEN_URL):
+        raise BotError("네트워크 대기 초과 — 드라이브 API 미접근")
     token = get_access_token()
     k.log.info("[sync-bot] 인증 완료")
 
@@ -633,7 +636,8 @@ def main():
 
     # 발송(취약 단계) → 성공 시에만 파일·매니페스트·커밋
     try:
-        k.ensure_kakao_running()
+        if not k.wait_for_kakao_login():
+            raise BotError("카톡 로그인 대기 초과 (재로그인 필요)")
         room = k.open_room_with_retry(k.ROOM_NAME)
         for i, text in enumerate(messages, 1):
             k.send_message(room, text)
@@ -641,7 +645,9 @@ def main():
             if i < len(messages):
                 time.sleep(MSG_GAP_SEC)
     except Exception as exc:
-        k.log.exception("[sync-bot] 카톡 발송 실패 — 커밋하지 않음(재시도 시 재발송됨)")
+        k.log.exception("[sync-bot] 카톡 발송 실패 — 커밋하지 않음(회복 태스크가 재실행)")
+        SYNC_PENDING.parent.mkdir(exist_ok=True)
+        SYNC_PENDING.write_text(f"{datetime.now(KST):%Y-%m-%d}\nSEND_FAIL: {exc}\n", encoding="utf-8")
         print(f"SEND_FAIL: {type(exc).__name__}: {exc}", file=sys.stderr)
         sys.exit(1)
     consume_summaries(changed)
@@ -662,6 +668,7 @@ def main():
         body_lines += [f"- 신규 폴더 등록: {p}" for p in new_folders.values()]
         git("add", "--", *paths, ".gdrive-sync-manifest.json")
         git("commit", "-m", subject, "-m", "\n".join(body_lines))
+        SYNC_PENDING.unlink(missing_ok=True)
         k.log.info("[sync-bot] 커밋 완료: %s", subject)
     except Exception as exc:
         k.log.exception("[sync-bot] 커밋 실패 — 발송은 완료됨. 매니페스트가 갱신 안 돼 "

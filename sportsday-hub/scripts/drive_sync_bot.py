@@ -18,10 +18,13 @@ Windows 작업 스케줄러(태스크 GdriveSyncBroadcast)가 직접 실행한�
 
 실행: python -X utf8 drive_sync_bot.py
 요약 대상만 추출(발송 없음): python -X utf8 drive_sync_bot.py --pending
-  — 변경분 전체의 old/new를 logs/summary_cache/에 남긴다(needs_summary=신규·전면개정 표시).
-  21:40 ZCode 자동화가 이를 읽어 ① 방송용 AI 소개(logs/doc_summaries.json, "path::mtime" 키)
-  ② 체크리스트 정합(문서로 완료 입증되는 미체크 milestones 항목 → completed=true)을 처리하고
-  22:00 방송이 📌 소개를 포함한다(없으면 기계 요약 폴백, 발송 신뢰성에는 무관).
+  — 변경분 전체의 팩트시트(행키 diff·링크)와 old/new 원문을 logs/에 남긴다.
+    21:40 ZCode 자동화가 ① 최종 방송문 작성(logs/broadcast.json: {date, paths, messages})
+    ② 체크리스트 정합(문서로 완료 입증되는 미체크 milestones → completed=true)을 처리한다.
+    22:00 실행은 broadcast.json이 오늘 날짜+파일 집합 일치하면 그대로 발송하고,
+    없으면(ZCode가 안 열려 있던 날) 카드형 기계 폴백으로 발송 — 신뢰성은 항상 OS 스케줄러에.
+방송 포맷(2026-09-01 재구성): 1통 스캔 요약 + 파일별 카드(■ 그룹 • 불릿 🔗 링크)를
+통당 ~900자로 분할. 문장/카드를 중간에 자르지 않는다(9/1 하드컷 사고 폐지).
 드라이런: SYNC_BOT_DRY=1 — 스캔·diff·메시지 구성까지만(발송·파일 쓰기·커밋 없음).
 종료 코드: 0 성공(변동 없음 포함) / 1 실패(로그에 AUTH_FAIL·SEND_FAIL·COMMIT_FAIL).
 행사 종료(9/20 18:00) 이후에는 아무 것도 하지 않고 종료.
@@ -57,6 +60,7 @@ PENDING_MODE = "--pending" in sys.argv  # 발송 대신 요약 대상(신규·�
 LOGS_DIR = Path(__file__).resolve().parent / "logs"
 SUMMARIES_PATH = LOGS_DIR / "doc_summaries.json"   # 21:40 ZCode 자동화가 채우는 AI 소개 캐시
 PENDING_PATH = LOGS_DIR / "pending_summary.json"
+BROADCAST_PATH = LOGS_DIR / "broadcast.json"        # 21:40 ZCode 자동화가 완성하는 최종 방송문(AI 판)
 CACHE_DIR = LOGS_DIR / "summary_cache"
 SYNC_PENDING = LOGS_DIR / "sync_pending.flag"      # 발송 실패 → 회복 태스크(kakao_recover)가 이 스크립트를 재실행
 KST = timezone(timedelta(hours=9))
@@ -266,10 +270,13 @@ def _track_categories(rows):
     return cats
 
 
-def diff_csv(old_text, new_text):
-    """시트 스냅샷 diff. 행 매칭은 SequenceMatcher, 그룹은 A열(카테고리) 추적."""
-    old_rows = [tuple(r) for r in _csv_rows(_extract_body(old_text))]
-    new_rows = [tuple(r) for r in _csv_rows(_extract_body(new_text))]
+def _diff_rows(old_rows, new_rows):
+    """행 단위 diff 공통 엔진(csv 스냅샷·xlsx 동일 사용).
+    폴백 품질 규칙(2026-09-01): 신규 시트는 행 나열 대신 요약, 절반 이상 재구성된 시트는
+    '구조 개편'으로 축약, 수치 변동 없는 '변경' 행(포맷·수식캐시 차이)은 노이즈로 버린다."""
+    from collections import Counter
+    if not old_rows:
+        return OrderedDict([("신규", [("신규", f"시트 신설 — {len(new_rows)}행 구성", "")])])
     sm = SequenceMatcher(None, old_rows, new_rows, autojunk=False)
     cats_old, cats_new = _track_categories(old_rows), _track_categories(new_rows)
     groups = OrderedDict()
@@ -283,12 +290,28 @@ def diff_csv(old_text, new_text):
                 f"{_fmt_num(a)} → {_fmt_num(b)}"
                 for a, b in zip(old_rows[i], new_rows[j])
                 if a.strip() != b.strip() and (_looks_like_number(a) or _looks_like_number(b)))[:120]
+            if not detail:  # 수치 변동 없는 짝 — 재정렬·포맷 차이로 판명
+                continue
             add(cats_new[j], (kind, _row_key(new_rows[j]), detail))
         elif kind == "신규":
             add(cats_new[j], (kind, _row_key(new_rows[j]), ""))
         else:
             add(cats_old[i], (kind, _row_key(old_rows[i]), ""))
+    if not groups:
+        return groups
+    co, cn = Counter(old_rows), Counter(new_rows)
+    diff_n = sum((co - cn).values()) + sum((cn - co).values())
+    if len(old_rows) >= 15 and diff_n > len(old_rows) * 0.5:
+        return OrderedDict([("재구성", [
+            ("변경", f"시트 구조 개편({len(old_rows)}행 → {len(new_rows)}행) — 주요 수치는 문서 확인", "")])])
     return groups
+
+
+def diff_csv(old_text, new_text):
+    """시트 스냅샷 diff — 헤더/펜스 제거 후 공통 행 diff 엔진으로."""
+    old_rows = [tuple(r) for r in _csv_rows(_extract_body(old_text))]
+    new_rows = [tuple(r) for r in _csv_rows(_extract_body(new_text))]
+    return _diff_rows(old_rows, new_rows)
 
 
 def _norm(s):
@@ -318,17 +341,32 @@ def _changed_span(old, new):
     return f"{o} → {n}"
 
 
-def _condense(groups, old_n, new_n):
-    """변동이 문서 절반 이상이면 전체 나열 대신 '전면 개정' 요약으로 축약."""
-    total = sum(len(v) for v in groups.values())
-    if old_n >= 30 and total > old_n * 0.4:
+def _condense(groups, old_items, new_items):
+    """변동을 '내용 집합' 기준으로 계산해 문서 절반 이상 바뀐 경우만 전면 개정으로 축약.
+    (위치 정렬 오탐 방지 — 어제 355/355 오판 교정: 집합 비교로는 실제 10줄 차이.)"""
+    from collections import Counter
+    co, cn = Counter(map(_norm, old_items)), Counter(map(_norm, new_items))
+    diff_n = sum((co - cn).values()) + sum((cn - co).values())
+    if len(old_items) >= 30 and diff_n > len(old_items) * 0.5:
         out = OrderedDict([("전면 개정", [
-            ("변경", f"문서 전반 수정 — {old_n}줄 중 {total}줄 변동", "")])])
+            ("변경", f"문서 전반 수정 — {len(old_items)}줄 중 {diff_n}줄 실제 변동", "")])])
         adds = [e for v in groups.values() for e in v if e[0] == "신규"][:8]
         if adds:
             out["추가된 내용"] = adds
         return out
     return groups
+
+
+def _line_change(old, new):
+    """위치 diff의 '변경' 짝 판정. None=별개 줄(제외+신규), False=사소한 차이(미표시),
+    문자열=변경(바뀐 구간 스팬). export 미세차이(문장부호 등)가 목록에 누수되는 걸 막는다."""
+    ratio = SequenceMatcher(None, _norm(old), _norm(new)).ratio()
+    if ratio < 0.5:
+        return None
+    span = _changed_span(old, new)
+    if ratio > 0.85 and not re.search(r"\d", span):
+        return False
+    return span
 
 
 def diff_lines(old_text, new_text):
@@ -344,11 +382,22 @@ def diff_lines(old_text, new_text):
                 return re.sub(r"^[#■\s]+", "", ln.strip())[:20] or "기타"
         return "기타"
 
-    for kind, i, j in _opcode_pairs(sm):
-        target, idx = (new_ls, j) if kind != "제외" else (old_ls, i)
-        detail = _changed_span(old_ls[i], new_ls[j]) if kind == "변경" else ""
+    def emit(kind, target, idx, detail=""):
         groups.setdefault(heading_of(target, idx), []).append((kind, _disp(target[idx]), detail))
-    return _condense(groups, len(old_ls), len(new_ls))
+
+    for kind, i, j in _opcode_pairs(sm):
+        if kind != "변경":
+            emit(kind, new_ls if kind == "신규" else old_ls, j if kind == "신규" else i)
+            continue
+        span = _line_change(old_ls[i], new_ls[j])
+        if span is False:
+            continue
+        if span is None:
+            emit("제외", old_ls, i)
+            emit("신규", new_ls, j)
+        else:
+            emit("변경", new_ls, j, span)
+    return _condense(groups, old_ls, new_ls)
 
 
 def diff_docx(old_bytes, new_bytes):
@@ -365,30 +414,64 @@ def diff_docx(old_bytes, new_bytes):
                 return t[:20]
         return "본문"
 
-    for kind, i, j in _opcode_pairs(sm):
-        target, idx = (new_ps, j) if kind != "제외" else (old_ps, i)
-        detail = _changed_span(old_ps[i], new_ps[j]) if kind == "변경" else ""
+    def emit(kind, target, idx, detail=""):
         groups.setdefault(heading_of(target, idx), []).append((kind, _disp(target[idx]), detail))
-    return _condense(groups, len(old_ps), len(new_ps))
+
+    for kind, i, j in _opcode_pairs(sm):
+        if kind != "변경":
+            emit(kind, new_ps if kind == "신규" else old_ps, j if kind == "신규" else i)
+            continue
+        span = _line_change(old_ps[i], new_ps[j])
+        if span is False:
+            continue
+        if span is None:
+            emit("제외", old_ps, i)
+            emit("신규", new_ps, j)
+        else:
+            emit("변경", new_ps, j, span)
+    return _condense(groups, old_ps, new_ps)
+
+
+def _cell_str(v):
+    """xlsx 셀값 → 비교·표시용 문자열. 숫자는 천단위 쉼표로 정규화(9460.0 → 9,460)."""
+    if v is None:
+        return ""
+    if isinstance(v, bool):
+        return "O" if v else "X"
+    if isinstance(v, (int, float)) and float(v).is_integer():
+        return f"{int(v):,}"
+    return str(v).strip()
+
+
+def _sheet_rows(ws, limit=2000):
+    rows = []
+    for row in ws.iter_rows(max_row=min(ws.max_row, limit)):
+        cells = tuple(_cell_str(c.value) for c in row)
+        cells = tuple(c for c in cells if c != "")  # 끝 빈셀 제거 — 위치 비교 안함
+        if any(cells):
+            rows.append(cells)
+    return rows
 
 
 def diff_xlsx(old_bytes, new_bytes):
+    """xlsx diff — 셀 좌표 비교가 아니라 행 키 비교(2026-09-01 'C3 None' 노이즈 폐지).
+    행 삽입·삭제는 키 이동으로 흡수되고, 남는 건 '품목: a → b' 실변경뿐."""
     import openpyxl
     old_wb = openpyxl.load_workbook(io.BytesIO(old_bytes), data_only=True)
     new_wb = openpyxl.load_workbook(io.BytesIO(new_bytes), data_only=True)
     groups = OrderedDict()
-    for title in new_wb.sheetnames:
-        ns, os_ = new_wb[title], (old_wb[title] if title in old_wb.sheetnames else None)
-        entries = []
-        for row in ns.iter_rows():
-            for c in row:
-                old_v = os_.cell(c.row, c.column).value if os_ else None
-                if c.value != old_v and not (c.value in (None, "") and old_v in (None, "")):
-                    detail = f"{_fmt_num(old_v)} → {_fmt_num(c.value)}" if os_ else ""
-                    entries.append(("신규" if os_ is None else "변경",
-                                    f"{c.coordinate} {_fmt_num(c.value)}", detail))
-        if entries:
-            groups[f"시트 {title}"] = entries[:40]
+    touched = [t for t in new_wb.sheetnames
+               if _sheet_rows(new_wb[t]) != (_sheet_rows(old_wb[t]) if t in old_wb.sheetnames else None)]
+    multi = len(touched) > 1
+    for title in touched:
+        prefix = f"{title} · " if multi else ""
+        new_rows = _sheet_rows(new_wb[title])
+        old_rows = _sheet_rows(old_wb[title]) if title in old_wb.sheetnames else []
+        for cat, entries in _diff_rows(old_rows, new_rows).items():
+            groups[prefix + cat] = entries[:30]
+    for title in old_wb.sheetnames:
+        if title not in new_wb.sheetnames:
+            groups[f"시트 {title}"] = [("제외", f"시트 삭제({old_wb[title].max_row}행)", "")]
     return groups
 
 
@@ -472,10 +555,12 @@ def stat_line(groups, is_new):
 
 
 def _settle_group(groups):
-    """'총 지출/합계/잔여/지원/수입' 항목은 마지막 ■ 정산 그룹으로 옮긴다(예산 서식)."""
+    """정산성 항목(총지출·합계·잔여·지원금·수입)은 마지막 ■ 정산 그룹으로 옮긴다.
+    단어 경계 없는 포함매칭 금지 — '…지원' 같은 문서 제목이 정산으로 끌려간 사례(9/1) 방지."""
     settle = []
     for cat in list(groups):
-        keep = [e for e in groups[cat] if not re.search(r"총\s*지출|합계|잔여|지원|수입|정산", e[1])]
+        keep = [e for e in groups[cat]
+                if not re.search(r"총\s*지출|합계|잔여|지원금|수입|정산|입장료", e[1])]
         settle.extend(e for e in groups[cat] if e not in keep)
         if keep:
             groups[cat] = keep
@@ -516,8 +601,27 @@ def render_groups(groups, budget):
     return "\n".join("\n".join(block) for block in out)
 
 
+def drive_link(fid, mime):
+    """드라이브 파일 id·mime으로 바로가기 링크 생성."""
+    if "google-apps.spreadsheet" in (mime or ""):
+        return f"https://docs.google.com/spreadsheets/d/{fid}"
+    if "google-apps.document" in (mime or ""):
+        return f"https://docs.google.com/document/d/{fid}"
+    if "google-apps.presentation" in (mime or ""):
+        return f"https://docs.google.com/presentation/d/{fid}"
+    return f"https://drive.google.com/file/d/{fid}/view"
+
+
+def _first_clause(text, n=55):
+    """1통 한 줄 요약용 — 첫 문장(첫 마침표/줄바꿈) 또는 n자."""
+    if not text:
+        return ""
+    return re.split(r"(?<![0-9])\. |\n", text.strip())[0][:n].rstrip()
+
+
 def compose_messages(changes):
-    """확정 서식(2026-08-27) 준수. changes: [{path,display,team,mtime_kst,is_new,groups,stat}]"""
+    """카드형 방송(2026-09-01 재구성): 1통 스캔 요약 + 파일별 카드를 통당 ~900자로 분할.
+    문장/카드를 절대 중간에 자르지 않는다 — 상한 초과는 통 분할과 '외 N건'으로 흡수."""
     today = datetime.now(KST)
     if not changes:
         return [f"📂 [드라이브 문서 업데이트] {today.month}/{today.day}({WEEKDAYS[today.weekday()]})\n\n"
@@ -525,33 +629,41 @@ def compose_messages(changes):
 
     earliest = min(c["mtime_kst"].date() for c in changes)
     when = "오늘" if earliest == today.date() else f"{earliest.month}/{earliest.day} 이후"
-    lines = [f"📂 [드라이브 문서 업데이트] {today.month}/{today.day}({WEEKDAYS[today.weekday()]})",
-             "", f"{when} 드라이브에서 갱신된 문서 {len(changes)}건"]
-    for c in changes:
-        new_tag = " · 신규" if c["is_new"] else ""
-        lines.append(f"\n• {c['display']} ({c['team']} · {c['mtime_kst']:%H:%M} 수정{new_tag})")
-        if c.get("summary"):
-            lines.append(f"  └ 📌 {c['summary'][:90]}")
-        else:
-            lines.append(f"  └ {c['stat']}")
-    lines.append("\n핵심 변화는 다음 메시지에 →")
-    msg1 = "\n".join(lines)
-    if len(msg1) > 300:
-        msg1 = msg1[:297].rstrip() + "…"
+    cards = _build_cards(changes)
+    rest, cur, cur_len = [], [], 0
+    for card in cards:
+        if cur and cur_len + len(card) + 2 > 900:
+            rest.append("\n\n".join(cur))
+            cur, cur_len = [], 0
+        cur.append(card)
+        cur_len += len(card) + 2
+    if cur:
+        rest.append("\n\n".join(cur))
 
-    per_budget = max(250, 1500 // len(changes) - 40)
-    parts = []
+    lines = [f"📂 스포츠데이 문서 업데이트 {today.month}/{today.day}({WEEKDAYS[today.weekday()]})",
+             "", f"{when} 바뀐 문서 {len(changes)}건", ""]
     for c in changes:
-        if c.get("summary"):  # AI 소개 캐시가 있으면 문서 소개를 2통 맨 앞에 붙인다
-            intro = OrderedDict([("문서 소개", [("변경", c["summary"][:200], "")])])
-            c["groups"] = OrderedDict([*intro.items(), *c["groups"].items()])
-        body = render_groups(c["groups"], per_budget)
-        header = f"[핵심 변화] {c['display']} {c['mtime_kst'].month}/{c['mtime_kst'].day} 개정분"
-        parts.append(f"{header}\n\n{body}" if body else f"{header}\n\n(미세 변경 — 원문 참고)")
-    msg2 = "\n\n".join(parts)
-    if len(msg2) > 1500:
-        msg2 = msg2[:1497].rstrip() + "…"
-    return [msg1, msg2]
+        one = _first_clause(c.get("summary")) or c["stat"].split(" · ")[0]
+        lines.append(f"• {c['display']} — {one[:60]} ({c['team']})")
+    lines += ["", f"파일별 상세는 다음 {len(rest)}통 →"]
+    return ["\n".join(lines)] + rest
+
+
+def _build_cards(changes):
+    cards = []
+    for c in changes:
+        parts = ["───────────────────",
+                 f"📄 {c['display']} ({c['team']} · {c['mtime_kst']:%m/%d %H:%M} 판"
+                 + (" · 신규" if c["is_new"] else "") + ")"]
+        if c.get("summary"):
+            parts += ["", f"📌 {c['summary'][:300]}"]
+        body = render_groups(c["groups"], 620)
+        if body:
+            parts += ["", body]
+        if c.get("link"):
+            parts += ["", f"🔗 {c['link']}"]
+        cards.append("\n".join(parts))
+    return cards
 
 
 # ---------------------------------------------------------------- 커밋
@@ -622,11 +734,17 @@ def main():
     summaries = load_summaries()
     for c in changed:
         c["summary"] = summaries.get(_summary_key(c["path"], c["mtime"]))
-    messages = compose_messages([
-        {"path": c["path"], "display": Path(c["path"]).stem, "team": team_of(c["path"]),
-         "mtime_kst": c["mtime_kst"], "is_new": c["is_new"], "groups": c["groups"],
-         "stat": c["stat"], "summary": c.get("summary")}
-        for c in changed])
+    broadcast, used_broadcast = load_broadcast({c["path"] for c in changed})
+    if used_broadcast:
+        messages = broadcast["messages"]
+        k.log.info("[sync-bot] AI 방송문 사용(broadcast.json) — %d통", len(messages))
+    else:
+        messages = compose_messages([
+            {"path": c["path"], "display": Path(c["path"]).stem, "team": team_of(c["path"]),
+             "mtime_kst": c["mtime_kst"], "is_new": c["is_new"], "groups": c["groups"],
+             "stat": c["stat"], "summary": c.get("summary"), "link": c.get("link")}
+            for c in changed])
+        k.log.info("[sync-bot] 기계 폴백 방송문 — %d통", len(messages))
     k.log.info("[sync-bot] 변동 %d건 — 메시지 %d통", len(changed), len(messages))
     if DRY_RUN:
         for i, m in enumerate(messages, 1):
@@ -651,6 +769,9 @@ def main():
         print(f"SEND_FAIL: {type(exc).__name__}: {exc}", file=sys.stderr)
         sys.exit(1)
     consume_summaries(changed)
+    if used_broadcast:
+        BROADCAST_PATH.unlink(missing_ok=True)
+        k.log.info("[sync-bot] 사용한 broadcast.json 정리")
 
     try:
         paths = []
@@ -693,6 +814,7 @@ def _prep_change(token, fid, entry, meta, is_new):
         data = download(token, fid, "text-md", meta)
     groups = diff_for(entry["kind"], entry["path"], old_bytes, data)
     return {"path": entry["path"], "data": data, "old": old_bytes, "groups": groups,
+            "fid": fid, "mime": meta["mime"], "link": drive_link(fid, meta["mime"]),
             "mtime": meta["mtime"],
             "mtime_kst": parse_mtime(meta["mtime"]).astimezone(KST),
             "is_new": is_new, "stat": stat_line(groups, is_new)}
@@ -711,21 +833,43 @@ def load_summaries():
         return {}
 
 
+def load_broadcast(changed_paths):
+    """21:40 ZCode 자동화가 써둔 최종 방송문 검증·반환. 오늘 날짜 + 파일 집합 일치 + 메시지 있을 때만 사용."""
+    try:
+        data = json.loads(BROADCAST_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None, False
+    ok = (data.get("date") == f"{datetime.now(KST):%Y-%m-%d}"
+          and set(data.get("paths", [])) == set(changed_paths)
+          and isinstance(data.get("messages"), list)
+          and data["messages"]
+          and all(isinstance(m, str) and m.strip() for m in data["messages"]))
+    if not ok:
+        k.log.warning("[sync-bot] broadcast.json 불일치(날짜/파일집합) — 기계 폴백으로 발송")
+        return None, False
+    return data, True
+
+
 def write_pending(changed):
-    """변경분 전체의 old/new 내용을 캐시로 남겨 ZCode 세션에 넘긴다.
-    needs_summary=true(신규·전면개정)만 방송용 AI 소개를 쓰고, 전체 항목은
-    체크리스트 정합(문서로 완료 입증되는 미체크 항목 체크) 판단에 쓰인다."""
+    """변경분 전체의 팩트시트(행키 diff·링크·통계)와 old/new 원문을 캐시로 남겨
+    21:40 ZCode 세션이 ① 방송문 작성(broadcast.json) ② 체크리스트 정합에 쓰도록 한다."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     items = []
     for n, c in enumerate(changed):
         old_f, new_f = CACHE_DIR / f"{n}.old", CACHE_DIR / f"{n}.new"
         old_f.write_bytes(c["old"] or "(신규 문서 — 이전 판 없음)".encode("utf-8"))
         new_f.write_bytes(c["data"])
-        items.append({"path": c["path"], "mtime": c["mtime"], "is_new": c["is_new"],
-                      "needs_summary": bool(c["is_new"] or "전면 개정" in c["groups"]),
-                      "old_file": str(old_f), "new_file": str(new_f)})
+        groups = [[cat, entries[:40]] for cat, entries in c["groups"].items()]
+        items.append({
+            "path": c["path"], "mtime": c["mtime"], "is_new": c["is_new"],
+            "display": Path(c["path"]).stem, "team": team_of(c["path"]),
+            "link": c["link"], "mime": c["mime"],
+            "needs_summary": bool(c["is_new"] or "전면 개정" in c["groups"]),
+            "facts": {"stat": c["stat"], "wholesale": "전면 개정" in c["groups"], "groups": groups},
+            "old_file": str(old_f), "new_file": str(new_f),
+        })
     PENDING_PATH.write_text(json.dumps(items, ensure_ascii=False, indent=2), encoding="utf-8")
-    k.log.info("[sync-bot] 캐시 %d건(요약 대상 %d건) → %s",
+    k.log.info("[sync-bot] 팩트시트 %d건(요약 대상 %d건) → %s",
                len(items), sum(i["needs_summary"] for i in items), PENDING_PATH)
     return len(items)
 

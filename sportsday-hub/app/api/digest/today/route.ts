@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         handoffs: handoffs ?? [],
         teams: teams ?? [],
       },
-      { style: 'detailed', maxItems: 20, textLimit: 2000 }
+      { style: 'detailed', maxItems: 100, textLimit: 2000 } // 전체 노출(2026-09-01 확정) — 2000자는 이상 시 안전판
     )
 
     // 임박 항목이 없어도 안내 텍스트를 반환한다 (매일 일정 도착 = 봇 생존 확인).

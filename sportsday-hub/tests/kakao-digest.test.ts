@@ -83,7 +83,7 @@ describe('buildKakaoDigest', () => {
       { now: NOW, style: 'detailed', textLimit: 2000 }
     )
     expect(detailed.text).not.toContain('· 상시 할 일')
-    expect(detailed.text).toContain('상시 과제 1건 진행 중')
+    expect(detailed.text).toContain('상시 과제 1건 · 완료체크 ▸')
     expect(detailed.urgent).toBe(true)
   })
 
@@ -127,7 +127,7 @@ describe('buildKakaoDigest', () => {
     expect(r.text).toContain('카드 대조 인계')
   })
 
-  it('detailed 스타일: 마감일 그룹헤더 + 풀 팀명 + 인계 화살표 + 링크 문구', () => {
+  it('detailed 스타일: ⚠/📅 그룹헤더 + [팀태그] 제목 + 그룹 사이 빈 줄', () => {
     const longTitle = '클럽 하우스 앞 스탠드 존 운영 세부 물품 배치 계획 확정하기'
     const r = buildKakaoDigest(
       {
@@ -138,15 +138,33 @@ describe('buildKakaoDigest', () => {
         handoffs: [handoff('h1', '2026-09-04', '카드 대조 완료')],
         teams: TEAMS,
       },
-      { now: NOW, style: 'detailed', maxItems: 20, textLimit: 2000 }
+      { now: NOW, style: 'detailed', maxItems: 100, textLimit: 2000 }
     )
-    expect(r.text).toContain(longTitle) // 잘리지 않음
-    expect(r.text).toContain('기한 지연 1건')
-    expect(r.text).toContain('오늘 9/2(수) 마감 1건')
-    expect(r.text).toContain('· 총회개최')
-    expect(r.text).toContain('— 타임라인/인력운영팀')
-    expect(r.text).toContain('· 카드 대조 완료 → 타임라인/인력운영팀')
-    expect(r.text).toContain('완료체크 & 세부사항 확인 ▸ ')
+    expect(r.text).toContain('⚠ 8/31(월) 마감 · 2일 지연 1건')
+    expect(r.text).toContain('[인관] 클럽 하우스 앞 스탠드 존 운영 세부 물품…') // 24자 축약, 괄호 상세 제거
+    expect(r.text).toContain('📅 오늘 9/2(수) 마감 1건')
+    expect(r.text).toContain('[전체] 총회개최')
+    expect(r.text).toContain('[교환→인관] 카드 대조 완료') // 인계는 보내는→받는 팀 태그
+    expect(r.text).toContain('완료체크 ▸ ')
+    expect(r.text).toMatch(/\n\n(⚠|📅)/) // 그룹 사이 빈 줄
+  })
+
+  it('detailed: 괄호 상세는 제거, 동명 제목만 첫 괄호로 구분', () => {
+    const r = buildKakaoDigest(
+      {
+        tasks: [
+          milestone('m1', '2026-09-03', '티셔츠 사이즈별 집계 (S~3XL)', 'exchange'),
+          milestone('m2', '2026-09-03', '버스 탑승 명단 작성 (명륜 2대 분할 / Suwon 직행 — 25-2 버스 80석 기준)', 'exchange'),
+          milestone('m3', '2026-09-03', '버스 탑승 명단 작성 (교환담당팀에서 전달)', 'timeline'),
+        ],
+        handoffs: [],
+        teams: TEAMS,
+      },
+      { now: NOW, style: 'detailed', textLimit: 2000 }
+    )
+    expect(r.text).toContain('[교환] 티셔츠 사이즈별 집계') // 유일 제목은 괄호 제거
+    expect(r.text).toContain('[교환] 버스 탑승 명단 작성 (명륜 2대 분할 /…') // 동명은 첫 괄호 10자
+    expect(r.text).toContain('[인관] 버스 탑승 명단 작성 (교환담당팀에서 전달)')
   })
 
   it('maxItems 초과 시 …외 N건 표기, 200자 이내 유지', () => {

@@ -37,6 +37,7 @@ interface UrgentEntry {
   kind: 'milestone' | 'handoff'
   title: string
   team?: string
+  fromTeam?: string // 인계의 보내는 팀 ([교환→홍보부] 태그용)
   dueDate: string // YYYY-MM-DD (그룹 헤더·예고 표기용)
 }
 
@@ -65,13 +66,50 @@ function shortDate(dateStr: string): string {
   return `${Number(m)}/${Number(d)}(${dowOf(dateStr)})`
 }
 
-function teamLabel(entry: UrgentEntry): string {
-  if (entry.kind === 'handoff') return entry.team ? ` → ${trim(entry.team, 10)}` : ''
-  return entry.team ? ` — ${trim(entry.team, 10)}` : ''
+const TEAM_SHORT: Record<string, string> = {
+  '교환담당팀': '교환',
+  '교환학생팀': '교환',
+  '예산팀': '예산',
+  '타임라인/인원관리팀': '인관',
+  '타임라인/인력운영팀': '인관',
+  '컨텐츠팀': '컨텐츠',
+  '기획관리팀': '기획',
 }
 
-/** 마감일 그룹 순서대로 헤더·항목 라인을 만든다. include는 본문에 실을 항목 수 상한. */
-function renderGroups(entries: UrgentEntry[], include: number, style: 'compact' | 'detailed'): string[] {
+/** 채팅 왼쪽 태그용 팀 축약 (시안 확정 2026-09-01): [교환] [예산] [인관] … */
+function teamTag(name: string): string {
+  return TEAM_SHORT[name] ?? trim(name.replace(/팀$/, '').split('/').pop() ?? name, 4)
+}
+
+/** 괄호 상세(실행자용 메모)를 뺀 제목 — 세부사항은 웹에서 보게 한다. */
+function baseTitle(title: string): string {
+  const t = title.replace(/\s*\([^)]*\)/g, '').trim()
+  return t.length <= 24 ? t : t.slice(0, 24).trimEnd() + '…'
+}
+
+/** 같은 그룹에 동명 제목이 있으면 구분용으로 첫 괄호 내용만 축약해 붙인다. */
+function chatTitle(title: string, needDisambig: boolean): string {
+  const base = baseTitle(title)
+  if (!needDisambig) return base
+  const m = title.match(/\(([^)]*)\)/)
+  return m ? `${base} (${trim(m[1], 10)})` : base
+}
+
+function entryTag(e: UrgentEntry): string {
+  const to = e.team ? teamTag(e.team) : ''
+  const from = e.fromTeam ? teamTag(e.fromTeam) : ''
+  if (e.kind === 'handoff') return from && to ? `${from}→${to}` : to || from || '인계'
+  return to || '전체'
+}
+
+function groupHeader(days: number, dueDate: string, count: number): string {
+  if (days < 0) return `⚠ ${shortDate(dueDate)} 마감 · ${-days}일 지연 ${count}건`
+  if (days === 0) return `📅 오늘 ${shortDate(dueDate)} 마감 ${count}건`
+  return `📅 ${shortDate(dueDate)} 마감 ${count}건`
+}
+
+/** compact 본문(아침 9시 메모, 200자 제한): 한 줄 헤더 + 축약 항목. */
+function renderCompact(entries: UrgentEntry[], include: number): string[] {
   const lines: string[] = []
   let used = 0
   let i = 0
@@ -83,23 +121,49 @@ function renderGroups(entries: UrgentEntry[], include: number, style: 'compact' 
     i++
     const shown = group.slice(0, Math.max(0, include - used))
     const days = group[0].days
-    if (style === 'detailed') {
-      const head =
-        days < 0 ? `기한 지연 ${group.length}건` : days === 0 ? `오늘 ${shortDate(group[0].dueDate)} 마감 ${group.length}건` : `${shortDate(group[0].dueDate)} 마감 ${group.length}건`
-      lines.push(head)
-      shown.forEach((e) => lines.push(`· ${e.title}${days < 0 ? ` (D+${-days})` : ''}${teamLabel(e)}`))
-    } else {
-      const head =
-        days < 0 ? `지연 ${group.length}건` : days === 0 ? `오늘 ${shortDate(group[0].dueDate)} ${group.length}건` : `${shortDate(group[0].dueDate)} ${group.length}건`
-      lines.push(head)
-      shown.forEach((e) => lines.push(`· ${trim(e.title, days < 0 ? 12 : 14)}${days < 0 ? '(D+' + -days + ')' : ''}${e.team ? '(' + trim(e.team, 4) + ')' : ''}`))
-    }
+    const head =
+      days < 0 ? `지연 ${group.length}건` : days === 0 ? `오늘 ${shortDate(group[0].dueDate)} ${group.length}건` : `${shortDate(group[0].dueDate)} ${group.length}건`
+    lines.push(head)
+    shown.forEach((e) => lines.push(`· ${trim(e.title, days < 0 ? 12 : 14)}${days < 0 ? '(D+' + -days + ')' : ''}${e.team ? '(' + trim(e.team, 4) + ')' : ''}`))
     used += shown.length
     if (shown.length < group.length) break // 그룹이 잘리면 이후 그룹도 전부 '외 N건'으로
   }
   const omitted = entries.length - used
   if (omitted > 0) lines.push(`…외 ${omitted}건`)
   return lines
+}
+
+/** detailed 본문(18시 단체방, 시안 확정 2026-09-01): 날짜별 그룹 헤더(⚠ 지연/📅 마감)
+ * + [팀태그] 제목 한 줄(괄호 상세 제거), 그룹 사이 빈 줄. */
+function renderDetailed(entries: UrgentEntry[], include: number): string[] {
+  const blocks: string[][] = []
+  let used = 0
+  let i = 0
+  while (i < entries.length && used < include) {
+    const group: UrgentEntry[] = [entries[i]]
+    while (i + 1 < entries.length && entries[i + 1].days === group[0].days) {
+      group.push(entries[++i])
+    }
+    i++
+    const shown = group.slice(0, Math.max(0, include - used))
+    used += shown.length
+    // 동명 제목 구분 여부는 그룹 전체 기준으로 판정 (잘린 항목이어도 의미 유지)
+    const baseCounts = new Map<string, number>()
+    for (const e of group) {
+      const b = baseTitle(e.title)
+      baseCounts.set(b, (baseCounts.get(b) ?? 0) + 1)
+    }
+    const lines = [groupHeader(group[0].days, group[0].dueDate, group.length)]
+    for (const e of shown) {
+      const dup = (baseCounts.get(baseTitle(e.title)) ?? 0) > 1
+      lines.push(`[${entryTag(e)}] ${chatTitle(e.title, dup)}`)
+    }
+    blocks.push(lines)
+    if (shown.length < group.length) break
+  }
+  const omitted = entries.length - used
+  if (omitted > 0) blocks.push([`…외 ${omitted}건`])
+  return blocks.flatMap((b, n) => (n === 0 ? b : ['', ...b]))
 }
 
 /**
@@ -155,6 +219,7 @@ export function buildKakaoDigest(
       kind: 'handoff',
       title: h.title,
       team: h.to_external ?? (h.to_team_id ? teamName.get(h.to_team_id) : undefined),
+      fromTeam: teamName.get(h.from_team_id),
       dueDate: h.due_date,
     }
     if (days <= horizonDays) entries.push(entry)
@@ -172,24 +237,32 @@ export function buildKakaoDigest(
   const nextDueText = nextDue ? `${shortDate(nextDue.dueDate)} ${trim(nextDue.title, isDetailed ? 20 : 12)}` : null
 
   const head = isDetailed ? `[스포츠데이 오늘의 할 일 ${date}]` : `[스포츠데이 임박 ${date}]`
-  const foot = isDetailed ? `완료체크 & 세부사항 확인 ▸ ${siteUrl}` : siteUrl
+  const foot = isDetailed
+    ? undatedCount > 0
+      ? `상시 과제 ${undatedCount}건 · 완료체크 ▸ ${siteUrl}`
+      : `완료체크 ▸ ${siteUrl}`
+    : siteUrl
 
   // 임박 없음: 안내 한 줄 발송 (매일 일정 도착 = 봇 생존 확인)
   if (entries.length === 0) {
-    const lines = [head, nextDueText ? `오늘 마감 없음 — 다음: ${nextDueText}` : '오늘 마감 없음']
-    if (isDetailed && undatedCount > 0) lines.push(`상시 과제 ${undatedCount}건 진행 중`)
-    lines.push(foot)
+    const none = nextDueText ? `오늘 마감 없음 — 다음: ${nextDueText}` : '오늘 마감 없음'
+    const lines = isDetailed ? [head, '', none, '', foot] : [head, none, foot]
     return { text: lines.join('\n'), total: 0, urgent: false }
   }
 
   // 본문: 그룹 렌더링 → (detailed) 예고·상시 줄 → foot. textLimit 안에 들 때까지 항목 수를 줄인다.
   const buildText = (include: number): string => {
-    const lines = [head, ...renderGroups(entries, include, style)]
+    const body = isDetailed ? renderDetailed(entries, include) : renderCompact(entries, include)
+    const lines = [head, ...(isDetailed ? ['', ...body] : body)]
     if (upcoming.length > 0) {
-      lines.push(isDetailed ? `다가오는 일정 D-${previewDays} 내 ${upcoming.length}건 · 다음: ${nextDueText}` : `외 D-${previewDays} 내 ${upcoming.length}건·다음 ${nextDueText}`)
+      lines.push(
+        ...(isDetailed ? [''] : []),
+        isDetailed
+          ? `다가오는 일정 D-${previewDays} 내 ${upcoming.length}건 · 다음: ${nextDueText}`
+          : `외 D-${previewDays} 내 ${upcoming.length}건·다음 ${nextDueText}`
+      )
     }
-    if (isDetailed && undatedCount > 0) lines.push(`상시 과제 ${undatedCount}건 진행 중`)
-    lines.push(foot)
+    lines.push(...(isDetailed ? ['', foot] : [foot]))
     return lines.join('\n')
   }
 

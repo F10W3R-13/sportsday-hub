@@ -2,7 +2,7 @@
   "version": 1,
   "rootFolderId": "1gFdRbLxlm36oyP0h39wS1fvLqW0cvxys",
   "localBase": "26-2 Sports Day",
-  "lastSyncedAt": "2026-08-30T20:07:36+09:00",
+  "lastSyncedAt": "2026-09-01T22:00:36+09:00",
   "rules": {
     "source": "드라이브가 원천, 로컬은 스냅샷. pull(다운로드)만 자동, push(업로드)는 수동.",
     "kind": {
@@ -185,7 +185,7 @@
       "path": "26-2 Sports Day/예산팀/26-2 Sports Day 예산안.xlsx",
       "name": "26-2 Sports Day 예산안",
       "kind": "export-xlsx",
-      "mtime": "2026-08-25T10:37:10.377Z",
+      "mtime": "2026-08-30T17:55:20.782Z",
       "size": 8255
     },
     "1nUgScnPu77kuSripZq4u_-D4OJqHdWLP": {
@@ -206,7 +206,7 @@
       "path": "26-2 Sports Day/예산팀/단체티 제작 업체별 견적 비교.xlsx",
       "name": "단체티 제작 업체별 견적 비교",
       "kind": "export-xlsx",
-      "mtime": "2026-08-20T02:51:16.745Z",
+      "mtime": "2026-09-01T04:39:48.494Z",
       "size": 1024
     },
     "1YE8DAwcW0ZJiFt8NJfcA82c8Syk_p_7i": {
@@ -256,8 +256,8 @@
       "path": "26-2 Sports Day/컨텐츠팀/스포츠데이 컨텐츠팀.docx",
       "name": "스포츠데이 컨텐츠팀",
       "kind": "export-docx",
-      "mtime": "2026-08-26T11:17:01.372Z",
-      "size": 33021
+      "mtime": "2026-08-31T03:38:33.313Z",
+      "size": 45284
     },
     "1-Fdm9L6gHbK8aPvyHHxWUP1io0R_M7sV": {
       "path": "26-2 Sports Day/컨텐츠팀/컨텐츠 초안 뼈대 (2차회의용).md",
@@ -312,7 +312,7 @@
       "path": "26-2 Sports Day/교환담당팀/[26 Fall] Sports Day with HI-Club ⚽️🍀(응답).xlsx",
       "name": "[26 Fall] Sports Day with HI-Club ⚽️🍀(응답)",
       "kind": "export-xlsx",
-      "mtime": "2026-08-30T10:06:35.684Z",
+      "mtime": "2026-08-31T07:39:44.094Z",
       "size": 41416
     },
     "1rMv2mmQvrEWZUV4ChYSdmILSwFpCN9-3BxEbzu1hPb0": {
@@ -321,6 +321,27 @@
       "kind": "export-docx",
       "mtime": "2026-08-29T18:18:26.043Z",
       "size": 3049
+    },
+    "12_0-ap8W5IHLFZqurct5DHJjXAxhgYlJtvLGzGG64dI": {
+      "path": "26-2 Sports Day/[2026_Fall_Sports Day] 최종기획안 및 인원관리표.xlsx",
+      "name": "[2026_Fall_Sports Day] 최종기획안 및 인원관리표",
+      "kind": "export-xlsx",
+      "mtime": "2026-09-01T04:55:36.454Z",
+      "size": 41532
+    },
+    "1N4E9GmQWxn-tutZ6fvwg1IelMygFP20ZsvsShxdyp20": {
+      "path": "26-2 Sports Day/교환담당팀/26-2 스포츠데이 수금부스용.xlsx",
+      "name": "26-2 스포츠데이 수금부스용",
+      "kind": "export-xlsx",
+      "mtime": "2026-09-01T08:47:52.951Z",
+      "size": 5304
+    },
+    "1Lk_Pcg3zakmF-Nt8DlHr5uzHuUSy8Fu4j7U1-vUsIxc": {
+      "path": "26-2 Sports Day/교환담당팀/2026-2 스포츠데이  컨텐츠 안내 카드뉴스 인계물 .docx",
+      "name": "2026-2 스포츠데이  컨텐츠 안내 카드뉴스 인계물 ",
+      "kind": "export-docx",
+      "mtime": "2026-08-31T03:24:40.847Z",
+      "size": 12351
     }
   },
   "skipped": {
@@ -331,6 +352,10 @@
     "1-Bk0T2js2UOby3XlsH6RUpZPyGsrCYA5ixReOkQmEpg": {
       "name": "00_기획지침_마스터.md",
       "reason": "8/11 구글문서 사본 — 8/19 text/markdown 원본(1gMIsrX)과 중복. 2026-08-22 드라이브에서 삭제 확인(로컬 대응 파일 없음)"
+    },
+    "1loUW5qBx5rHQ6E5NYrqDauZcEDgYPTD6_HX9bfJRxp4": {
+      "name": "[26 Fall] Sports Day with HI-Club ⚽️🍀의 사본",
+      "reason": "구글 폼 등 — export 불가"
     }
   },
   "folders": {

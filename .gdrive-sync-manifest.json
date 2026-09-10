@@ -2,7 +2,7 @@
   "version": 1,
   "rootFolderId": "1gFdRbLxlm36oyP0h39wS1fvLqW0cvxys",
   "localBase": "26-2 Sports Day",
-  "lastSyncedAt": "2026-09-06T22:30:39+09:00",
+  "lastSyncedAt": "2026-09-10T22:16:06+09:00",
   "rules": {
     "source": "드라이브가 원천, 로컬은 스냅샷. pull(다운로드)만 자동, push(업로드)는 수동.",
     "kind": {
@@ -185,7 +185,7 @@
       "path": "26-2 Sports Day/예산팀/26-2 Sports Day 예산안.xlsx",
       "name": "26-2 Sports Day 예산안",
       "kind": "export-xlsx",
-      "mtime": "2026-08-30T17:55:20.782Z",
+      "mtime": "2026-09-07T10:24:33.070Z",
       "size": 8255
     },
     "1nUgScnPu77kuSripZq4u_-D4OJqHdWLP": {
@@ -206,7 +206,7 @@
       "path": "26-2 Sports Day/예산팀/단체티 제작 업체별 견적 비교.xlsx",
       "name": "단체티 제작 업체별 견적 비교",
       "kind": "export-xlsx",
-      "mtime": "2026-09-01T04:39:48.494Z",
+      "mtime": "2026-09-07T10:21:10.002Z",
       "size": 1024
     },
     "1YE8DAwcW0ZJiFt8NJfcA82c8Syk_p_7i": {
@@ -256,7 +256,7 @@
       "path": "26-2 Sports Day/컨텐츠팀/스포츠데이 컨텐츠팀.docx",
       "name": "스포츠데이 컨텐츠팀",
       "kind": "export-docx",
-      "mtime": "2026-08-31T03:38:33.313Z",
+      "mtime": "2026-09-08T03:08:38.054Z",
       "size": 45284
     },
     "1-Fdm9L6gHbK8aPvyHHxWUP1io0R_M7sV": {
@@ -284,7 +284,7 @@
       "path": "26-2 Sports Day/타임라인_인원관리팀/2026 Sports Day 2. 타임라인 & 인원관리표.xlsx",
       "name": "2026 Sports Day 2. 타임라인 & 인원관리표",
       "kind": "export-xlsx",
-      "mtime": "2026-08-17T08:35:21.650Z",
+      "mtime": "2026-09-08T03:28:14.633Z",
       "size": 10892
     },
     "1dJgJMjJmzej0T6MVdts--ln76bDWMXjm": {
@@ -326,8 +326,8 @@
       "path": "26-2 Sports Day/[2026_Fall_Sports Day] 최종기획안 및 인원관리표.xlsx",
       "name": "[2026_Fall_Sports Day] 최종기획안 및 인원관리표",
       "kind": "export-xlsx",
-      "mtime": "2026-09-06T06:43:22.263Z",
-      "size": 41532
+      "mtime": "2026-09-10T11:44:52.772Z",
+      "size": 663129
     },
     "1N4E9GmQWxn-tutZ6fvwg1IelMygFP20ZsvsShxdyp20": {
       "path": "26-2 Sports Day/교환담당팀/26-2 스포츠데이 수금부스용.xlsx",
@@ -348,7 +348,8 @@
       "name": "2026-2 스포츠데이 출석부 ",
       "kind": "export-xlsx",
       "mtime": "2026-09-04T11:34:17.192Z",
-      "size": 54232
+      "size": 54232,
+      "note": "드라이브에서 삭제됨 (09/10 확인)"
     },
     "1RJwi3BHWOa0cOnYBtFef11R7mqbace_IXteJpxLHKe8": {
       "path": "26-2 Sports Day/교환담당팀/스포츠데이_26-2_교환학생_팀배정.xlsx",
@@ -356,6 +357,34 @@
       "kind": "export-xlsx",
       "mtime": "2026-09-06T07:19:47.364Z",
       "size": 15576
+    },
+    "1be5jwR1PB_FUVbjWvF7uD_MTvYHwdMQI": {
+      "path": "26-2 Sports Day/컨텐츠팀/26-2 스포츠데이 배치도.png",
+      "name": "26-2 스포츠데이 배치도.png",
+      "kind": "as-is",
+      "mtime": "2026-09-07T15:15:08.816Z",
+      "size": 621640
+    },
+    "1gRHFFXO2xIvGvEACto8cqg3nxfuDSFILfmOvd3hbzWQ": {
+      "path": "26-2 Sports Day/예산팀/스데_예산안_2.xlsx",
+      "name": "스데_예산안_2",
+      "kind": "export-xlsx",
+      "mtime": "2026-09-07T10:21:19.939Z",
+      "size": 7616
+    },
+    "13vOp1Cu-396F9MYm-o5wLWRYlEa7c-wa": {
+      "path": "26-2 Sports Day/교환담당팀/26-2_스포츠데이_교환학생_출석부.xlsx",
+      "name": "26-2_스포츠데이_교환학생_출석부.xlsx",
+      "kind": "as-is",
+      "mtime": "2026-09-10T06:26:11.665Z",
+      "size": 30065
+    },
+    "1VNwX7BPjF1q_QU4nziSmcYWTdhMgee9V": {
+      "path": "26-2 Sports Day/교환담당팀/스포츠데이_26-2_교환학생_팀배정_수금170.xlsx",
+      "name": "스포츠데이_26-2_교환학생_팀배정_수금170.xlsx",
+      "kind": "as-is",
+      "mtime": "2026-09-07T04:53:22.963Z",
+      "size": 39677
     }
   },
   "skipped": {

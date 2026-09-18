@@ -14,6 +14,7 @@ import {
   GATHER,
   JUKSIK,
   LUNCH,
+  MAPLE6,
   MC,
   MORNING,
   MR6,
@@ -134,13 +135,14 @@ function buildSchedules(): Map<string, ScheduleItem[]> {
         }
         continue
       }
-      const cells: SlotCell[] =
-        row.k === 'H'
-          ? [row.l, ...(row.r ? [row.r] : [])]
-          : [{ role: row.role, n: row.n, lead: row.lead }]
+      const cells: SlotCell[] = row.k === 'H' ? [row.l, ...(row.r ? [row.r] : [])] : [row]
       for (const cell of cells) {
-        if (cell.lead) {
-          for (const owner of leadOwners(cell.lead)) {
+        // members(시트 전원 명단)가 있으면 전원에게 배정 — 조장만 추적하면
+        // 오전 배치 대부분이 사라진다(2026-09-18 시트2 대조). 없으면 lead 규칙.
+        const owners = cell.members ?? (cell.lead ? leadOwners(cell.lead) : [])
+        if (owners.length > 0) {
+          for (const owner of owners) {
+            if (!ROSTER_NAMES.includes(owner)) continue
             push(owner, {
               time: slot.time,
               sortKey: start,
@@ -148,6 +150,10 @@ function buildSchedules(): Map<string, ScheduleItem[]> {
               title: cell.role,
               detail: slot.label,
               headcount: cell.n > 0 ? cell.n : undefined,
+              peers:
+                cell.members && cell.members.length > 1
+                  ? cell.members.filter((m) => m !== owner).join(' · ')
+                  : undefined,
               source: 'slot',
             })
           }
@@ -315,6 +321,7 @@ const BADGE_DEFS: { names: string[]; label: string; desc: string }[] = [
   },
   { names: MC, label: '사회', desc: '개회·중간·최종 발표 진행 (마이크)' },
   { names: JUKSIK, label: '점수 집계', desc: '본부 옆 상시 집계 — 경기 종료 후 각 게임 점수 전달' },
+  { names: MAPLE6, label: '메이플 지원', desc: 'SG MAPLE 지원 — 본인 팀 게임이 없는 시간에 게임 보조·부스 지원 (시트 출석 표시는 미정)' },
   { names: MR6, label: '명륜 파트', desc: '09:30 명륜 국제관 L 집합 — 버스 탑승 안내 담당' },
 ]
 

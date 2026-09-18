@@ -1,6 +1,6 @@
 import { ChevronDown } from 'lucide-react'
 import { MyRoleClient } from '@/components/my-role/my-role-client'
-import { COMMON_FOOTER, GATHER } from '@/lib/dayof/data'
+import { COMMON_FOOTER, GATHER, NOTE_GAME_JOIN } from '@/lib/dayof/data'
 
 function GatherGroupCard({ group }: { group: (typeof GATHER)['myeongryun'] }) {
   return (
@@ -50,6 +50,7 @@ export default function MyRolePage() {
             </div>
             <p className="text-sm text-muted-foreground">🕒 {GATHER.wait}</p>
             <p className="text-sm text-muted-foreground">🌧 {GATHER.weather}</p>
+            <p className="text-sm text-muted-foreground">🎮 {NOTE_GAME_JOIN}</p>
             <p className="text-sm text-muted-foreground">{COMMON_FOOTER}</p>
           </div>
         </details>

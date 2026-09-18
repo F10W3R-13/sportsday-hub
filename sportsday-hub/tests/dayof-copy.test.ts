@@ -78,8 +78,8 @@ describe('displayTitle — 작가 시점 제목', () => {
     }
   })
 
-  it('이현서 첫 항목 — "그 외 전원" 대신 바로 와닿는 제목', () => {
-    expect(displayTitle(getScheduleFor('이현서')[0])).toBe('본인 팀 천막 대기 (개별 배정 없는 시간)')
+  it('오전 배정 없는 사람의 첫 항목 — "그 외 전원" 대신 바로 와닿는 제목 (김나경)', () => {
+    expect(displayTitle(getScheduleFor('김나경')[0])).toBe('본인 팀 천막 대기 (개별 배정 없는 시간)')
   })
 
   it('부스 노래 — 동료 이름(김나경) 제거', () => {
@@ -88,7 +88,7 @@ describe('displayTitle — 작가 시점 제목', () => {
   })
 
   it('공통 원문은 제목 교체 후에도 드롭다운 원문으로 보존된다', () => {
-    const first = getScheduleFor('이현서')[0]
+    const first = getScheduleFor('김나경')[0]
     expect(first.title).toContain('그 외 전원') // 원문 필드는 불변
   })
 })

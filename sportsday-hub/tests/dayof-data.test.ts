@@ -6,6 +6,7 @@ import {
   VICELEADS,
   JUKSIK,
   MC,
+  MAPLE6,
   GAMES,
   MORNING,
   LUNCH,
@@ -14,7 +15,7 @@ import {
   GATHER,
 } from '@/lib/dayof/data'
 
-// 데이터 원천: _briefing_build/roster.js 스냅샷 변환본.
+// 데이터 원천: _briefing_build/roster.js 스냅샷 + 2026-09-18 최종기획안 시트2 원본 대조 반영.
 // 여기서 깨지면 변환 과정에서 데이터가 유실/변형된 것이다.
 
 describe('dayof/data 명단', () => {
@@ -27,12 +28,12 @@ describe('dayof/data 명단', () => {
     expect(ROSTER_NAMES).toEqual(sorted)
   })
 
-  it('인원 = 48명 (roster.js 전원)', () => {
-    expect(ROSTER_NAMES.length).toBe(48)
+  it('인원 = 54명 (하클 48 + 메이플 지원 6)', () => {
+    expect(ROSTER_NAMES.length).toBe(54)
   })
 
   it('핵심 직제 명단 전원이 ROSTER_NAMES에 포함된다', () => {
-    for (const name of [...MR6, ...TEAMLEADS, ...VICELEADS, ...JUKSIK, ...MC]) {
+    for (const name of [...MR6, ...TEAMLEADS, ...VICELEADS, ...JUKSIK, ...MC, ...MAPLE6]) {
       expect(ROSTER_NAMES).toContain(name)
     }
   })

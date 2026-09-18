@@ -90,10 +90,68 @@ describe('getScheduleFor', () => {
     }
   })
 
-  it('아침 집합 — GATHER 명단 항목이 시간순 맨 앞에 온다 (이강서·물품 상차)', () => {
-    const items = getScheduleFor('이강서')
+  it('아침 집합 — GATHER 명단 항목이 시간순 맨 앞에 온다 (유주영·물품 상차, 시트2 기준)', () => {
+    const items = getScheduleFor('유주영')
     expect(items[0].source).toBe('gather')
     expect(items[0].title).toContain('물품 상차')
+    expect(items[0].time).toBe('09:30~10:00')
+  })
+
+  it('시트2 대조 — 이강서는 명륜 집합/버스 인솔에 없다 (배정 수정 반영)', () => {
+    const items = getScheduleFor('이강서')
+    expect(items.some((i) => i.title.includes('물품 상차'))).toBe(false)
+    expect(items.some((i) => i.source === 'flow' && i.title.includes('버스 도착'))).toBe(false)
+    expect(getScheduleFor('유주영').some((i) => i.source === 'flow' && i.title.includes('버스 도착'))).toBe(true)
+  })
+
+  it('09:20/09:50 하클 출석 체크 — 김소라·이주환의 첫 일정이 된다', () => {
+    expect(getScheduleFor('김소라')[0].title).toContain('하클 출석 체크')
+    expect(getScheduleFor('김소라')[0].time).toBe('09:20~09:30')
+    expect(getScheduleFor('이주환').some((i) => i.time === '09:50~10:00')).toBe(true)
+  })
+
+  it('멤버 배치 — 조장이 아녀도 시트 명단 전원에게 배정된다 (전창민·총학 물품 이동)', () => {
+    expect(getScheduleFor('전창민').some((i) => i.title === '총학 물품 이동')).toBe(true)
+    expect(getScheduleFor('이나원').some((i) => i.title.includes('점심 수령'))).toBe(true)
+  })
+
+  it('멤버 배치 — 함께 담당 명단(peers)이 붙는다', () => {
+    const item = getScheduleFor('전창민').find((i) => i.title === '총학 물품 이동')
+    expect(item?.peers).toContain('성현중')
+    expect(item?.peers).toContain('박하늘')
+  })
+
+  it('촬영 담당 — 유주영·최준혁에게 12:00~18:10 독립 일정이 있다', () => {
+    for (const n of ['유주영', '최준혁']) {
+      const item = getScheduleFor(n).find((i) => i.title.includes('행사 촬영'))
+      expect(item, n).toBeDefined()
+      expect(item?.time).toBe('12:00~18:10')
+    }
+  })
+
+  it('2부 도장/뽑기 — 박서원·안령인은 없고 메이플 지원(강지예)이 담당한다', () => {
+    expect(getScheduleFor('박서원').some((i) => i.title.includes('도장/뽑기'))).toBe(false)
+    expect(getScheduleFor('안령인').some((i) => i.title.includes('도장/뽑기'))).toBe(false)
+    expect(getScheduleFor('강지예').some((i) => i.title.includes('도장/뽑기'))).toBe(true)
+  })
+
+  it('팀별 소집 — 부팀장 6명도 받는다 (members 기준 12명)', () => {
+    for (const v of ['이희수', '전창민', '서인호', '이현지', '최준혁', '예건희']) {
+      expect(getScheduleFor(v).some((i) => i.title.includes('팀별 소집')), v).toBe(true)
+    }
+  })
+
+  it('계주 게임 보조 — 이현지·이은재가 추가됐다', () => {
+    for (const n of ['이현지', '이은재']) {
+      const item = getScheduleFor(n).find((i) => i.gameIdx === 6)
+      expect(item?.role, n).toBe('게임 보조')
+    }
+  })
+
+  it('메이플 지원 — 6명 전원이 짝 찾기 보조를 받는다', () => {
+    for (const n of ['강지예', '김연수', '뭉흐솝드', '이소윤', '이용재', '임준성']) {
+      expect(getScheduleFor(n).some((i) => i.gameIdx === 3), n).toBe(true)
+    }
   })
 
   it('이름 경계 매칭 — 이현지는 이현서의 게임 배정을 받지 않는다', () => {

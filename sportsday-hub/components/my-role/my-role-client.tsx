@@ -108,6 +108,7 @@ function ItemDetails({ item }: { item: ScheduleItem }) {
         {item.headcount !== undefined && (
           <Section label="배치 규모">이 배치 총원 {item.headcount}명 (조장 = 첫 담당자)</Section>
         )}
+        {item.peers && <Section label="함께 담당">{item.peers}</Section>}
       </>
     )
   } else if (item.source === 'gather') {

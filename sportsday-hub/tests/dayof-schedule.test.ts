@@ -73,6 +73,15 @@ describe('getScheduleFor', () => {
     }
   })
 
+  it('오후 "팀별 인솔 — 팀장 6" — 실명 없는 집합 표기도 팀장 전원에게 배정된다', () => {
+    for (const lead of TEAMLEADS) {
+      expect(
+        getScheduleFor(lead).some((i) => i.title.includes('팀별 인솔')),
+        lead
+      ).toBe(true)
+    }
+  })
+
   it('공통 항목 — 전원이 천막 대기(11:50)와 뒷정리(18:00)를 받는다', () => {
     for (const name of ROSTER_NAMES) {
       const items = getScheduleFor(name)
@@ -170,23 +179,26 @@ describe('dayof/schedule 시각 정밀화', () => {
 })
 
 describe('cleanTitle', () => {
-  it('내 이름과 인라인 시각을 지우고 띄어쓰기를 정리한다', () => {
-    expect(cleanTitle('짝 찾기 (메인) 14:50~15:10 — 리드 강단비', '강단비')).toBe(
-      '짝 찾기 (메인) — 리드'
-    )
-    expect(cleanTitle('생존집계 이현서', '이현서')).toBe('생존집계')
-    expect(cleanTitle('상시 — 점수 집계(노트북) 고연준·이주환', '고연준')).toBe(
-      '상시 — 점수 집계(노트북) 이주환'
-    )
-    expect(cleanTitle('15:10~15:45 중간 — 중간 발표(사회) 김지원·김소라', '김지원')).toBe(
-      '중간 — 중간 발표(사회) 김소라'
-    )
+  it('모든 사람 이름(동료 포함)과 인라인 시각을 지운다', () => {
+    expect(cleanTitle('짝 찾기 (메인) 14:50~15:10 — 리드 강단비')).toBe('짝 찾기 (메인) — 리드')
+    expect(cleanTitle('생존집계 이현서')).toBe('생존집계')
+    expect(cleanTitle('상시 — 점수 집계(노트북) 고연준·이주환')).toBe('상시 — 점수 집계(노트북)')
+    expect(cleanTitle('부스 노래(BGM) 김나경')).toBe('부스 노래(BGM)')
+  })
+
+  it('"그 외:" 꼬리(내 담당 아닌 안내)는 제거한다', () => {
+    expect(
+      cleanTitle('국민체조 시범 ×5 이대현·전창민·박하늘·이강서·윤시현 — 그 외: 본부 제외 본인 팀과 참여')
+    ).toBe('국민체조 시범 ×5')
   })
 
   it('이름이 없으면 시각만 지운다', () => {
-    expect(cleanTitle('그 외 전원 — 본인 팀 천막 대기', '고연준')).toBe(
-      '그 외 전원 — 본인 팀 천막 대기'
-    )
+    expect(cleanTitle('그 외 전원 — 본인 팀 천막 대기')).toBe('그 외 전원 — 본인 팀 천막 대기')
+  })
+
+  it('이름 없는 제목의 정당한 " · " 구분자는 유지한다', () => {
+    expect(cleanTitle('대여물품 수령 · 출석 체크')).toBe('대여물품 수령 · 출석 체크')
+    expect(cleanTitle('팀별 소집 — 팀장 6 · 부팀장 6')).toBe('팀별 소집 — 팀장 6 · 부팀장 6')
   })
 })
 

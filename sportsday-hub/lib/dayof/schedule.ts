@@ -215,8 +215,17 @@ function buildSchedules(): Map<string, ScheduleItem[]> {
       const { start, end } = parseRange(timeLabel)
       const alias = GAME_ALIASES.find(([, a]) => row.includes(a))
       for (const seg of row.split(' · ')) {
-        for (const name of ROSTER_NAMES) {
-          if (!mentions(seg, name)) continue
+        // 오후 자유 텍스트의 집합 표기("팀장 6")는 실명이 없어 이름 매칭이 비므로
+        // 직제 그룹으로 확장 배정한다 (슬롯의 "OO 외 팀장 6"과 같은 취급).
+        const segHasName = ROSTER_NAMES.some((n) => mentions(seg, n))
+        const segOwners = segHasName
+          ? ROSTER_NAMES.filter((n) => mentions(seg, n))
+          : seg.includes('부팀장')
+            ? VICELEADS
+            : seg.includes('팀장')
+              ? TEAMLEADS
+              : []
+        for (const name of segOwners) {
           if (alias) {
             const covered = map.get(name)?.find((i) => i.gameIdx === alias[0])
             // 게임 카드가 같은 역할까지 이미 커버하면 오후 중복 행은 버린다.
@@ -265,13 +274,17 @@ export function getWarningsFor(name: string): string[] {
   return [...new Set(out)]
 }
 
-/** 대형 제목용 — 인라인 시각과 내 이름을 지우고 띄어쓰기를 정리한다. */
-export function cleanTitle(title: string, name: string): string {
-  return title
+/** 대형 제목용 — 모든 사람 이름·인라인 시각·운영 잔여 문구를 지운다. */
+export function cleanTitle(title: string): string {
+  let out = title
+  // 동료 이름도 제목에서 뺀다 — 함께하는 사람은 세부 드롭다운(원문·peers)에 있다.
+  for (const n of ROSTER_NAMES) {
+    out = out.replace(new RegExp(`(?<![가-힣])${n}(\\s*·\\s*)?`, 'g'), '')
+  }
+  return out
     .replace(/\d{1,2}:\d{2}\s*~\s*\d{1,2}:\d{2}/g, '')
-    .replace(new RegExp(`(?<![가-힣])${name}(?![가-힣])`), '')
-    .replace(/(^|\s)·\s*/g, '$1') // 이름이 빠지며 떠도는 분리 기호 정리
-    .replace(/\s*·\s*$/g, '')
+    .replace(/\s*—?\s*그 외:.*$/, '')
+    .replace(/\s*·\s*$/g, '') // 이름이 빠지며 끝에 남는 구분자만 정리
     .replace(/\s{2,}/g, ' ')
     .trim()
 }

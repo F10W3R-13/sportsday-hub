@@ -10,9 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { GAMES } from '@/lib/dayof/data'
-import { friendlyFor, warnFriendly } from '@/lib/dayof/copy'
+import { displayTitle, friendlyFor, warnFriendly } from '@/lib/dayof/copy'
 import {
-  cleanTitle,
   getProfile,
   getScheduleFor,
   getWarningsFor,
@@ -115,6 +114,8 @@ function ItemDetails({ item }: { item: ScheduleItem }) {
     sections = <Section label="집합 조·장소">{item.detail}</Section>
   } else if (item.source === 'afternoon') {
     sections = <Section label="원문 (당일 진행표 행 전체)">{item.detail}</Section>
+  } else if (item.source === 'common') {
+    sections = <Section label="원문 (전체 공지)">{item.title}</Section>
   }
 
   if (!sections) return null
@@ -141,17 +142,15 @@ function ItemDetails({ item }: { item: ScheduleItem }) {
 
 function TimelineItem({
   item,
-  name,
   phase,
   isNext,
 }: {
   item: ScheduleItem
-  name: string
   phase: ItemPhase | null
   isNext: boolean
 }) {
   const meta = SOURCE_META[item.source]
-  const title = cleanTitle(item.title, name)
+  const title = displayTitle(item)
   const game = item.gameIdx !== undefined ? GAMES.find((g) => g.idx === item.gameIdx) : undefined
 
   const dot =
@@ -271,7 +270,6 @@ function ResultView({ name }: { name: string }) {
           <TimelineItem
             key={`${item.sortKey}-${item.title}`}
             item={item}
-            name={name}
             phase={eventDay ? phaseFor(item, nowMin) : null}
             isNext={i === nextIdx}
           />

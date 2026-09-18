@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   GAME_ROLE_COPY,
   TASK_KEYWORD_COPY,
+  displayTitle,
   friendlyFor,
   warnFriendly,
 } from '@/lib/dayof/copy'
@@ -62,6 +63,33 @@ describe('dayof/copy 대표 케이스', () => {
   it('전원 · 뒷정리 — 천막 철거 안내', () => {
     const item = getScheduleFor('성현중').find((i) => i.title.includes('뒷정리'))
     expect(friendlyFor(item!)).toContain('천막')
+  })
+})
+
+describe('displayTitle — 작가 시점 제목', () => {
+  it('전원 전 항목의 제목에 어떤 사람 이름도 남지 않는다', () => {
+    for (const name of ROSTER_NAMES) {
+      for (const item of getScheduleFor(name)) {
+        const t = displayTitle(item)
+        for (const other of ROSTER_NAMES) {
+          expect(t.includes(other), `${name} / ${item.title} / ${other}`).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('이현서 첫 항목 — "그 외 전원" 대신 바로 와닿는 제목', () => {
+    expect(displayTitle(getScheduleFor('이현서')[0])).toBe('본인 팀 천막 대기 (개별 배정 없는 시간)')
+  })
+
+  it('부스 노래 — 동료 이름(김나경) 제거', () => {
+    const item = getScheduleFor('이현서').find((i) => i.title.includes('부스 노래'))
+    expect(displayTitle(item!)).toBe('부스 노래(BGM)')
+  })
+
+  it('공통 원문은 제목 교체 후에도 드롭다운 원문으로 보존된다', () => {
+    const first = getScheduleFor('이현서')[0]
+    expect(first.title).toContain('그 외 전원') // 원문 필드는 불변
   })
 })
 

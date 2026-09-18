@@ -2,7 +2,7 @@
 // 규칙: ① 첫 문장 = 지금 뭘 하는지 한 줄 ② 동사로 된 구체 동작 ③ 상황 대응 포함
 //       ④ 숫자·장소·이름은 roster.js 데이터에 있는 것만 ⑤ 원문은 수정하지 않는다.
 // 사전에 없는 항목은 설명 없이 원문만 나온다(추측 문장 금지).
-import type { ScheduleItem } from './schedule'
+import { cleanTitle, type ScheduleItem } from './schedule'
 
 /** 게임별 역할 설명 — 키: `${게임idx}::${역할}`. 첫 문장에 게임 소개가 겹쳐 들어간다. */
 export const GAME_ROLE_COPY: Record<string, string> = {
@@ -137,6 +137,25 @@ export function friendlyFor(item: ScheduleItem): string | undefined {
     if (item.title.includes(kw)) return copy
   }
   return undefined
+}
+
+/**
+ * 대형 제목 오버라이드 — 운영 문구("그 외 전원" 등)는 읽는 사람에게 바로
+ * 와닿지 않아 작가가 다시 쓴 제목. 원문은 드롭다운 원문 섹션에 그대로 남는다.
+ * 키 = roster.js 원문 그대로.
+ */
+export const TITLE_OVERRIDES: Record<string, string> = {
+  '그 외 전원 — 본인 팀 천막 대기 · 팀장은 반드시 천막에서 교환과 함께 · 지각생 관리: 성현중 양서경 (13:30까지)':
+    '본인 팀 천막 대기 (개별 배정 없는 시간)',
+  '팀별 부스에서 입장 — 그 외 전원': '팀별 부스로 이동 · 입장 대기',
+  '뒷정리 다 같이 — 설치자가 철거: 천막 → 농구장 앞 · 브룸 원복 · 촬영(12~18:10) 유주영·최준혁':
+    '뒷정리 — 다 같이 철거',
+  '15:10~15:45 중간 — 점수 중간점검 고연준·이주환': '점수 중간점검 (15:10~15:45)',
+}
+
+/** 카드 대형 제목 — 오버라이드가 우선, 없으면 자동 정리(cleanTitle). */
+export function displayTitle(item: ScheduleItem): string {
+  return TITLE_OVERRIDES[item.title] ?? cleanTitle(item.title)
 }
 
 /** 경고 원문 → 친절 설명. */

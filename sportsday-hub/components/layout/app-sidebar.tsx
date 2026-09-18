@@ -9,6 +9,7 @@ import {
   Trash2,
   Circle,
   Settings,
+  UserRoundCheck,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -31,6 +32,7 @@ type IconComponent = ComponentType<{ style?: CSSProperties; className?: string }
 const NAV_ITEMS = [
   { href: '/', label: '대시보드', icon: LayoutDashboard },
   { href: '/timeline', label: '타임라인', icon: CalendarClock },
+  { href: '/my-role', label: '내 역할', icon: UserRoundCheck },
   { href: '/trash', label: '휴지통', icon: Trash2 },
   { href: '/settings', label: '설정', icon: Settings },
 ]

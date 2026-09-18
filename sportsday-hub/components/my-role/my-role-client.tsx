@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { GAMES } from '@/lib/dayof/data'
+import { friendlyFor, warnFriendly } from '@/lib/dayof/copy'
 import {
   cleanTitle,
   getProfile,
@@ -64,6 +65,7 @@ function PhaseBadge({ phase }: { phase: ItemPhase }) {
 
 function ItemDetails({ item }: { item: ScheduleItem }) {
   const game = item.gameIdx !== undefined ? GAMES.find((g) => g.idx === item.gameIdx) : undefined
+  const friendly = friendlyFor(item)
 
   let sections: React.ReactNode = null
   if (game) {
@@ -122,7 +124,17 @@ function ItemDetails({ item }: { item: ScheduleItem }) {
         세부 내용
         <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
       </summary>
-      <div className="mt-3 space-y-3 border-l-2 border-border/70 pl-4">{sections}</div>
+      <div className="mt-3 space-y-3 border-l-2 border-border/70 pl-4">
+        {friendly && (
+          <div>
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground">
+              👀 쉽게 설명
+            </p>
+            <div className="mt-0.5 text-sm leading-relaxed">{friendly}</div>
+          </div>
+        )}
+        {sections}
+      </div>
     </details>
   )
 }
@@ -240,10 +252,16 @@ function ResultView({ name }: { name: string }) {
       {warnings.length > 0 && (
         <div className="space-y-1 rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
           <p className="font-bold text-amber-800">⚠ 담당 겹침 주의</p>
-          <ul className="list-disc space-y-0.5 pl-5 text-sm text-amber-800">
-            {warnings.map((w) => (
-              <li key={w}>{w}</li>
-            ))}
+          <ul className="list-disc space-y-1.5 pl-5 text-sm text-amber-800">
+            {warnings.map((w) => {
+              const wf = warnFriendly(w)
+              return (
+                <li key={w}>
+                  {w}
+                  {wf && <p className="mt-0.5 list-none text-amber-700/90">👀 {wf}</p>}
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}

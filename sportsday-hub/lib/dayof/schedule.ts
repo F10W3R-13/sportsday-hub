@@ -2,6 +2,7 @@
 // 데이터는 lib/dayof/data.ts (roster.js 스냅샷). 파싱 규칙:
 //  · 구조화 배치(MORNING/LUNCH·FLOW·GAMES·GATHER)는 필드 기반 매칭
 //  · AFTERNOON 자유 텍스트는 ' · ' 세그먼트 분할 + 명단 사전 경계 매칭
+//    · 행에 명시적 "HH:MM~HH:MM"이 있으면 그 시각이 항목 시각·정렬 기준이 된다
 //  · "OO 외 팀장 6" lead는 팀장 전원으로 확장
 //  · 전원 대상 행(전원/다 같이/lead 없는 셀)은 공통 항목으로 전배
 //  · 오후 텍스트의 게임 배정은 게임 카드 항목과 역할이 같으면 중복 제거
@@ -27,11 +28,18 @@ export type ScheduleSource = 'gather' | 'slot' | 'common' | 'flow' | 'game' | 'a
 
 export interface ScheduleItem {
   time: string
+  /** 시작 시각(분). 정렬 기준. */
   sortKey: number
+  /** 종료 시각(분). 없으면 phaseFor가 시작+30분으로 판정. */
+  endSortKey?: number
   title: string
   role?: string
   detail?: string
   gameIdx?: number
+  /** 배치 총원(슬롯 항목). */
+  headcount?: number
+  /** 같은 일을 함께하는 명단 원문(게임 같은 역할·플로우 단계). */
+  peers?: string
   source: ScheduleSource
 }
 
@@ -50,10 +58,18 @@ function mentions(text: string, name: string): boolean {
   return new RegExp(`(?<![가-힣])${name}(?![가-힣])`).test(text)
 }
 
-function startMinutes(time: string): number {
-  const m = /(\d{1,2}):(\d{2})/.exec(time)
+/** "09:30~10:00"·"13:30 ~ 14:10"·"18:00~"(열린 끝)·단일 시각을 분 단위로. */
+function parseRange(time: string): { start: number; end: number } {
+  const m = /(\d{1,2}):(\d{2})(?:\s*~\s*(?:(\d{1,2}):(\d{2}))?)?/.exec(time)
   if (!m) throw new Error(`시각 파싱 실패: ${time}`)
-  return Number(m[1]) * 60 + Number(m[2])
+  const start = Number(m[1]) * 60 + Number(m[2])
+  if (m[4] !== undefined) return { start, end: Number(m[3]) * 60 + Number(m[4]) }
+  if (m[0].includes('~')) return { start, end: 23 * 60 + 59 } // "18:00~" 같은 열린 구간
+  return { start, end: start + 15 } // 단일 시각 = 15분 짜리로 취급
+}
+
+function startMinutes(time: string): number {
+  return parseRange(time).start
 }
 
 // "배현빈 외 팀장 6" 같은 lead는 팀장 전원, 그 외는 lead 1인.
@@ -85,13 +101,15 @@ function buildSchedules(): Map<string, ScheduleItem[]> {
   // 1. 아침 집합 (GATHER) — 이름이 명시된 행만.
   for (const group of [GATHER.myeongryun, GATHER.yuljeon]) {
     for (const row of group.rows) {
+      const { start, end } = parseRange(row.t)
       for (const name of ROSTER_NAMES) {
         if (!mentions(row.n, name)) continue
         push(name, {
           time: row.t,
-          sortKey: startMinutes(row.t),
+          sortKey: start,
+          endSortKey: end,
           title: row.d,
-          detail: group.title,
+          detail: `${group.title} · ${group.chip}`,
           source: 'gather',
         })
       }
@@ -100,17 +118,17 @@ function buildSchedules(): Map<string, ScheduleItem[]> {
 
   // 2. 오전·점심 배치 슬롯 (MORNING/LUNCH).
   for (const slot of [...MORNING, ...LUNCH]) {
-    const key = startMinutes(slot.time)
+    const { start, end } = parseRange(slot.time)
     for (const row of slot.rows) {
       if (row.k === 'N') {
         if (row.text.includes('전원')) {
-          pushAll({ time: slot.time, sortKey: key, title: row.text, source: 'common' })
+          pushAll({ time: slot.time, sortKey: start, endSortKey: end, title: row.text, source: 'common' })
           continue
         }
         for (const seg of row.text.split(' · ')) {
           for (const name of ROSTER_NAMES) {
             if (mentions(seg, name)) {
-              push(name, { time: slot.time, sortKey: key, title: seg, source: 'slot' })
+              push(name, { time: slot.time, sortKey: start, endSortKey: end, title: seg, source: 'slot' })
             }
           }
         }
@@ -125,21 +143,23 @@ function buildSchedules(): Map<string, ScheduleItem[]> {
           for (const owner of leadOwners(cell.lead)) {
             push(owner, {
               time: slot.time,
-              sortKey: key,
+              sortKey: start,
+              endSortKey: end,
               title: cell.role,
               detail: slot.label,
+              headcount: cell.n > 0 ? cell.n : undefined,
               source: 'slot',
             })
           }
         } else {
           // lead 없는 셀(예: 12:50 팀별 부스 입장)은 전원 공통.
-          pushAll({ time: slot.time, sortKey: key, title: cell.role, source: 'common' })
+          pushAll({ time: slot.time, sortKey: start, endSortKey: end, title: cell.role, source: 'common' })
         }
       }
     }
   }
 
-  // 3. 입장 수속 플로우 (FLOW) — 11:50 전원 수속.
+  // 3. 입장 수속 플로우 (FLOW) — 11:50 전원 수속, 각 단계 15분 가정.
   const flowKey = 11 * 60 + 50
   for (const step of FLOW) {
     for (const name of ROSTER_NAMES) {
@@ -147,8 +167,10 @@ function buildSchedules(): Map<string, ScheduleItem[]> {
       push(name, {
         time: '11:50 입장 수속',
         sortKey: flowKey,
+        endSortKey: flowKey + 15,
         title: step.t,
         detail: step.d.replace(/\n/g, ' · '),
+        peers: step.n,
         source: 'flow',
       })
     }
@@ -156,7 +178,7 @@ function buildSchedules(): Map<string, ScheduleItem[]> {
 
   // 4. 게임 배정 (GAMES) — "역할 — 이름들" 파싱 + judge 세부 설명 매핑.
   for (const game of GAMES) {
-    const key = startMinutes(game.time)
+    const { start, end } = parseRange(game.time)
     for (const entry of game.assign) {
       const [role, names] = entry.split(' — ')
       const judges = game.judge.filter((j) => {
@@ -167,25 +189,30 @@ function buildSchedules(): Map<string, ScheduleItem[]> {
         if (!mentions(names, name)) continue
         push(name, {
           time: game.time,
-          sortKey: key,
+          sortKey: start,
+          endSortKey: end,
           title: game.name,
           role,
           detail: judges.length > 0 ? judges.join(' · ') : undefined,
           gameIdx: game.idx,
+          peers: names,
           source: 'game',
         })
       }
     }
   }
 
-  // 5. 오후 자유 텍스트 (AFTERNOON).
+  // 5. 오후 자유 텍스트 (AFTERNOON) — 행에 명시적 시각이 있으면 그것을 쓴다.
   for (const slot of AFTERNOON) {
-    const key = startMinutes(slot.time)
     for (const row of slot.rows) {
       if (row.includes('전원') || row.includes('다 같이')) {
-        pushAll({ time: slot.time, sortKey: key, title: row, source: 'common' })
+        const { start, end } = parseRange(slot.time)
+        pushAll({ time: slot.time, sortKey: start, endSortKey: end, title: row, source: 'common' })
         continue
       }
+      const explicit = row.match(/(\d{1,2}:\d{2})\s*~\s*(\d{1,2}:\d{2})/)
+      const timeLabel = explicit ? `${explicit[1]}~${explicit[2]}` : slot.time
+      const { start, end } = parseRange(timeLabel)
       const alias = GAME_ALIASES.find(([, a]) => row.includes(a))
       for (const seg of row.split(' · ')) {
         for (const name of ROSTER_NAMES) {
@@ -195,7 +222,14 @@ function buildSchedules(): Map<string, ScheduleItem[]> {
             // 게임 카드가 같은 역할까지 이미 커버하면 오후 중복 행은 버린다.
             if (covered?.role && seg.includes(covered.role)) continue
           }
-          push(name, { time: slot.time, sortKey: key, title: seg, source: 'afternoon' })
+          push(name, {
+            time: timeLabel,
+            sortKey: start,
+            endSortKey: end,
+            title: seg,
+            detail: row, // 드롭다운용 원문 전체
+            source: 'afternoon',
+          })
         }
       }
     }
@@ -231,6 +265,30 @@ export function getWarningsFor(name: string): string[] {
   return [...new Set(out)]
 }
 
+/** 대형 제목용 — 인라인 시각과 내 이름을 지우고 띄어쓰기를 정리한다. */
+export function cleanTitle(title: string, name: string): string {
+  return title
+    .replace(/\d{1,2}:\d{2}\s*~\s*\d{1,2}:\d{2}/g, '')
+    .replace(new RegExp(`(?<![가-힣])${name}(?![가-힣])`), '')
+    .replace(/(^|\s)·\s*/g, '$1') // 이름이 빠지며 떠도는 분리 기호 정리
+    .replace(/\s*·\s*$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+export type ItemPhase = 'past' | 'current' | 'future'
+
+/** 당일 현시각(분) 기준 항목 상태. 종료 미정이면 시작+30분으로 판정. */
+export function phaseFor(
+  item: Pick<ScheduleItem, 'sortKey' | 'endSortKey'>,
+  minutesOfDay: number
+): ItemPhase {
+  const end = item.endSortKey ?? item.sortKey + 30
+  if (minutesOfDay < item.sortKey) return 'future'
+  if (minutesOfDay < end) return 'current'
+  return 'past'
+}
+
 const BADGE_DEFS: { names: string[]; label: string; desc: string }[] = [
   {
     names: TEAMLEADS,
@@ -257,3 +315,6 @@ export function getProfile(name: string): PersonProfile {
     })),
   }
 }
+
+// startMinutes는 data 무결성 테스트 등 외부 사용 대비 유지.
+export { startMinutes }

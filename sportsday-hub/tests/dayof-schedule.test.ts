@@ -4,6 +4,8 @@ import {
   getProfile,
   getScheduleFor,
   getWarningsFor,
+  cleanTitle,
+  phaseFor,
 } from '@/lib/dayof/schedule'
 import { ROSTER_NAMES, TEAMLEADS } from '@/lib/dayof/data'
 
@@ -125,5 +127,81 @@ describe('getProfile', () => {
         expect(b.desc.length, name).toBeGreaterThan(0)
       }
     }
+  })
+})
+
+// ── v2: 정보 최대화·시각 정밀화 (대형 제목 UI의 데이터 기반) ──
+
+describe('dayof/schedule 시각 정밀화', () => {
+  it('오후 행의 명시적 시각이 항목 시각·정렬에 쓰인다 (강단비·짝 찾기 리드)', () => {
+    const item = getScheduleFor('강단비').find((i) => i.title.includes('리드 강단비'))
+    expect(item?.time).toBe('14:50~15:10')
+    expect(item?.sortKey).toBe(14 * 60 + 50)
+    expect(item?.endSortKey).toBe(15 * 60 + 10)
+  })
+
+  it('행 선두의 시각(중간 점검 15:10~15:45)이 뒤 세그먼트 담당자에게도 적용된다 (김지원)', () => {
+    const item = getScheduleFor('김지원').find((i) => i.title.includes('중간 발표'))
+    expect(item?.sortKey).toBe(15 * 60 + 10)
+  })
+
+  it('슬롯 항목에 배치 총원이 붙는다 (성현중·총학 물품 이동 11명)', () => {
+    const item = getScheduleFor('성현중').find((i) => i.title === '총학 물품 이동')
+    expect(item?.headcount).toBe(11)
+  })
+
+  it('게임 항목에 같은 역할 동료 명단이 붙는다 (짝 찾기·심판 4)', () => {
+    const item = getScheduleFor('강단비').find((i) => i.gameIdx === 3)
+    expect(item?.peers).toContain('성현중')
+  })
+
+  it('플로우 항목에 함께 하는 명단이 붙는다 (고연준·출석 체크)', () => {
+    const item = getScheduleFor('고연준').find(
+      (i) => i.source === 'flow' && i.title.includes('출석 체크')
+    )
+    expect(item?.peers).toContain('성현중')
+  })
+
+  it('오후 항목의 detail에는 행 전체 원문이 남는다 (이현지·상시 도장/뽑기)', () => {
+    const item = getScheduleFor('이현지').find((i) => i.title.includes('도장/뽑기/간식'))
+    expect(item?.detail).toContain('상시')
+    expect(item?.detail).toContain('페이스페인팅')
+  })
+})
+
+describe('cleanTitle', () => {
+  it('내 이름과 인라인 시각을 지우고 띄어쓰기를 정리한다', () => {
+    expect(cleanTitle('짝 찾기 (메인) 14:50~15:10 — 리드 강단비', '강단비')).toBe(
+      '짝 찾기 (메인) — 리드'
+    )
+    expect(cleanTitle('생존집계 이현서', '이현서')).toBe('생존집계')
+    expect(cleanTitle('상시 — 점수 집계(노트북) 고연준·이주환', '고연준')).toBe(
+      '상시 — 점수 집계(노트북) 이주환'
+    )
+    expect(cleanTitle('15:10~15:45 중간 — 중간 발표(사회) 김지원·김소라', '김지원')).toBe(
+      '중간 — 중간 발표(사회) 김소라'
+    )
+  })
+
+  it('이름이 없으면 시각만 지운다', () => {
+    expect(cleanTitle('그 외 전원 — 본인 팀 천막 대기', '고연준')).toBe(
+      '그 외 전원 — 본인 팀 천막 대기'
+    )
+  })
+})
+
+describe('phaseFor', () => {
+  const base = { time: '09:30~10:00', sortKey: 570, title: 'x', source: 'slot' as const, endSortKey: 600 }
+
+  it('진행 중 / 지남 / 예정을 판정한다', () => {
+    expect(phaseFor(base, 580)).toBe('current')
+    expect(phaseFor(base, 610)).toBe('past')
+    expect(phaseFor(base, 500)).toBe('future')
+  })
+
+  it('종료 시각이 없으면 시작+30분 기준으로 판정한다', () => {
+    const item = { ...base, endSortKey: undefined }
+    expect(phaseFor(item, 570 + 29)).toBe('current')
+    expect(phaseFor(item, 570 + 31)).toBe('past')
   })
 })

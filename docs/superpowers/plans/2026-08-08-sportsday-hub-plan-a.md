@@ -2181,7 +2181,7 @@ export function AppSidebar({ teams }: { teams: Team[] }) {
 }
 
 function daysUntil(): number {
-  const event = new Date('2026-09-19')
+  const event = new Date('2026-09-20')
   const now = new Date()
   return Math.max(
     0,

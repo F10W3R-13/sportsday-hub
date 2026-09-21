@@ -5,7 +5,7 @@ import { Providers } from './providers'
 import { SidebarLayout } from '@/components/layout/sidebar'
 import { NicknameProvider } from '@/components/layout/nickname-provider'
 import { DemoBanner } from '@/components/demo-banner'
-import { HUB_TITLE, EVENT_NAME } from '@/lib/event-config'
+import { getEventConfig } from '@/lib/config'
 
 // 라틴은 Inter, 한글은 Noto Sans KR로 해결하는 폰트 스택 (globals.css --font-sans 참조)
 const inter = Inter({
@@ -20,9 +20,13 @@ const notoSansKr = Noto_Sans_KR({
   display: 'swap',
 })
 
-export const metadata: Metadata = {
-  title: `${HUB_TITLE} — ${EVENT_NAME}`,
-  description: `${EVENT_NAME} 기획팀 협업 허브`,
+// 연도 값은 DB(app_config)에서 — 비어 있으면 event-config.ts 폴백
+export async function generateMetadata(): Promise<Metadata> {
+  const config = await getEventConfig()
+  return {
+    title: `${config.hubTitle} — ${config.eventName}`,
+    description: `${config.eventName} 기획팀 협업 허브`,
+  }
 }
 
 // 첫 페인트 전에 다크 클래스 적용 — 테마 깜빡임(FOUC) 방지

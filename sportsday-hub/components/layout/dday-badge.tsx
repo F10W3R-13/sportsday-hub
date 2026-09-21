@@ -2,18 +2,26 @@
 
 import { useEffect, useState } from 'react'
 import { CalendarClock } from 'lucide-react'
-import { daysUntilEvent } from '@/lib/dday'
+import { daysUntil } from '@/lib/dday'
 
 /**
  * D-day 카운트다운 배지 — 상단 헤더 등 사이드바 밖에서도 행사 임박도를 보여준다.
+ * 행사일은 서버(sidebar.tsx)가 DB(app_config)에서 읽어 props로 전달한다.
  * 자정 경과 시 자동 갱신을 위해 1분마다 재계산.
  */
-export function DdayBadge() {
-  const [days, setDays] = useState(() => daysUntilEvent())
+export function DdayBadge({ dateIso }: { dateIso: string }) {
+  const [days, setDays] = useState(() => daysUntil(dateIso))
+  // props로 받은 행사일이 바뀌면(시즌 리셋 직후 등) 렌더 중 즉시 재계산 —
+  // React 공식 "props 변경에 상태 조정" 패턴 (추가 렌더 유발 없음)
+  const [prevIso, setPrevIso] = useState(dateIso)
+  if (prevIso !== dateIso) {
+    setPrevIso(dateIso)
+    setDays(daysUntil(dateIso))
+  }
   useEffect(() => {
-    const id = setInterval(() => setDays(daysUntilEvent()), 60 * 1000)
+    const id = setInterval(() => setDays(daysUntil(dateIso)), 60 * 1000)
     return () => clearInterval(id)
-  }, [])
+  }, [dateIso])
 
   const isEventDay = days === 0
 

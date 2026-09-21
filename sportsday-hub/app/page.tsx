@@ -12,10 +12,10 @@ import { getRecentDriveFiles, getLastSyncedAt } from '@/lib/queries/drive-files'
 import { getHandoffs } from '@/lib/queries/handoffs'
 import { IS_DEMO } from '@/lib/demo'
 import { getDriveConnectionStatus } from '@/lib/drive/sync'
-import { HUB_TITLE, EVENT_NAME } from '@/lib/event-config'
-import { EVENT_DATE_LABEL } from '@/lib/dday'
+import { getEventConfig } from '@/lib/config'
 
 export default async function DashboardPage() {
+  const config = await getEventConfig()
   const [
     decisions,
     teams,
@@ -41,9 +41,9 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">{HUB_TITLE}</h1>
+        <h1 className="text-2xl font-bold">{config.hubTitle}</h1>
         <p className="text-sm text-muted-foreground">
-          {EVENT_NAME} 기획 허브 · {EVENT_DATE_LABEL}
+          {config.eventName} 기획 허브 · {config.eventDateLabel}
         </p>
       </div>
 

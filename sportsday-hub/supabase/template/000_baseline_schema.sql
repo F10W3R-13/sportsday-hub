@@ -529,3 +529,28 @@ for each row execute function block_milestones_insert();
 
 -- ────────── 시드 후 재잠금 — migrate:md 시드(0005) 실행이 끝난 뒤 이 쿼리를 따로 실행 ──────────
 -- update app_locks set locked = true where key = 'milestones_insert';
+
+-- ────────── 0023 연도 설정 (app_config) ──────────
+-- 연도 값 DB화 — 시즌 리셋 SQL만으로 앱에 올해 값 반영(코드 수정 불필요).
+-- 비어 있으면 앱은 lib/event-config.ts 기본값으로 폴백한다.
+
+BEGIN;
+
+create table if not exists public.app_config (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.app_config enable row level security;
+create policy "app_config_open_read"  on public.app_config for select using (true);
+create policy "app_config_open_write" on public.app_config for insert with check (true);
+create policy "app_config_open_edit"  on public.app_config for update using (true);
+create policy "app_config_open_del"   on public.app_config for delete using (true);
+
+drop trigger if exists trg_audit_app_config on public.app_config;
+create trigger trg_audit_app_config
+  after insert or update or delete on public.app_config
+  for each row execute function public.audit_capture();
+
+COMMIT;

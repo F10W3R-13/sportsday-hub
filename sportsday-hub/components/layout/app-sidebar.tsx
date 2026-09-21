@@ -23,8 +23,8 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import type { Team } from '@/lib/types/models'
-import { EVENT_DATE_LABEL, daysUntilEvent } from '@/lib/dday'
-import { HUB_TITLE } from '@/lib/event-config'
+import { daysUntil } from '@/lib/dday'
+import type { EventConfig } from '@/lib/config'
 import * as Icons from 'lucide-react'
 import type { ComponentType, CSSProperties } from 'react'
 
@@ -43,21 +43,21 @@ function getIcon(name: string): IconComponent {
   return registry[name] ?? Circle
 }
 
-export function AppSidebar({ teams }: { teams: Team[] }) {
+export function AppSidebar({ teams, config }: { teams: Team[]; config: EventConfig }) {
   const pathname = usePathname()
   // D-day 카운트다운을 주기적으로 재계산하여 자정 경과 시 자동 갱신.
-  const [days, setDays] = useState(() => daysUntilEvent())
+  const [days, setDays] = useState(() => daysUntil(config.eventDateIso))
   useEffect(() => {
-    const id = setInterval(() => setDays(daysUntilEvent()), 60 * 1000)
+    const id = setInterval(() => setDays(daysUntil(config.eventDateIso)), 60 * 1000)
     return () => clearInterval(id)
-  }, [])
+  }, [config.eventDateIso])
 
   return (
     <Sidebar>
       <SidebarHeader className="px-4 py-3">
-        <div className="text-lg font-bold">{HUB_TITLE}</div>
+        <div className="text-lg font-bold">{config.hubTitle}</div>
         <div className="text-xs text-muted-foreground">
-          {EVENT_DATE_LABEL} · D-{days}
+          {config.eventDateLabel} · D-{days}
         </div>
       </SidebarHeader>
       <SidebarContent>

@@ -20,7 +20,6 @@ import {
   type ItemPhase,
   type ScheduleItem,
 } from '@/lib/dayof/schedule'
-import { EVENT_DATE_ISO } from '@/lib/dday'
 
 const SOURCE_META: Record<ScheduleItem['source'], { label: string; chip: string }> = {
   gather: { label: '아침 집합', chip: 'bg-sky-100 text-sky-700' },
@@ -31,8 +30,8 @@ const SOURCE_META: Record<ScheduleItem['source'], { label: string; chip: string 
   afternoon: { label: '오후 담당', chip: 'bg-orange-100 text-orange-700' },
 }
 
-function isEventDay(d: Date): boolean {
-  const [y, m, day] = EVENT_DATE_ISO.split('-').map(Number)
+function isEventDay(d: Date, dateIso: string): boolean {
+  const [y, m, day] = dateIso.split('-').map(Number)
   return d.getFullYear() === y && d.getMonth() === m - 1 && d.getDate() === day
 }
 
@@ -206,13 +205,13 @@ function TimelineItem({
   )
 }
 
-function ResultView({ name }: { name: string }) {
+function ResultView({ name, eventDateIso }: { name: string; eventDateIso: string }) {
   const profile = getProfile(name)
   const items = getScheduleFor(name)
   const warnings = getWarningsFor(name)
 
   // 당일에만 실시간 상태(진행 중/다음/지남)를 계산하고 30초마다 갱신한다.
-  const eventDay = useMemo(() => isEventDay(new Date()), [])
+  const eventDay = useMemo(() => isEventDay(new Date(), eventDateIso), [eventDateIso])
   const [now, setNow] = useState<Date>(() => new Date())
   useEffect(() => {
     if (!eventDay) return
@@ -280,7 +279,7 @@ function ResultView({ name }: { name: string }) {
   )
 }
 
-export function MyRoleClient() {
+export function MyRoleClient({ eventDateIso }: { eventDateIso: string }) {
   const [name, setName] = useState<string | null>(null)
 
   return (
@@ -308,7 +307,7 @@ export function MyRoleClient() {
           </p>
         </div>
       ) : (
-        <ResultView name={name} />
+        <ResultView name={name} eventDateIso={eventDateIso} />
       )}
     </div>
   )

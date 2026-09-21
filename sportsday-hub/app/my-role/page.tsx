@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react'
 import { MyRoleClient } from '@/components/my-role/my-role-client'
 import { COMMON_FOOTER, GATHER, NOTE_GAME_JOIN } from '@/lib/dayof/data'
+import { getEventConfig } from '@/lib/config'
 
 function GatherGroupCard({ group }: { group: (typeof GATHER)['myeongryun'] }) {
   return (
@@ -20,7 +21,9 @@ function GatherGroupCard({ group }: { group: (typeof GATHER)['myeongryun'] }) {
   )
 }
 
-export default function MyRolePage() {
+export default async function MyRolePage() {
+  // 행사일은 DB(app_config)에서 — 당일 실시간 진행상태 판정에 쓰인다
+  const config = await getEventConfig()
   return (
     <div className="space-y-6">
       <div>
@@ -29,7 +32,7 @@ export default function MyRolePage() {
           스포츠데이 당일 — 이름을 선택하면 담당 역할과 일정이 시간순으로 표시됩니다
         </p>
       </div>
-      <MyRoleClient />
+      <MyRoleClient eventDateIso={config.eventDateIso} />
       <section className="rounded-xl border">
         <details className="group p-4">
           <summary className="flex cursor-pointer select-none items-center gap-1.5 text-base font-bold list-none [&::-webkit-details-marker]:hidden">

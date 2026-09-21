@@ -13,8 +13,9 @@
 로컬에서 `npm run build` 가 통과하는지 먼저 검증.
 
 **버튼을 눌러도 저장이 안 돼요**
-→ 닉네임 미설정(좌측 하단). 닉네임이 있어도 안 되면 07 아래 RLS 항목 참조.
-데모 모드(NEXT_PUBLIC_DEMO_MODE=1)면 의도된 동작 — 0으로 바꿀 것.
+→ 닉네임 미설정(좌측 하단). 데모 모드(NEXT_PUBLIC_DEMO_MODE=1)면 의도된 동작 — 0으로.
+마일스톤 **신규 추가만** 안 되면 CHECKLIST_LOCKED — AI에게 잠금 해제 SQL을 요청
+(update app_locks set locked = false where key = 'milestones_insert';).
 
 **team 페이지가 404**
 → URL의 팀 id가 event-config.ts의 TEAM_IDS 왔는지 확인.

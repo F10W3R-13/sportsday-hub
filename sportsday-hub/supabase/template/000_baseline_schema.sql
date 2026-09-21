@@ -503,8 +503,8 @@ create table if not exists app_locks (
 alter table public.app_locks enable row level security;
 create policy app_locks_open_read on public.app_locks for select using (true);
 
--- ⚠ 시드 전에는 잠금 해제 상태로 시작한다 — migrate:md 가 생성하는 시드(0005)가
--- milestones INSERT를 수행하기 때문. 시드 실행 후 맨 아래 "재잠금" 쿼리를 실행할 것.
+-- 운영 정책: 잠금은 해제 상태로 시작·유지한다(시즌 중 UI에서 자유 추가 허용).
+-- 필요시에만 잠근다: update app_locks set locked = true where key = 'milestones_insert';
 insert into app_locks (key, locked, note)
 values (
   'milestones_insert',
@@ -527,7 +527,7 @@ drop trigger if exists milestones_insert_lock on milestones;
 create trigger milestones_insert_lock before insert on milestones
 for each row execute function block_milestones_insert();
 
--- ────────── 시드 후 재잠금 — migrate:md 시드(0005) 실행이 끝난 뒤 이 쿼리를 따로 실행 ──────────
+-- (선택) 수동 잠금 — 중복 항목 방지가 필요할 때만
 -- update app_locks set locked = true where key = 'milestones_insert';
 
 -- ────────── 0023 연도 설정 (app_config) ──────────

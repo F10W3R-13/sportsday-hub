@@ -4,6 +4,12 @@
 2026-2학기에 처음 도입되어 성공적으로 운영되었고, 이후 매년 후계자가 이어 쓸 수 있도록
 템플릿화되었습니다.
 
+## 🧭 이 저장소를 처음 받았다면 (3줄 요약)
+
+1. **코딩·설치는 전혀 필요 없습니다.** 새 시즌 시작은 [`AI-SEASON-RESET.md`](AI-SEASON-RESET.md) 절차서와 AI 에이전트로 30분이면 끝납니다 (`HANDOVER/01`).
+2. 시즌 중 운영은 **웹 사이트에서 클릭과 입력만** — git·터미널·코드 수정은 평생 안 해도 됩니다.
+3. 혼자 시작하지 마세요 — 처음 한 번은 아는 사람과 1시간 같이. 그 다음부터는 혼자 됩니다.
+
 ## 🚀 후계자라면 (시작하기)
 
 **[`HANDOVER/00_개요와_연간_사이클.md`](HANDOVER/00_개요와_연간_사이클.md)** 부터 읽으세요.
@@ -13,7 +19,7 @@
 
 | 하고 싶은 것 | 문서 |
 |---|---|
-| 새 시즌 시작 (앱 띄우기) | [HANDOVER/01](HANDOVER/01_연초_셋업.md) |
+| 새 시즌 시작 (AI와 30분) | [AI-SEASON-RESET.md](AI-SEASON-RESET.md) · [HANDOVER/01](HANDOVER/01_연초_셋업.md) |
 | 지침·일정·결정 채우기 | [HANDOVER/02](HANDOVER/02_콘텐츠_채우기.md) |
 | 당일 역할 페이지 만들기 | [HANDOVER/03](HANDOVER/03_당일역할_페이지.md) |
 | 브리핑 덱·현장 보드 제작 | [HANDOVER/04](HANDOVER/04_브리핑_자료_제작.md) · [briefing-build/GUIDE.md](briefing-build/GUIDE.md) |

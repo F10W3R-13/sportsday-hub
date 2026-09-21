@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/sidebar'
 import type { Team } from '@/lib/types/models'
 import { EVENT_DATE_LABEL, daysUntilEvent } from '@/lib/dday'
+import { HUB_TITLE } from '@/lib/event-config'
 import * as Icons from 'lucide-react'
 import type { ComponentType, CSSProperties } from 'react'
 
@@ -54,7 +55,7 @@ export function AppSidebar({ teams }: { teams: Team[] }) {
   return (
     <Sidebar>
       <SidebarHeader className="px-4 py-3">
-        <div className="text-lg font-bold">HI-Side Out Hub</div>
+        <div className="text-lg font-bold">{HUB_TITLE}</div>
         <div className="text-xs text-muted-foreground">
           {EVENT_DATE_LABEL} · D-{days}
         </div>

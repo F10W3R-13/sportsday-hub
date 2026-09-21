@@ -4,8 +4,8 @@
 
 - `briefing_deck.js` → **최종 브리핑 덱** (18장 pptx, 발표자용)
 - `board.js` → **현장 운영 보드** (12장 pptx → PNG으로 출력해 현장에 세팅)
-- `sheet.js` → **발표자 치트시트** (pptx → pdf/png)
-- `roster.js` — **명단·게임·배치 데이터의 단일 진실 원천.** 위 3개 스크립트가 모두 이 파일을 읽는다.
+- `sheet.js` → **발표자 치트시트** (pptx → pdf/png) — ⚠ roster.js를 읽지 않는 고정 문안이라 매 시즌 직접 재작성
+- `roster.js` — **명단·게임·배치 데이터의 단일 진실 원천.** board.js·briefing_deck.js가 이 파일을 읽는다 (sheet.js는 예외 — 위 주석 참조).
 - `배치도_26-2.png` — 덱 F4슬라이드에 삽입되는 배치도 이미지 (올해 것으로 교체)
 - `rules.txt`, `schedule_cells.txt` — 작년에 원본 문서에서 발췌해 두었던 참고 텍스트
 - `assemble.py` — ⛔ **실행 금지** (작년 중간 과정의 일회용 도구. 덱 전용 슬라이드를 파괴함)

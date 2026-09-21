@@ -137,4 +137,85 @@ describe('dayof/data 배치·플로우 형식', () => {
     expect(GATHER.yuljeon.rows.length).toBeGreaterThan(0)
     expect(GATHER.chips.length).toBeGreaterThan(0)
   })
+
+  // ── 자유 텍스트 필드의 오타 탐지 ──
+  // GATHER.*.rows[].n · FLOW[].n 은 "이름 · 이름" 또는 설명어가 섞인 자유 텍스트라
+  // 엄격한 명단 검증이 불가능하다. 대신 (1) 한 글자 차이(편집거리 1)로 명단과 어긋나는
+  // 토큰을 "오타 의심"으로 잡고 (2) 각 행/단계가 이름이나 집합 표기를 최소 1개 포함하는지 확인한다.
+  const GROUP_WORDS = ['팀장', '부팀장', '조별', '준비조', '전원', '외']
+
+  function isEditDistance1(a: string, b: string): boolean {
+    if (Math.abs(a.length - b.length) > 1) return false
+    let i = 0
+    let j = 0
+    let diff = 0
+    while (i < a.length && j < b.length) {
+      if (a[i] === b[j]) {
+        i++
+        j++
+        continue
+      }
+      if (++diff > 1) return false
+      if (a.length === b.length) {
+        i++
+        j++
+      } else if (a.length > b.length) i++
+      else j++
+    }
+    return true
+  }
+
+  function suspiciousTokens(text: string): string[] {
+    const tokens = text.match(/[가-힣]{2,}/g) ?? []
+    return tokens.filter(
+      (t) =>
+        !ROSTER_NAMES.includes(t) &&
+        !GROUP_WORDS.includes(t) &&
+        ROSTER_NAMES.some((n) => isEditDistance1(n, t))
+    )
+  }
+
+  it('GATHER·FLOW 자유 텍스트에 명단과 한 글자만 다른 이름이 없다 (오타 탐지)', () => {
+    const texts: string[] = []
+    for (const g of [GATHER.myeongryun, GATHER.yuljeon]) {
+      for (const row of g.rows) texts.push(`${row.t} ${row.d} ${row.n}`)
+    }
+    for (const step of FLOW) texts.push(`${step.t} ${step.n}`)
+    for (const text of texts) {
+      const bad = suspiciousTokens(text)
+      expect(bad, `${text} → ${bad.join(', ')}`).toEqual([])
+    }
+  })
+
+  it('GATHER 각 행·FLOW 각 단계는 이름 또는 집합 표기를 최소 1개 포함한다', () => {
+    const hasAssignee = (s: string) =>
+      ROSTER_NAMES.some((n) => s.includes(n)) || GROUP_WORDS.some((w) => s.includes(w))
+    for (const g of [GATHER.myeongryun, GATHER.yuljeon]) {
+      for (const row of g.rows) {
+        expect(hasAssignee(row.n), `${g.title} / ${row.d}`).toBe(true)
+      }
+    }
+    for (const step of FLOW) {
+      expect(hasAssignee(step.n), step.t).toBe(true)
+    }
+  })
+
+  it('게임 별칭은 고유하며 서로를 가리지 않는다 (첫 매칭 승리 규칙 보호)', () => {
+    const aliases = GAMES.map((g) => g.alias ?? g.name)
+    expect(new Set(aliases).size).toBe(aliases.length)
+    for (let i = 0; i < aliases.length; i++) {
+      for (let j = i + 1; j < aliases.length; j++) {
+        const shadow =
+          aliases[i].includes(aliases[j]) || aliases[j].includes(aliases[i])
+        expect(shadow, `"${aliases[i]}" vs "${aliases[j]}"`).toBe(false)
+      }
+    }
+  })
+
+  it('모든 게임 별칭이 오후 배치 텍스트에 최소 1회 등장한다 (오후↔카드 중복 제거 매칭용)', () => {
+    const afternoonAll = AFTERNOON.map((s) => s.rows.join('\n')).join('\n')
+    for (const g of GAMES) {
+      expect(afternoonAll.includes(g.alias ?? g.name), g.name).toBe(true)
+    }
+  })
 })

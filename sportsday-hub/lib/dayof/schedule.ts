@@ -315,8 +315,8 @@ const BADGE_DEFS: { names: string[]; label: string; desc: string }[] = [
   },
   { names: MC, label: '사회', desc: '개회·중간·최종 발표 진행 (마이크)' },
   { names: JUKSIK, label: '점수 집계', desc: '본부 옆 상시 집계 — 경기 종료 후 각 게임 점수 전달' },
-  { names: MAPLE6, label: '메이플 지원', desc: 'SG MAPLE 지원 — 본인 팀 게임이 없는 시간에 게임 보조·부스 지원 (시트 출석 표시는 미정)' },
-  { names: MR6, label: '명륜 파트', desc: '09:30 명륜 국제관 L 집합 — 버스 탑승 안내 담당' },
+  { names: MAPLE6, label: '메이플 지원', desc: '타학교 지원 인원 — 본인 팀 게임이 없는 시간에 게임 보조·부스 지원' },
+  { names: MR6, label: '명륜 파트', desc: '아침 집합(명륜 조) — 버스 탑승 안내 담당' },
 ]
 
 export function getProfile(name: string): PersonProfile {

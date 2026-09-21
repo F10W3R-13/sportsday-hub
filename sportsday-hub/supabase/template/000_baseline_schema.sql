@@ -499,10 +499,16 @@ create table if not exists app_locks (
   note text
 );
 
+-- app_locks 는 익명 쓰기로부터 보호 (읽기만 허용 — 외부에서 잠금을 해제하는 것 방지)
+alter table public.app_locks enable row level security;
+create policy app_locks_open_read on public.app_locks for select using (true);
+
+-- ⚠ 시드 전에는 잠금 해제 상태로 시작한다 — migrate:md 가 생성하는 시드(0005)가
+-- milestones INSERT를 수행하기 때문. 시드 실행 후 맨 아래 "재잠금" 쿼리를 실행할 것.
 insert into app_locks (key, locked, note)
 values (
   'milestones_insert',
-  true,
+  false,
   '체크리스트 항목 추가 잠금. 해제: update app_locks set locked = false where key = ''milestones_insert'';'
 )
 on conflict (key) do nothing;
@@ -520,3 +526,6 @@ $$;
 drop trigger if exists milestones_insert_lock on milestones;
 create trigger milestones_insert_lock before insert on milestones
 for each row execute function block_milestones_insert();
+
+-- ────────── 시드 후 재잠금 — migrate:md 시드(0005) 실행이 끝난 뒤 이 쿼리를 따로 실행 ──────────
+-- update app_locks set locked = true where key = 'milestones_insert';

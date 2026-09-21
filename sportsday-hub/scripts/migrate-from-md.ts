@@ -15,60 +15,13 @@ import {
   parseTeamChecklists,
   parseGuidelineSections,
 } from '@/lib/markdown/parser'
-import type { Milestone, TeamId } from '@/lib/types/models'
+import type { Milestone } from '@/lib/types/models'
+import { TEAM_META, TEAM_ORDER } from '@/lib/event-config'
 
 // tsx/ESM 환경에서 __dirname 대체
 const ROOT = resolve(__dirname, '..')
 
-// ===== 팀 메타데이터 (고정) =====
-const TEAM_META: Record<
-  TeamId,
-  { name: string; name_en: string; color: string; icon: string; mission: string }
-> = {
-  management: {
-    name: '기획관리팀',
-    name_en: 'Management',
-    color: '#6366f1', // indigo
-    icon: 'Settings',
-    mission: '전체 총괄, 진행상황 업데이트, 팀 간 조율',
-  },
-  content: {
-    name: '컨텐츠팀',
-    name_en: 'Content',
-    color: '#ec4899', // pink
-    icon: 'Gamepad2',
-    mission: '게임 구성·규칙, 배치도, 필요 인원/물품',
-  },
-  budget: {
-    name: '예산팀',
-    name_en: 'Budget',
-    color: '#10b981', // emerald
-    icon: 'Wallet',
-    mission: '예산안, 입장료, 식사, 단체티, 준비물 리스트',
-  },
-  exchange: {
-    name: '교환담당팀',
-    name_en: 'Exchange',
-    color: '#f59e0b', // amber
-    icon: 'Users',
-    mission: '구글폼, 참여자 명단, 교환 팀 배정, 카드뉴스 인계물',
-  },
-  timeline: {
-    name: '타임라인/인원관리팀',
-    name_en: 'Timeline',
-    color: '#06b6d4', // cyan
-    icon: 'CalendarClock',
-    mission: '전체 타임라인, 하클 인원 배치, 명륜 버스 운영',
-  },
-}
-
-const TEAM_ORDER: TeamId[] = [
-  'management',
-  'content',
-  'budget',
-  'exchange',
-  'timeline',
-]
+// ===== 팀 메타데이터·순서 — lib/event-config.ts (연도 설정 파일) 에서 import =====
 
 // ===== SQL 이스케이프 헬퍼 =====
 function sqlStr(s: string | null | undefined): string {

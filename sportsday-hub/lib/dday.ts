@@ -1,4 +1,7 @@
-export const EVENT_DATE_ISO = '2026-09-20'
+import { EVENT_DATE_ISO } from './event-config'
+
+// 행사일의 원천은 lib/event-config.ts (연도 설정 파일) — 기존 import 경로 호환용 재수출.
+export { EVENT_DATE_ISO }
 
 const KOREAN_WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const
 

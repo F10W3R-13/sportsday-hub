@@ -12,36 +12,42 @@ import { resolve } from 'path'
 const HUB_ROOT = resolve(__dirname, '..')
 const REPO_ROOT = resolve(HUB_ROOT, '..')
 
-// canonical → content-source 매핑
+// canonical(사람이 관리하는 원본 문서 폴더) — 실행 시 --canonical=<경로> 로 지정.
+// 미지정 시 26-2 아카이브(참고용)를 기본으로 둔다.
+// 예) npx tsx scripts/verify-guideline-sync.ts --canonical="../27-1 Sports Day"
+const CANONICAL_ROOT =
+  process.argv
+    .find((a) => a.startsWith('--canonical='))
+    ?.slice('--canonical='.length) ??
+  resolve(REPO_ROOT, 'archive/2026-2/sports-day')
+
+// canonical → content-source 매핑 (canonical 루트는 상단 CANONICAL_ROOT 참조)
 const PAIRS: Array<{ name: string; canonical: string; source: string }> = [
   {
     name: '마스터',
-    canonical: resolve(REPO_ROOT, '26-2 Sports Day/00_기획지침_마스터.md'),
+    canonical: resolve(CANONICAL_ROOT, '00_기획지침_마스터.md'),
     source: resolve(HUB_ROOT, 'content-source/00_기획지침_마스터.md'),
   },
   {
     name: '컨텐츠팀',
-    canonical: resolve(REPO_ROOT, '26-2 Sports Day/컨텐츠팀/컨텐츠팀_지침.md'),
+    canonical: resolve(CANONICAL_ROOT, '컨텐츠팀/컨텐츠팀_지침.md'),
     source: resolve(HUB_ROOT, 'content-source/teams/content.md'),
   },
   {
     name: '예산팀',
-    canonical: resolve(REPO_ROOT, '26-2 Sports Day/예산팀/예산팀_지침.md'),
+    canonical: resolve(CANONICAL_ROOT, '예산팀/예산팀_지침.md'),
     source: resolve(HUB_ROOT, 'content-source/teams/budget.md'),
   },
   {
     name: '교환담당팀',
-    canonical: resolve(
-      REPO_ROOT,
-      '26-2 Sports Day/교환담당팀/교환담당팀_지침.md'
-    ),
+    canonical: resolve(CANONICAL_ROOT, '교환담당팀/교환담당팀_지침.md'),
     source: resolve(HUB_ROOT, 'content-source/teams/exchange.md'),
   },
   {
     name: '타임라인팀',
     canonical: resolve(
-      REPO_ROOT,
-      '26-2 Sports Day/타임라인_인원관리팀/타임라인_인원관리팀_지침.md'
+      CANONICAL_ROOT,
+      '타임라인_인원관리팀/타임라인_인원관리팀_지침.md'
     ),
     source: resolve(HUB_ROOT, 'content-source/teams/timeline.md'),
   },

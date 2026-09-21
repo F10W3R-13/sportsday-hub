@@ -12,6 +12,8 @@ import { getRecentDriveFiles, getLastSyncedAt } from '@/lib/queries/drive-files'
 import { getHandoffs } from '@/lib/queries/handoffs'
 import { IS_DEMO } from '@/lib/demo'
 import { getDriveConnectionStatus } from '@/lib/drive/sync'
+import { HUB_TITLE, EVENT_NAME } from '@/lib/event-config'
+import { EVENT_DATE_LABEL } from '@/lib/dday'
 
 export default async function DashboardPage() {
   const [
@@ -39,9 +41,9 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">HI-Side Out</h1>
+        <h1 className="text-2xl font-bold">{HUB_TITLE}</h1>
         <p className="text-sm text-muted-foreground">
-          26-2 스포츠데이 기획 허브 · 2026. 9. 19 (토)
+          {EVENT_NAME} 기획 허브 · {EVENT_DATE_LABEL}
         </p>
       </div>
 

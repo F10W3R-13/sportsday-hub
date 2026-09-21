@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import type { Decision, Milestone, Issue, TeamId } from '@/lib/types/models'
+import { EVENT_YEAR, TEAM_KEYWORDS as TEAM_KEYWORD } from '@/lib/event-config'
 
 // 마크다운 강조 표시 제거 (**, *, __, _) — 텍스트는 유지
 export function stripMarkdown(s: string): string {
@@ -161,16 +162,7 @@ export function parseDecisions(md: string): Decision[] {
 // §4-1 회의 일정: "- [ ] 이름 (날짜)" 형식 → category='meeting'
 // §4-2 산출물 일정: 표 | 날짜 | 산출물 | 담당 | 완료 | → category='deliverable'
 
-const TEAM_KEYWORD: Record<string, TeamId> = {
-  컨텐츠: 'content',
-  콘텐츠: 'content',
-  예산: 'budget',
-  교환: 'exchange',
-  타임라인: 'timeline',
-  기획관리: 'management',
-  기획: 'management',
-  전체: 'management',
-}
+// 키워드 매핑의 원천은 lib/event-config.ts (TEAM_KEYWORDS) — 상단 import 참조.
 
 function mapTeam(raw: string): TeamId | null {
   for (const [keyword, id] of Object.entries(TEAM_KEYWORD)) {
@@ -179,13 +171,13 @@ function mapTeam(raw: string): TeamId | null {
   return null
 }
 
-// 한국식 날짜 (8/9, 8/13 등) → ISO (2026-MM-DD)
+// 한국식 날짜 (8/9, 8/13 등) → ISO (EVENT_YEAR-MM-DD) — 연도는 event-config에서
 function parseKoreanDate(raw: string): string | null {
   const m = raw.match(/(\d{1,2})\/(\d{1,2})/)
   if (!m) return null
   const month = m[1].padStart(2, '0')
   const day = m[2].padStart(2, '0')
-  return `2026-${month}-${day}`
+  return `${EVENT_YEAR}-${month}-${day}`
 }
 
 export function parseMilestones(md: string): Milestone[] {

@@ -5,6 +5,7 @@ import { Providers } from './providers'
 import { SidebarLayout } from '@/components/layout/sidebar'
 import { NicknameProvider } from '@/components/layout/nickname-provider'
 import { DemoBanner } from '@/components/demo-banner'
+import { HUB_TITLE, EVENT_NAME } from '@/lib/event-config'
 
 // 라틴은 Inter, 한글은 Noto Sans KR로 해결하는 폰트 스택 (globals.css --font-sans 참조)
 const inter = Inter({
@@ -20,8 +21,8 @@ const notoSansKr = Noto_Sans_KR({
 })
 
 export const metadata: Metadata = {
-  title: 'HI-Side Out Hub — 26-2 스포츠데이',
-  description: '26-2 스포츠데이 기획팀 협업 허브',
+  title: `${HUB_TITLE} — ${EVENT_NAME}`,
+  description: `${EVENT_NAME} 기획팀 협업 허브`,
 }
 
 // 첫 페인트 전에 다크 클래스 적용 — 테마 깜빡임(FOUC) 방지

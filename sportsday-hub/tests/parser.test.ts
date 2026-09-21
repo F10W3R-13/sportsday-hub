@@ -133,9 +133,11 @@ describe('parseMilestones', () => {
     expect(contentMilestone?.team_id).toBe('content')
   })
 
-  it('한국식 날짜를 ISO로 변환한다', () => {
+  it('한국식 날짜를 ISO로 변환한다', async () => {
     const milestones = parseMilestones(MASTER_SAMPLE)
-    expect(milestones[0].date).toMatch(/^2026-\d{2}-\d{2}$/)
+    // 연도는 lib/event-config.ts 의 EVENT_DATE_ISO에서 유도 — 연도가 바뀌어도 본 테스트는 불변
+    const { EVENT_YEAR } = await import('@/lib/event-config')
+    expect(milestones[0].date).toMatch(new RegExp(`^${EVENT_YEAR}-\\d{2}-\\d{2}$`))
   })
 })
 

@@ -1,14 +1,10 @@
 import { z } from 'zod'
+import { TEAM_IDS, type TeamId } from '@/lib/event-config'
 
 // ===== 팀 =====
-export const TEAM_IDS = [
-  'management',
-  'content',
-  'budget',
-  'exchange',
-  'timeline',
-] as const
-export type TeamId = (typeof TEAM_IDS)[number]
+// 팀 구성(목록·순서)의 원천은 lib/event-config.ts — 여기서는 기존 import 호환용으로 재수출.
+export { TEAM_IDS }
+export type { TeamId }
 
 export const teamSchema = z.object({
   id: z.enum(TEAM_IDS),

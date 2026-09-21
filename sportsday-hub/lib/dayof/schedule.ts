@@ -79,14 +79,8 @@ function leadOwners(lead: string): string[] {
 }
 
 // 오후 자유 텍스트에서 게임 행 식별용 별칭 (행 단위).
-const GAME_ALIASES: [number, string][] = [
-  [1, '색깔 판'],
-  [2, '무궁화'],
-  [3, '짝 찾기'],
-  [4, '줄다리기'],
-  [5, '피구'],
-  [6, '계주'],
-]
+// data.ts 의 GAMES[].alias(없으면 name)에서 유도 — 게임이 바뀌어도 코드 수정 불필요.
+const GAME_ALIASES: [number, string][] = GAMES.map((g) => [g.idx, g.alias ?? g.name])
 
 function buildSchedules(): Map<string, ScheduleItem[]> {
   const map = new Map<string, ScheduleItem[]>()

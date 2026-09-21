@@ -9,7 +9,7 @@ import {
 } from '@/lib/handoff'
 import type { HandoffItem } from '@/lib/types/models'
 
-const NOW = new Date('2026-08-18T12:00:00')
+const NOW = new Date('2026-08-18T12:00:00+09:00') // TZ 명시 — 호스트 TZ 무관
 
 // 테스트용 HandoffItem 팩토리 — 필수 필드만 교체해 사용
 function item(over: Partial<HandoffItem> = {}): HandoffItem {

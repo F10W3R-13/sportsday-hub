@@ -14,3 +14,27 @@ client_secret_*.json
 # ===== 빌드/캐시 부산물 =====
 __pycache__/
 *.pyc
+.ruff_cache/
+
+# ===== 브리핑 빌드(briefing-build) 산출물 중 재생성 가능한 것 =====
+# 원천 소스(roster.js·board.js 등)와 입력 자산(배치도 PNG·cardnews)은 추적한다.
+_briefing_build/node_modules/
+_briefing_build/pages/
+_briefing_build/deckpages/
+_briefing_build/backup_pre_L1/
+_briefing_build/v2/
+_briefing_build/cardnews2/
+_briefing_build/*.pdf
+_briefing_build/*.pptx
+_briefing_build/cheat-1.png
+briefing-build/node_modules/
+briefing-build/pages/
+briefing-build/deckpages/
+briefing-build/backup_pre_L1/
+briefing-build/*.pdf
+briefing-build/*.pptx
+briefing-build/cheat-1.png
+
+# ===== 일회성 개발 스크래치 =====
+sportsday-hub/_scratch/
+sportsday-hub/.tmp-milestones.json

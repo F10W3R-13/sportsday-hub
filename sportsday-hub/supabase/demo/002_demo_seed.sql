@@ -13,7 +13,7 @@ update public.app_locks set locked = false where key = 'milestones_insert';
 
 -- ===== 기존(실제) 데이터 전부 제거 =====
 -- checklist_items는 0018(체크리스트→마일스톤 병합)에서 삭제된 테이블 — 목록에서 제외
-truncate public.drive_files, public.drive_tokens, public.bot_runs, public.audit_log,
+truncate public.drive_files, public.drive_tokens, public.audit_log,
                public.handoffs, public.issues, public.milestones,
                public.decisions restart identity cascade;
 truncate public.teams cascade;

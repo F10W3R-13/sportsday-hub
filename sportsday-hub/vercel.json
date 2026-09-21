@@ -1,12 +1,3 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/kakao-digest",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/kakao-bot-watchdog",
-      "schedule": "10 9 * * *"
-    }
-  ]
+  "crons": []
 }

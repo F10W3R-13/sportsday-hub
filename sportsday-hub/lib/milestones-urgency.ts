@@ -16,15 +16,31 @@ export interface MilestoneWithUrgency {
   daysFromToday: number // overdue는 음수, today는 0, upcoming은 양수
 }
 
+/** KST UTC 오프셋 (밀리초) — 대한민국은 DST 없이 고정. */
+export const KST_TIMEZONE_OFFSET_MS = 9 * 60 * 60 * 1000
+
+/** KST 기준 오늘 날짜 'YYYY-MM-DD' (서버 TZ 무관 — UTC 컨테이너에서도 동일). */
+export function kstTodayStr(now: Date = new Date()): string {
+  return new Date(now.getTime() + KST_TIMEZONE_OFFSET_MS).toISOString().slice(0, 10)
+}
+
 /**
- * 오늘 자정을 기준 시각으로 사용한다 (시간대 무시).
- * 컴포넌트가 렌더링 시점에 하루 안에서 새로고침해도 같은 날 안에서는
- * 안정적인 분류를 유지한다.
+ * 오늘(KST) 자정 인스턴스. 서버 TZ와 무관하게 같은 KST 날이면 항상 같은 값.
+ * 날짜 기반 판정 전용 — KST 자정~09:00 사이 호출 시 최대 +9h 미래 시각을 가리키므로
+ * 저장하거나 현재 시각과 직접 비교하는 용도로는 쓰지 않는다.
  */
 export function startOfToday(now: Date = new Date()): Date {
-  const d = new Date(now)
-  d.setHours(0, 0, 0, 0)
-  return d
+  return new Date(Date.parse(`${kstTodayStr(now)}T00:00:00Z`) - KST_TIMEZONE_OFFSET_MS)
+}
+
+/**
+ * dueDate('YYYY-MM-DD')와 오늘(KST)의 일수 차. 음수=지연, 0=오늘, 양수=남은 일수.
+ * 날짜 문자열은 UTC 자정으로 파싱한다 — 서버 TZ에 따라 하루가 밀리는 과거 결함 제거.
+ */
+export function dayDiff(dueDate: string, now: Date = new Date()): number {
+  return Math.floor(
+    (Date.parse(`${dueDate}T00:00:00Z`) - startOfToday(now).getTime()) / 86_400_000
+  )
 }
 
 /**
@@ -36,7 +52,6 @@ export function sortByUrgency(
   milestones: Milestone[],
   now: Date = new Date()
 ): MilestoneWithUrgency[] {
-  const todayStart = startOfToday(now)
   // date가 null인(상시) 항목은 'undated' tier로 분류해 배열 맨 뒤로 보낸다
   const dated = milestones.filter((m): m is Milestone & { date: string } => m.date !== null)
   const undated = milestones.filter((m) => m.date === null)
@@ -44,9 +59,7 @@ export function sortByUrgency(
     ...dated
       .filter((m) => !m.completed)
       .map((m) => {
-        const milestoneDate = new Date(m.date + 'T00:00:00')
-        const diffMs = milestoneDate.getTime() - todayStart.getTime()
-        const daysFromToday = Math.round(diffMs / (1000 * 60 * 60 * 24))
+        const daysFromToday = dayDiff(m.date, now)
         let tier: UrgencyTier
         if (daysFromToday < 0) tier = 'overdue'
         else if (daysFromToday === 0) tier = 'today'

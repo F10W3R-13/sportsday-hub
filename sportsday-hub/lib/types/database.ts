@@ -7,7 +7,6 @@ import type {
   DriveToken,
   DriveFile,
   Handoff,
-  BotRun,
 } from './models'
 
 // Supabase 자동 생성 타입과 호환되는 수동 정의
@@ -61,12 +60,6 @@ export interface Database {
         Row: Handoff
         Insert: Partial<Handoff>
         Update: Partial<Handoff>
-        Relationships: []
-      }
-      bot_runs: {
-        Row: BotRun
-        Insert: Partial<BotRun>
-        Update: Partial<BotRun>
         Relationships: []
       }
     }

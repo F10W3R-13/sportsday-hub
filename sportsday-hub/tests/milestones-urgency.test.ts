@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { sortByUrgency, startOfToday } from '@/lib/milestones-urgency'
 import type { Milestone, MilestoneCategory } from '@/lib/types/models'
 
-// 테스트 기준일: 2026-08-09 자정
-const NOW = new Date('2026-08-09T14:30:00')
+// 테스트 기준일: 2026-08-09 (KST) — TZ 명시 인스턴트라 어떤 호스트 TZ에서도 동일 결과
+const NOW = new Date('2026-08-09T14:30:00+09:00')
 
 // 테스트용 최소 Milestone 팩토리. sortByUrgency는 date, completed만 본다.
 function milestone(
@@ -24,11 +24,9 @@ function milestone(
 }
 
 describe('startOfToday', () => {
-  it('시분초를 00:00:00으로 만든다', () => {
-    const result = startOfToday(NOW)
-    expect(result.getHours()).toBe(0)
-    expect(result.getMinutes()).toBe(0)
-    expect(result.getDate()).toBe(9)
+  it('KST 기준 오늘 자정 인스턴스를 반환한다 (호스트 TZ 무관)', () => {
+    const result = startOfToday(new Date('2026-08-09T05:30:00Z')) // KST 14:30
+    expect(result.getTime()).toBe(Date.parse('2026-08-09T00:00:00+09:00'))
   })
 })
 
@@ -82,11 +80,11 @@ describe('sortByUrgency', () => {
     expect(result.map((r) => r.milestone.id)).toEqual(['near', 'mid', 'far'])
   })
 
-  it('오늘 자정 기준: 2026-08-09 당일은 시간과 무관하게 today', () => {
-    // 오늘 새벽에 봐도, 오늘 밤에 봐도 8/9는 today
+  it('오늘 자정 기준: 2026-08-09 당일은 시간과 무관하게 today (KST 기준)', () => {
+    // 오늘 새벽에 봐도, 오늘 밤에 봐도 8/9는 today — 인스턴트는 UTC로 명시(KST 새벽·심야)
     const ms = [milestone('today', '2026-08-09', false)]
-    const morning = new Date('2026-08-09T06:00:00')
-    const night = new Date('2026-08-09T23:59:00')
+    const morning = new Date('2026-08-08T21:00:00Z') // KST 06:00
+    const night = new Date('2026-08-09T14:59:00Z') // KST 23:59
     expect(sortByUrgency(ms, morning)[0].tier).toBe('today')
     expect(sortByUrgency(ms, night)[0].tier).toBe('today')
   })

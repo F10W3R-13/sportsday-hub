@@ -1,4 +1,4 @@
-import { startOfToday } from '@/lib/milestones-urgency'
+import { dayDiff } from '@/lib/milestones-urgency'
 import { TEAM_IDS, type HandoffItem, type RecentFileItem, type TeamId } from '@/lib/types/models'
 
 // 인계 시급함 — 오늘 자정 기준(스펙 §5). 임박 = 오늘~3일 이내.
@@ -11,9 +11,7 @@ export function handoffUrgency(
 ): HandoffUrgency {
   if (completed) return 'scheduled' // 완료는 기한 티어 무의미 — 정렬은 completed 플래그가 우선 관리
   if (!dueDate) return 'no_due'
-  const todayStart = startOfToday(now)
-  const due = new Date(dueDate + 'T00:00:00')
-  const days = Math.round((due.getTime() - todayStart.getTime()) / 86_400_000)
+  const days = dayDiff(dueDate, now)
   if (days < 0) return 'overdue'
   if (days <= 3) return 'due_soon'
   return 'scheduled'

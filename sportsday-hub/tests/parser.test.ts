@@ -189,3 +189,18 @@ describe('parseGuidelineSections', () => {
 // 통합 테스트가 0건만 리턴하며 레드 상태로 되었습니다. 실제 회귀를 가리지
 // 않도록 해당 통합 테스트는 제거하고, 인라인 MASTER_SAMPLE/TEAM_SAMPLE
 // 픽스처에 대한 유닛 테스트만 유지합니다. (it.skip 사용 금지)
+
+// ── CRLF 회귀 (2026-09 플레이테스트에서 발견 — Windows 저장 문서는 줄 끝이 \r\n) ──
+describe('CRLF 줄 끝 회귀', () => {
+  it('CRLF 문서도 LF 문서와 완전히 동일하게 파싱된다', () => {
+    const crlf = MASTER_SAMPLE.replace(/\n/g, '\r\n')
+    expect(splitSections(crlf).length).toBe(splitSections(MASTER_SAMPLE).length)
+    expect(parseDecisions(crlf).length).toBe(parseDecisions(MASTER_SAMPLE).length)
+    expect(parseMilestones(crlf).length).toBe(parseMilestones(MASTER_SAMPLE).length)
+    expect(parseIssues(crlf, null).length).toBe(parseIssues(MASTER_SAMPLE, null).length)
+    expect(parseGuidelineSections(crlf).length).toBe(parseGuidelineSections(MASTER_SAMPLE).length)
+    expect(parseTeamChecklists(crlf, 'content').length).toBe(
+      parseTeamChecklists(MASTER_SAMPLE, 'content').length
+    )
+  })
+})

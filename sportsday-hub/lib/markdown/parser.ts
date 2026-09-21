@@ -21,7 +21,9 @@ export interface MdSection {
 }
 
 export function splitSections(md: string): MdSection[] {
-  const lines = md.split('\n')
+  // CRLF 정규화 — Windows에서 문서를 저장하면 줄 끝에 \r이 붙고,
+  // \r은 정규식의 . 이 매칭하지 않아 모든 헤더 인식이 실패한다 (템플릿화 시 실제 발견된 버그).
+  const lines = md.split(/\r?\n/)
   const sections: MdSection[] = []
   let current: MdSection | null = null
   let buffer: string[] = []

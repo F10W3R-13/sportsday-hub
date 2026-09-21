@@ -18,10 +18,7 @@ create policy "app_config_open_write" on public.app_config for insert with check
 create policy "app_config_open_edit"  on public.app_config for update using (true);
 create policy "app_config_open_del"   on public.app_config for delete using (true);
 
--- 감사 트리거 (0003 audit_capture 재사용 — 누가 설정을 바꿨는지 추적)
-drop trigger if exists trg_audit_app_config on public.app_config;
-create trigger trg_audit_app_config
-  after insert or update or delete on public.app_config
-  for each row execute function public.audit_capture();
+-- 감사 트리거 없음 — audit_capture는 NEW.id를 참조하는데 app_config은 key가 PK라
+-- 컬럼이 맞지 않아 오류 발생. app_config은 시즌 리셋 SQL로만 갱신되므로 감사 불필요.
 
 COMMIT;

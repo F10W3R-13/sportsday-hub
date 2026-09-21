@@ -109,8 +109,8 @@ INSERT INTO decisions (id, title, options, status, current_value, decision_date,
   -- ...행 추가
 
 INSERT INTO milestones (id, date, title, team_id, category, completed, depends_on, sort_order, priority, source) VALUES
-  ('m-meeting-1', '2027-03-05', '1차 회의', 'management', 'meeting', true, NULL, 0, NULL, '마스터 §4-1');
-  -- ...행 추가 (회의=meeting · 산출물=deliverable · 'Sports Day'당일=event)
+  (gen_random_uuid(), '2027-03-05', '1차 회의', 'management', 'meeting', true, NULL, 0, NULL, '마스터 §4-1');
+  -- ...행 추가 (id는 uuid 타입 — gen_random_uuid() 사용, 회의=meeting · 산출물=deliverable · 'Sports Day'당일=event)
 
 INSERT INTO issues (id, team_id, date, title, status, notes) VALUES
   (gen_random_uuid(), NULL, '2027-03-10', '<이슈>', 'open', '<비고>');

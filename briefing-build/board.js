@@ -1,8 +1,13 @@
 const pptxgen = require("pptxgenjs");
 const path = require("path");
 const R = require("./roster.js");
-const ROOT = "C:\\Users\\0616y\\OneDrive\\바탕 화면\\minwo0___\\26-2 스포츠데이기획";
-const OUT = path.join(ROOT, "26-2 Sports Day", "현장 운영 보드.pptx");
+
+// 저장소 루트 — 이 스크립트가 어느 컴퓨터·어느 폴더에 있어도 따라가도록 상대 경로화.
+const ROOT = path.resolve(__dirname, "..");
+// 산출물을 넣을 시즌 폴더 — 새 시즌에는 이 기본값을 바꾸거나
+// 실행 시 환경변수로 지정:  set SEASON_DIR=C:\...\27-1 Sports Day && node board.js
+const SEASON_DIR = process.env.SEASON_DIR || path.join(ROOT, "archive", "2026-2", "sports-day");
+const OUT = path.join(SEASON_DIR, "현장 운영 보드.pptx");
 
 // ===== 팔레트/공통 =====
 const PRIMARY = "4B3FA6", PTINT = "ECEAF7", PTINT2 = "F7F6FB", ACCENT = "F5A623";

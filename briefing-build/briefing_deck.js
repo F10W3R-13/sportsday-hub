@@ -1,8 +1,13 @@
 const pptxgen = require("pptxgenjs");
 const path = require("path");
 const R = require("./roster.js");
-const ROOT = "C:\\Users\\0616y\\OneDrive\\바탕 화면\\minwo0___\\26-2 스포츠데이기획";
-const OUT = process.env.DECK_OUT || path.join(ROOT, "26-2 Sports Day", "최종 브리핑 덱 (발표자용).pptx");
+
+// 저장소 루트 — 이 스크립트가 어느 컴퓨터·어느 폴더에 있어도 따라가도록 상대 경로화.
+const ROOT = path.resolve(__dirname, "..");
+// 산출물을 넣을 시즌 폴더 — 새 시즌에는 이 기본값을 바꾸거나
+// 실행 시 환경변수로 지정:  set SEASON_DIR=C:\...\27-1 Sports Day && node briefing_deck.js
+const SEASON_DIR = process.env.SEASON_DIR || path.join(ROOT, "archive", "2026-2", "sports-day");
+const OUT = process.env.DECK_OUT || path.join(SEASON_DIR, "최종 브리핑 덱 (발표자용).pptx");
 
 // ===== 팔레트/공통 =====
 const PRIMARY = "4B3FA6", PTINT = "ECEAF7", PTINT2 = "F7F6FB", ACCENT = "F5A623";
@@ -320,7 +325,7 @@ function bandC(s, y, time, rows, gap = 0.07) {
   const s = slideBase();
   header(s, "VENUE", "대운동장 배치도 — 설치 구역과 담당");
   s.addShape(p.shapes.ROUNDED_RECTANGLE, { x: M, y: 1.55, w: 8.3, h: 5.15, rectRadius: 0.07, fill: { color: WHITE }, line: { color: LINEC, width: 0.75 }, shadow: softShadow() });
-  s.addImage({ path: path.join(ROOT, "_briefing_build", "배치도_26-2.png"), x: 0.75, y: 1.8, w: 7.8, h: 4.3, sizing: { type: "contain", w: 7.8, h: 4.3 } });
+  s.addImage({ path: path.join(__dirname, "배치도_26-2.png"), x: 0.75, y: 1.8, w: 7.8, h: 4.3, sizing: { type: "contain", w: 7.8, h: 4.3 } });
   s.addText("출처: 최종기획안 '7. 스포츠데이 배치도'", { x: M, y: 6.78, w: 6, h: 0.28, fontFace: F, fontSize: 10, color: MUTED, margin: 0 });
   const zones = [
     { t: "입장 관리존", d: "천막 3 · 테이블 4 · 노트북 4 — 최우선 설치 → 이후 응급처치 존 전환" },

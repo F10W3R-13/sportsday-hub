@@ -1,7 +1,6 @@
 const pptxgen = require("pptxgenjs");
 const path = require("path");
-const ROOT = "C:\\Users\\0616y\\OneDrive\\바탕 화면\\minwo0___\\26-2 스포츠데이기획";
-const OUT = path.join(ROOT, "_briefing_build", "cheatsheet.pptx");
+const OUT = path.join(__dirname, "cheatsheet.pptx");
 
 const PRIMARY = "4B3FA6", PTINT = "ECEAF7", PTINT2 = "F7F6FB", ACCENT = "F5A623";
 const TEXT = "1F2937", MUTED = "6B7280", LINEC = "E2E8F0", WHITE = "FFFFFF";

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { FolderMapping } from '@/components/settings/folder-mapping'
+import { DriveDisconnectButton } from '@/components/settings/drive-disconnect-button'
 import { getDriveConnectionStatus } from '@/lib/drive/sync'
 import { getTeams } from '@/lib/queries/teams'
 import { IS_DEMO } from '@/lib/demo'
@@ -36,12 +37,18 @@ export default async function SettingsPage() {
                 ? `: ${status.email}`
                 : ' (계정 정보를 가져올 수 없습니다)'}
             </p>
-            <a
-              href="/api/auth/google-connect"
-              className="inline-block rounded-md border px-3 py-1 text-sm hover:bg-muted"
-            >
-              다른 계정으로 재연결 (현재 연결이 교체됩니다)
-            </a>
+            <div className="flex items-center gap-2">
+              <a
+                href="/api/auth/google-connect"
+                className="inline-block rounded-md border px-3 py-1 text-sm hover:bg-muted"
+              >
+                다른 계정으로 재연결
+              </a>
+              <DriveDisconnectButton />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              연결 해제 시 Google 계정의 보안 설정에서 앱 권한 회수를 권장합니다.
+            </p>
           </div>
         ) : (
           <div className="space-y-2">
